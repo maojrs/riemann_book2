@@ -1,0 +1,25 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "riemann-book"
+version = "0.1.0"
+description = "Code for the book 'Riemann Problems and Jupyter Solutions' (Ketcheson, LeVeque, del Razo)"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy",
+    "scipy",
+    "matplotlib",
+    "ipywidgets",
+    "ipython",
+]
+
+[dependency-groups]
+dev = ["pytest"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["exact_solvers", "utils"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

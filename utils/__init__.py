@@ -1,9 +1,4 @@
+"""Plotting and helper tools for the book's notebooks.
 
-from __future__ import absolute_import
-
-__version__ = "0.1"
-
-import utils.nbtools
-import utils.animation_tools
-import utils.riemann_tools
-
+Import submodules explicitly, e.g. ``from utils import riemann_tools``.
+"""

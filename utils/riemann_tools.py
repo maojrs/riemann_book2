@@ -32,21 +32,11 @@ These are usually obtained from an exact or approximate Riemann solver.
                 are 'shock', 'contact', and 'raref'.
 """
 
-from __future__ import absolute_import
-from __future__ import print_function
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
-from six.moves import range
 import copy
 
-try:
-    from JSAnimation import IPython_display
-except:
-    try:
-        from clawpack.visclaw.JSAnimation import IPython_display
-    except:
-        print("*** Warning: JSAnimation not found")
 from IPython.display import display
 
 
