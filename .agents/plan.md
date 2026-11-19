@@ -16,7 +16,7 @@
 2. **Content conversion.** Convert the notebooks following `.agents/conversion.md`. Configure `myst.yml` with the table of contents from `Index.ipynb` and a `references.bib` from `riemann.bib`. Set up CI that builds with `--execute` and deploys to Pages.
 3. **Component prototype.** Build one representative interactive figure end to end (Pyodide worker, JS plot, MyST embedding), done early in parallel with phases 1–2 to reduce risk.
 4. **Rollout.** Replace static or ipywidgets figures with components chapter by chapter, SIAM book chapters (Parts I–II) first and the extras later.
-5. **Polish.** PDF export and an optional download of runnable notebooks.
+5. **Polish.** PDF export and an optional download of runnable notebooks. Before release, send the authors the list in "Text to flag for the authors" and apply only the changes they approve.
 
 ## Status
 
@@ -35,8 +35,12 @@
   - Part VI's two external nbviewer notebooks (multidimensional acoustics and elasticity) are left out of the table of contents for now. **Ask the user later** whether to include them.
 - Sidebar: tried a flat table of contents with part pages instead of dropdowns; the user preferred the original nested parts (reverted).
 - `book.css` widens the text column on screens of 1024px and wider. If the theme changes its grid, regenerate the override from the theme's `.article-grid` rules.
-- To flag to the authors: the Part II description of FV_compare says "when used with PyClaw" (now miniclaw), and the Approximate_solvers chapter is itself titled "Part II. Approximate Riemann Solvers".
-- Next: convert a pilot chapter (Acoustics, compared with jbook2test) and settle the conversion script.
+- Step 2, pilot chapter Acoustics: done.
+  - Converted with `.agents/tools/convert_notebook.py`; the prose is unchanged (0 word differences).
+  - It executes cleanly, and has no horizontal scroll bars at 390–1920 px.
+  - The procedure and conventions are in `.agents/conversion.md`.
+- Text to flag to the authors is collected in "Text to flag for the authors" below.
+- Next: convert the other chapters one at a time with the same procedure; then execution in the full build and CI.
 
 Notes collected so far:
 - First build warnings to fix during conversion:
@@ -44,12 +48,26 @@ Notes collected so far:
   - the equation label `swa:hll_middle_state` is defined in both Shallow_water_approximate and Euler_approximate;
   - cross-references to headings are missing in Shallow_water and Traffic_variable_speed.
 - Headless execution (nbclient) stalls on `interact` cells until the cell timeout. CI needs a per-cell timeout or static rendering for them.
+- Unconverted chapters carry a temporary `execute: skip: true` first cell, so `jupyter-book start --execute` only runs converted chapters.
+- `seaborn` is imported by Acoustics_heterogeneous, Kitchen_sink_problem and Pressureless_flow but is not a dependency. Decide at conversion: add it (it exists in Pyodide) or replace the styling.
+- Nonlinear_elasticity and Pressureless_flow ask for a `python2` kernel; set it to `python3` at conversion (metadata only).
 - The removed Matplotlib style `seaborn-talk` is used in Pressureless_flow and Kitchen_sink_problem.
 - Warnings in notebook code, previously hidden by a global filter in `shallow_water.py`:
   - Shallow_water_approximate: `np.sqrt` of a negative depth;
   - Pressureless_flow: invalid escape sequences (`'\l'`) in LaTeX strings (use raw strings).
 - Kitchen_sink_problem set no `dry_tolerance`/`sea_level`, which Clawpack 5.14 requires. miniclaw does not need them.
 - Keep the table of contents in `myst.yml` explicit, so that `AGENTS.md`, `CHANGES.md` and `.agents/` are not rendered as pages.
+
+## Text to flag for the authors
+Original text that refers to things that no longer exist or have changed. Not changed (rule 1); add to this list during conversion, by chapter.
+- index.md: the new front page is a draft; its wording needs approval.
+- Index (Part II description): FV_compare "when used with PyClaw" (now miniclaw).
+- Approximate_solvers: the chapter is itself titled "Part II. Approximate Riemann Solvers".
+- Acoustics:
+  - the "on github" code links point to `blob/FA16`;
+  - "in the notebook version, or on [this webpage](http://www.clawpack.org/riemann_book/phase_plane/...)";
+  - "produced using a numerical method from PyClaw … or on [this webpage]" (now miniclaw; old clawpack.org page);
+  - "*In the live notebook, you can advance the above solutions in time…*" (widgets are static until phase 4).
 
 ## Open decisions
 - Whether interactive components use anywidget, so they also run in plain Jupyter, or web-only JS. Leaning towards anywidget.

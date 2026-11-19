@@ -1979,6 +1979,7 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "ipykernel" },
     { name = "jupyter-book" },
     { name = "pytest" },
 ]
@@ -1994,6 +1995,7 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "ipykernel", specifier = ">=7.4.0" },
     { name = "jupyter-book", specifier = ">=2" },
     { name = "pytest" },
 ]

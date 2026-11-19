@@ -500,3 +500,23 @@ if(typeof(mpld3) !== "undefined" && mpld3._mpld3IsLoaded){
          });
 }
 </script>
+
+<script>
+/* Added for the web edition of the book: scale the figure down to the page width
+   (keeping its aspect ratio) instead of overflowing it. */
+(function () {
+  var tries = 0;
+  var timer = setInterval(function () {
+    document.querySelectorAll('svg.mpld3-figure').forEach(function (svg) {
+      if (svg.getAttribute('viewBox')) return;
+      var w = svg.getAttribute('width'), h = svg.getAttribute('height');
+      svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
+      svg.setAttribute('width', '100%');
+      svg.removeAttribute('height');
+      svg.style.maxWidth = w + 'px';
+      svg.style.height = 'auto';
+    });
+    if (++tries > 100) clearInterval(timer);
+  }, 100);
+})();
+</script>

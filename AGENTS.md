@@ -11,7 +11,7 @@ Port the interactive book *Riemann Problems and Jupyter Solutions* (Ketcheson, L
 
 ## Read when needed
 - `.agents/plan.md`: architecture, phases, current status and open decisions. Read it before planning or starting a phase, and update the status when a step is done.
-- `.agents/conversion.md`: notebook-to-MyST conventions. Read it before converting a chapter.
+- `.agents/conversion.md`: the procedure and conventions for converting a chapter, and how to check for horizontal scroll bars. Read it before converting or changing a chapter.
 - `.agents/miniclaw.md`: miniclaw design and decisions. Read it before working on `miniclaw/`.
 
 ## Repository layout
@@ -60,7 +60,10 @@ Work step by step: agree on each step with the user before implementing it, and 
 4. **Register every change in `CHANGES.md`.**
    - Every change compared with the original book goes there, in the matching section: text changes, bug fixes in the solvers, compatibility fixes, interface changes, project infrastructure.
    - Keep entries short and simple: one or two lines saying what changed and why, and the test that covers it.
-5. **Code must be well organized, simple, concise and human-readable.**
+5. **No horizontal scroll bars on any page, at any width (phone to wide desktop).**
+   - Check every converted or changed chapter with `.agents/tools/pagecheck.py` at 390, 768, 1280, 1440 and 1920 px, and look at the screenshots.
+   - Fix the cause: site-wide layout in `book.css`, warnings in the code, and wide figures made to scale. See `.agents/conversion.md`.
+6. **Code must be well organized, simple, concise and human-readable.**
    - Small, focused modules and functions with clear names and short docstrings stating the equations or method.
    - No dead code, no `sys.path` hacks, no Python 2 leftovers (`six`, `__future__`).
    - Prefer clarity over cleverness: this code is read by students.

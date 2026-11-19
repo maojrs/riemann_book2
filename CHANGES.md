@@ -45,6 +45,9 @@ These make the code run on current Python, NumPy and IPython without changing an
 
 - `import utils` no longer auto-loads its submodules. Use `from utils import riemann_tools`, as the
   notebooks already do.
+- `acoustics_demos.py`: two plot calls passed the colour twice (format `'-k'` and `color=`),
+  which Matplotlib warns about and resolves in favour of `color=`. The format is now `'-'`. The
+  figure is unchanged.
 - Importing `exact_solvers.shallow_water` no longer silences all warnings: its
   `warnings.filterwarnings("ignore")` was removed (approved). The one expected warning it hid in the
   book (u = hu/h in dry regions, in `make_demo_plot_function`) is now silenced locally.
@@ -82,5 +85,26 @@ These make the code run on current Python, NumPy and IPython without changing an
   14ch instead of 10ch, i.e. about 84 instead of 60 characters). The same columns are applied to
   the sidebar's own grid, so the sidebar and text never overlap (checked with screenshots at
   1280, 1440, 1600 and 1920 px).
+- Chapters converted to MyST (markup only; a word-level check confirms the prose is unchanged):
+  - **Acoustics.**
+  - What the conversion does is described in `.agents/conversion.md`:
+    - equation references become `{eq}`;
+    - citations become `[@key]`;
+    - unnumbered displays are kept unnumbered;
+    - `Image` cells become `{image}`;
+    - the phase-plane `IFrame` becomes embedded HTML;
+    - paths are made relative to `chapters/`;
+    - notebook magics and repeated import cells are removed.
+- Chapters not yet converted have a temporary first cell `execute: skip: true`, so the build
+  (`--execute`) does not run them. Each is removed when its chapter is converted.
+- `figures/phase_plane/*.html`: a short script appended to each file scales the figure to the
+  page width.
+- `book.css` also prevents horizontal scroll bars:
+  - equations fit their box and are centred (the theme sets their margins to 0, which put them on the left);
+  - long code lines wrap;
+  - the top-bar title shrinks on small screens;
+  - ipywidgets placeholders are hidden on the static site.
+- `.agents/tools/`: the conversion script, a prose check and a browser check for horizontal scroll
+  bars. These are for the editors; they are not part of the book.
 - Not carried over: `make_html.py`, `make_pdf.py`, `make_html_bib.sh`, the Docker files, `html/`,
   `files_for_*`, `html_animations/`, `Index.ipynb`, `Index2.ipynb`, `Make_html_animations.ipynb`.

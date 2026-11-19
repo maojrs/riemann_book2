@@ -18,3 +18,22 @@
     grid-template-columns: [screen-start].5rem[screen-inset-start]1fr[page-start]3rem[page-inset-start]9rem[body-outset-start]3rem[body-start gutter-left-start]1rem[body-inset-start]minmax(8ch,14ch)[middle-start]minmax(8ch,14ch)[gutter-left-end]minmax(8ch,14ch) minmax(8ch,14ch)[gutter-right-start]minmax(8ch,14ch)[middle-end]minmax(8ch,14ch)[body-inset-end]1rem[body-end gutter-right-end]3rem[body-outset-end]13rem[page-inset-end]3rem[page-end]1fr[screen-inset-end].5rem[screen-end];
   }
 }
+
+/* Equations: size each display block to its content and centre it (the theme sets margin: 0 !important).
+   KaTeX's aligned environments are otherwise 2px wider than their box, which shows a
+   horizontal scroll bar under every numbered equation. */
+article .katex-display { display: block; width: fit-content; max-width: 100%; margin-left: auto !important; margin-right: auto !important; }
+
+/* Code cells and text outputs: wrap long lines instead of scrolling sideways. */
+article pre, article pre code, article pre code span { white-space: pre-wrap !important; overflow-wrap: anywhere; }
+
+/* Top bar: on narrow screens the long book title shrinks (with an ellipsis) so that the
+   search box and the theme button stay on the screen. */
+.myst-top-nav-bar > div:first-child { min-width: 0; flex-shrink: 1; }
+.myst-top-nav-bar > div:first-child a { min-width: 0; }
+.myst-top-nav-bar span.text-md { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+
+/* ipywidgets (interact) need a running kernel. On the static site they show only a placeholder
+   ("a Jupyter kernel connection is required") and the widget's text form; hide those. The
+   figure drawn by the interact call is a separate output and stays visible. */
+.jp-OutputArea-child:has(.thebe-ipywidgets-placeholder) { display: none; }

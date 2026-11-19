@@ -97,8 +97,8 @@ def char_solution(t, K, rho):
     x = np.linspace(-2*c-1,2*c+1,41)
     tt = np.linspace(0,1.2,20)
     for ix in x:
-        axes[0].plot(ix-c*tt,tt,'-k',lw=0.5,color=colors[0])
-        axes[0].plot(ix+c*tt,tt,'-k',lw=0.5,color=colors[1])
+        axes[0].plot(ix-c*tt,tt,'-',lw=0.5,color=colors[0])
+        axes[0].plot(ix+c*tt,tt,'-',lw=0.5,color=colors[1])
     axes[0].set_xlim(-1,1)
     axes[0].set_ylim(-0.2,1.2)
     axes[0].set_title('Characteristics')
