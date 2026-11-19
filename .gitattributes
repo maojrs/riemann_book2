@@ -3,3 +3,7 @@ figures/phase_plane/*.html linguist-generated linguist-vendored
 # Agent notes are documentation, not book code.
 AGENTS.md linguist-documentation
 .agents/*.md linguist-documentation
+
+*.ipynb filter=nbstripout
+*.zpln filter=nbstripout
+*.ipynb diff=ipynb
