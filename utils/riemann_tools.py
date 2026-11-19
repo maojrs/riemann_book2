@@ -1,12 +1,6 @@
 """
-This version of riemann_tools.py was adapted from the
-version in clawpack/riemann/src from Clawpack V5.3.1 to
-add some new features and improve the plots.
-
-This may be modified further as the notebooks in this
-directory are improved and expanded.  Eventually a
-stable version of this should be moved back to
-clawpack/riemann/src in a future release.
+Tools to compute and plot Riemann solutions, used throughout the book.
+Originally adapted from riemann_tools.py in Clawpack 5.3.1 (clawpack/riemann).
 
 Several of the main functions require the following sequence of arguments:
 
@@ -37,18 +31,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 import copy
 
-from IPython.display import display
 
-
-
-def set_interact(context):
-    if context == 'notebook':
-        from ipywidgets import interact
-    elif context == 'html':
-        from utils.jsanimate_widgets import interact
-    elif context == 'pdf':
-        from utils.snapshot_widgets import interact
-    return interact
 
 def convert_to_list(x):
     if isinstance(x, (list, tuple)):
@@ -66,7 +49,7 @@ def riemann_solution(solver,q_l,q_r,aux_l=None,aux_r=None,t=0.2,problem_data=Non
     **Example**::
 
         # Call solver
-        >>> from clawpack import riemann
+        >>> from miniclaw import riemann
         >>> gamma = 1.4
         >>> problem_data = { 'gamma' : gamma, 'gamma1' : gamma - 1 }
         >>> solver = riemann.euler_1D_py.euler_hll_1D
@@ -132,6 +115,7 @@ def riemann_solution(solver,q_l,q_r,aux_l=None,aux_r=None,t=0.2,problem_data=Non
 
     if verbose:
         import sympy
+        from IPython.display import display
         sympy.init_printing(use_latex='mathjax')
         print('States in Riemann solution:')
         states_sym = sympy.Matrix(states)
@@ -163,49 +147,6 @@ def riemann_solution(solver,q_l,q_r,aux_l=None,aux_r=None,t=0.2,problem_data=Non
 
     return states, s, riemann_eval
 
-
-def plot_phase(states, i_h=0, i_v=1, ax=None, label_h=None, label_v=None):
-    """
-    Plot 2d phase space plot.
-    If num_eqns > 2, can specify which component of q to put on horizontal
-    and vertical axes via i_h and i_v.
-    """
-
-    if label_h is None:
-        label_h = 'q[%s]' % i_h
-    if label_v is None:
-        label_v = 'q[%s]' % i_v
-
-    q0 = states[i_h,:]
-    q1 = states[i_v,:]
-
-    if ax is None:
-        fig, ax = plt.subplots()
-    ax.plot(q0,q1,'o-k')
-    ax.set_title('States in phase space')
-    ax.axis('equal')
-    dq0 = q0.max() - q0.min()
-    dq1 = q1.max() - q1.min()
-    ax.text(q0[0] + 0.05*dq0,q1[0] + 0.05*dq1,'q_left')
-    ax.text(q0[-1] + 0.05*dq0,q1[-1] + 0.05*dq1,'q_right')
-    ax.axis([q0.min()-0.1*dq0, q0.max()+0.1*dq0, q1.min()-0.1*dq1, q1.max()+0.1*dq1])
-    ax.set_xlabel(label_h)
-    ax.set_ylabel(label_v)
-
-def plot_phase_3d(states):
-    """
-    3d phase space plot
-    """
-    from mpl_toolkits.mplot3d import Axes3D
-    fig = plt.figure()
-    ax = fig.gca(projection='3d')
-    ax.plot(states[0,:],states[1,:],states[2,:],'ko-')
-    ax.set_xlabel('q[0]')
-    ax.set_ylabel('q[1]')
-    ax.set_zlabel('q[2]')
-    ax.set_title('phase space')
-    ax.text(states[0,0]+0.05,states[1,0],states[2,0],'q_left')
-    ax.text(states[0,-1]+0.05,states[1,-1],states[2,-1],'q_right')
 
 def plot_waves(states, s, riemann_eval, wave_types, t=0.1, ax=None,
                color='multi', t_pointer=False, xmax=None):
@@ -498,19 +439,6 @@ def make_plot_function(states_list, speeds_list, riemann_eval_list,
 
         return real_plot_function
 
-def JSAnimate_plot_riemann(states, speeds, riemann_eval, wave_types=None, times=None, **kwargs):
-    from matplotlib import animation
-    fig, axes = plt.subplots(1,3,figsize=(12,4))
-
-    def fplot(frame_number):
-        for axis in axes:
-            axis.cla()
-        t = frame_number/10.
-        plot_riemann(states,speeds,riemann_eval,t=t,ax=axes)
-        return axes,
-
-    return animation.FuncAnimation(fig, fplot, frames=10, interval=200)
-
 def compute_riemann_trajectories(states, s, riemann_eval, wave_types=None,
                                  i_vel=1, num_left=10, num_right=10,
                                  rho_left=None, rho_right=None, xmax=None):
@@ -658,9 +586,9 @@ def plot_characteristics(reval, char_speed, aux=None, axes=None,
         q = np.array(reval(xi))
         for j in range(len(x)):
             if aux:
-                c[j] = char_speed(q[:,j],xi[j],(xi[j]<=contact_speed)*aux[0]+(xi[j]>contact_speed)*aux[1])
+                c[j] = np.squeeze(char_speed(q[:,j],xi[j],(xi[j]<=contact_speed)*aux[0]+(xi[j]>contact_speed)*aux[1]))
             else:
-                c[j] = char_speed(q[:,j],xi[j])
+                c[j] = np.squeeze(char_speed(q[:,j],xi[j]))
         chars[:,i] = chars[:,i-1] + dt*c  # Euler's method
 
     for j in range(len(x)):
@@ -738,35 +666,3 @@ def make_waves(values, ranges, xi):
             wave_types.append('shock')
             speeds.append(xi[r[0]])
     return wave_types, speeds
-
-def waves_from_smoothness(smoothness, xi):
-    """
-    Determine the locations of shock waves and rarefaction waves, based on
-    computed smoothness of the Riemann solution.
-    """
-    speeds = []
-    wave_types = []
-
-    i = 0
-    while i<len(smoothness)-1:
-        if smoothness[i] == 2:  # Shock
-            assert smoothness[i+2] != 2
-            wave_types.append('shock')
-            speeds.append((xi[i]+xi[i+1])/2.)
-        elif smoothness[i] == 1:  # Rarefaction
-            assert smoothness[i+1] == 1, xi[i]
-            wave_types.append('raref')
-            left_speed = xi[i]
-            while smoothness[i] == 1:
-                i += 1
-            right_speed = xi[i-1]
-            speeds.append((left_speed,right_speed))
-            continue
-        else:
-            i += 1
-
-    return speeds, wave_types
-
-if __name__ == '__main__':
-    import doctest
-    doctest.testmod()

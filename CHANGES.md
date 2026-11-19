@@ -35,16 +35,31 @@ These make the code run on current Python, NumPy and IPython without changing an
 - `nonlinear_elasticity.py`, `interactive_pplanes.py`: LaTeX strings made raw (`r'$\gamma$'`).
 - `utils/__init__.py`: no longer imports `nbtools`, which fails on IPython 9.
 - `utils/riemann_tools.py`: removed the `__future__`, `six` and unused JSAnimation imports.
+- `utils/riemann_tools.py`: `plot_characteristics` crashed (NumPy ≥ 2.4) when the characteristic
+  speed function returns a 1-element array, as `traffic_LWR.c` does. The value is now squeezed.
+  Test: `test_riemann_tools.py`.
 
 ## Interface changes
 
 - `import utils` no longer auto-loads its submodules. Use `from utils import riemann_tools`, as the
   notebooks already do.
+- Importing `exact_solvers.shallow_water` no longer silences all warnings: its
+  `warnings.filterwarnings("ignore")` was removed (approved). The one expected warning it hid in the
+  book (u = hu/h in dry regions, in `make_demo_plot_function`) is now silenced locally.
+- PyClaw is replaced by miniclaw in `acoustics_demos.py`, `burgers_demos.py` and
+  `shallow_water.macro_riemann_plot`: `from clawpack import pyclaw, riemann` became
+  `from miniclaw import pyclaw, riemann`. No other change.
+- Removed `utils` modules not used anywhere in the book: `animation_tools`, `jsanimate_widgets`,
+  `snapshot_widgets`, `nbtools`, `fix_eqref`, `fix_nblinks`, `change_ql`.
+- Removed unused or broken `riemann_tools` functions: `set_interact`, `plot_phase`, `plot_phase_3d`
+  (it used a removed Matplotlib API), `JSAnimate_plot_riemann`, `waves_from_smoothness`, and the
+  Clawpack doctest. `riemann_tools` now imports IPython only for `riemann_solution(verbose=True)`.
 
 ## Project infrastructure
 
 - `pyproject.toml` makes `exact_solvers` and `utils` installable (`uv sync` or `pip install -e .`).
-- `tests/`: scientific test suite (pytest). It is not part of the deployed book.
+- `tests/`: scientific test suite (pytest) for `exact_solvers`, `utils.riemann_tools` and `miniclaw`.
+  It is not part of the deployed book.
 - `tests/reference/`: results of the book's PyClaw runs with real Clawpack 5.14, made by
   `generate_reference.py` (needs Clawpack, not a book dependency), to test miniclaw against.
   The runs are defined once in `book_setups.py`, for both Clawpack and miniclaw.

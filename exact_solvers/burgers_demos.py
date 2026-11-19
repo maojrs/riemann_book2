@@ -2,8 +2,8 @@
 Additional functions and demos for Burgers' equation.
 """
 import sys, os
-from clawpack import pyclaw
-from clawpack import riemann
+from miniclaw import pyclaw
+from miniclaw import riemann
 import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib import animation

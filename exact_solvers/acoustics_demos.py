@@ -2,8 +2,8 @@
 Additional functions and demos for acoustics equations.
 """
 import sys, os
-from clawpack import pyclaw
-from clawpack import riemann
+from miniclaw import pyclaw
+from miniclaw import riemann
 from matplotlib import animation
 from IPython.display import HTML
 import matplotlib.pyplot as plt

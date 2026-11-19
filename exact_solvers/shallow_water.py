@@ -2,12 +2,10 @@ import sys, os
 import numpy as np
 from scipy.optimize import fsolve
 import matplotlib.pyplot as plt
-import warnings
 from ipywidgets import interact
 from ipywidgets import widgets, Checkbox, fixed
 from utils import riemann_tools
 from collections import namedtuple
-warnings.filterwarnings("ignore")
 
 conserved_variables = ('Depth', 'Momentum')
 primitive_variables = ('Depth', 'Velocity')
@@ -518,7 +516,8 @@ def make_demo_plot_function(h_l=3., h_r=1., u_l=0., u_r=0,
     def reval_rho_u(x):
         q = reval(x)
         rho = q[0]
-        u = q[1]/q[0]
+        with np.errstate(divide='ignore', invalid='ignore'):  # u is undefined (nan) where dry
+            u = q[1]/q[0]
         rho_u = np.vstack((rho,u))
         return rho_u
 
@@ -625,9 +624,9 @@ def macro_riemann_plot(which,context='notebook',figsize=(10,3)):
     in the Cauchy problem.
     """
     from IPython.display import HTML
-    from clawpack import pyclaw
+    from miniclaw import pyclaw
     from matplotlib import animation
-    from clawpack.riemann import shallow_roe_tracer_1D
+    from miniclaw.riemann import shallow_roe_tracer_1D
 
     depth = 0
     momentum = 1
