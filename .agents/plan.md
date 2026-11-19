@@ -33,6 +33,9 @@
 - Waiting for the user:
   - approval of the wording of the draft front page `index.md`;
   - Part VI's two external nbviewer notebooks (multidimensional acoustics and elasticity) are left out of the table of contents for now. **Ask the user later** whether to include them.
+- Sidebar: tried a flat table of contents with part pages instead of dropdowns; the user preferred the original nested parts (reverted).
+- `book.css` widens the text column on screens of 1024px and wider. If the theme changes its grid, regenerate the override from the theme's `.article-grid` rules.
+- To flag to the authors: the Part II description of FV_compare says "when used with PyClaw" (now miniclaw), and the Approximate_solvers chapter is itself titled "Part II. Approximate Riemann Solvers".
 - Next: convert a pilot chapter (Acoustics, compared with jbook2test) and settle the conversion script.
 
 Notes collected so far:

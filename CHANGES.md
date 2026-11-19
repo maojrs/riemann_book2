@@ -78,5 +78,9 @@ These make the code run on current Python, NumPy and IPython without changing an
   The notebooks are in `chapters/`, copied from master with their outputs removed (the build
   regenerates them). Figures and phase-plane HTML are in `figures/`, `riemann.bib` is now
   `references.bib`, and `LICENSE-CODE` and `LICENSE-TEXT.md` are copied unchanged.
+- `book.css`: a wider text column on large screens (each of the theme's six body columns up to
+  14ch instead of 10ch, i.e. about 84 instead of 60 characters). The same columns are applied to
+  the sidebar's own grid, so the sidebar and text never overlap (checked with screenshots at
+  1280, 1440, 1600 and 1920 px).
 - Not carried over: `make_html.py`, `make_pdf.py`, `make_html_bib.sh`, the Docker files, `html/`,
   `files_for_*`, `html_animations/`, `Index.ipynb`, `Index2.ipynb`, `Make_html_animations.ipynb`.

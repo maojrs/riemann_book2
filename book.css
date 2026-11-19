@@ -1,0 +1,20 @@
+/* Wider text column: the theme's grid (myst book-theme) with each of the six body columns
+   allowed up to 14ch instead of 10ch, on screens of 1024px and wider. The side columns (the
+   navigation sidebar, 9rem, and the page outline, 13rem) are kept at their full width, so
+   the text only takes the space that is left. From 1280px the sidebar is laid out on its
+   own copy of the grid (.xl:article-grid), so it must get the same columns as the text. */
+@media (min-width: 1024px) {
+  .article-grid {
+    grid-template-columns: [screen-start].25rem[screen-inset-start page-start]1rem[page-inset-start body-outset-start]1fr[body-start gutter-left-start]1rem[body-inset-start]minmax(8ch,14ch)[middle-start]minmax(8ch,14ch)[gutter-left-end]minmax(8ch,14ch) minmax(8ch,14ch)[gutter-right-start]minmax(8ch,14ch)[middle-end]minmax(8ch,14ch)[body-inset-end]1rem[body-end gutter-right-end]3rem[body-outset-end]13rem[page-inset-end]3rem[page-end]1fr[screen-inset-end].25rem[screen-end];
+  }
+}
+@media (min-width: 1280px) {
+  .article-grid, .xl\:article-grid {
+    grid-template-columns: [screen-start].25rem[screen-inset-start]1fr[page-start]3rem[page-inset-start]9rem[body-outset-start]3rem[body-start gutter-left-start]1rem[body-inset-start]minmax(8ch,14ch)[middle-start]minmax(8ch,14ch)[gutter-left-end]minmax(8ch,14ch) minmax(8ch,14ch)[gutter-right-start]minmax(8ch,14ch)[middle-end]minmax(8ch,14ch)[body-inset-end]1rem[body-end gutter-right-end]3rem[body-outset-end]13rem[page-inset-end]3rem[page-end]1fr[screen-inset-end].25rem[screen-end];
+  }
+}
+@media (min-width: 1536px) {
+  .article-grid, .xl\:article-grid {
+    grid-template-columns: [screen-start].5rem[screen-inset-start]1fr[page-start]3rem[page-inset-start]9rem[body-outset-start]3rem[body-start gutter-left-start]1rem[body-inset-start]minmax(8ch,14ch)[middle-start]minmax(8ch,14ch)[gutter-left-end]minmax(8ch,14ch) minmax(8ch,14ch)[gutter-right-start]minmax(8ch,14ch)[middle-end]minmax(8ch,14ch)[body-inset-end]1rem[body-end gutter-right-end]3rem[body-outset-end]13rem[page-inset-end]3rem[page-end]1fr[screen-inset-end].5rem[screen-end];
+  }
+}

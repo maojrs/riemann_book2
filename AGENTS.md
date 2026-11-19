@@ -22,6 +22,7 @@ riemann_book2/
 ├── README.md
 ├── CHANGES.md        # record of every change vs. the original book
 ├── myst.yml          # book config + table of contents (defines chapter order)
+├── book.css          # small style tweaks for the site (wider text column)
 ├── references.bib    # bibliography (from riemann.bib)
 ├── pyproject.toml    # makes the code folders installable (pip install -e .; Pyodide wheel)
 ├── chapters/         # all notebooks, book chapters and extras, original names, no numbers

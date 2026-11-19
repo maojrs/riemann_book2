@@ -58,3 +58,4 @@ site:
     logo_dark: figures/clawlogodark.jpg
     logo_text: Riemann Problems and Jupyter Solutions
     hide_myst_branding: true
+    style: book.css
