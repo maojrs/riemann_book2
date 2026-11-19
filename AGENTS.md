@@ -48,6 +48,7 @@ Work step by step: agree on each step with the user before implementing it, and 
    - Markup conversion is allowed. The wording must stay identical.
    - **The science must remain the same:** equations, statements, parameters and conclusions.
    - When in doubt, leave the text and flag it for the authors.
+   - Code cells in the chapters may be changed only if the change is small and the user approves it first.
 2. **Never modify the original scientific code (the exact solvers) without the user's approval.**
    - The numerical code of the original `exact_solvers/` modules is copied **verbatim**.
    - Changes are allowed only to fix bugs, old-Python issues or severe slowdowns, and each one must be proposed, explained and **approved before it is applied**.

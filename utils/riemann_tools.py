@@ -27,9 +27,10 @@ These are usually obtained from an exact or approximate Riemann solver.
 """
 
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib
 import copy
+
+# matplotlib is imported inside the plotting functions only, so that computing
+# Riemann solutions (for example in the browser) does not need to load it.
 
 
 
@@ -172,6 +173,7 @@ def plot_waves(states, s, riemann_eval, wave_types, t=0.1, ax=None,
         t_pointer: if True, plot a horizontal dashed line and a text label,
                 corresponding to the time.
     """
+    import matplotlib.pyplot as plt
     if wave_types is None:
         wave_types = ['contact']*len(s)
 
@@ -212,6 +214,30 @@ def plot_waves(states, s, riemann_eval, wave_types, t=0.1, ax=None,
     ax.set_ylim(0,tmax)
 
 
+def sample_riemann(s, riemann_eval, t, xmax, derived_variables=None):
+    """The Riemann solution at time t on [-xmax, xmax], as plotted by plot_riemann:
+    1000 points plus one between each pair of waves.  Returns x and q(x, t)."""
+    x = np.linspace(-xmax, xmax, 1000)
+    if t>0:
+        # Make sure we have a value of x between each pair of waves
+        # This is important e.g. for nearly-pressureless gas,
+        # in order to catch small regions
+        wavespeeds = []
+        for speed in s:
+            wavespeeds += convert_to_list(speed)
+
+        wavespeeds = np.array(wavespeeds)
+        xm = 0.5*(wavespeeds[1:]+wavespeeds[:-1])*t
+        iloc = np.searchsorted(x,xm)
+        x = np.insert(x, iloc, xm)
+
+    # Avoid dividing by zero
+    q = riemann_eval(x/(t+1e-10))
+    if derived_variables:
+        q = derived_variables(q)
+    return x, q
+
+
 def plot_riemann(states, s, riemann_eval, wave_types=None, t=0.1, ax=None,
                  color='multi', layout='horizontal', variable_names=None,
                  t_pointer=False, extra_axes=False, fill=(),
@@ -237,6 +263,8 @@ def plot_riemann(states, s, riemann_eval, wave_types=None, t=0.1, ax=None,
         fill: a list of integers; if i is in fill, then q[i] uses a
                 fill_between plot.
     """
+    import matplotlib
+    import matplotlib.pyplot as plt
     num_vars, num_states = states.shape
     pstates = states.copy()
     if derived_variables:
@@ -326,24 +354,7 @@ def plot_riemann(states, s, riemann_eval, wave_types=None, t=0.1, ax=None,
         elif layout == 'vertical':
             ax[i+1].set_ylabel(variable_names[i])
 
-    x = np.linspace(-xmax, xmax, 1000)
-    if t>0:
-        # Make sure we have a value of x between each pair of waves
-        # This is important e.g. for nearly-pressureless gas,
-        # in order to catch small regions
-        wavespeeds = []
-        for speed in s:
-            wavespeeds += convert_to_list(speed)
-
-        wavespeeds = np.array(wavespeeds)
-        xm = 0.5*(wavespeeds[1:]+wavespeeds[:-1])*t
-        iloc = np.searchsorted(x,xm)
-        x = np.insert(x, iloc, xm)
-
-    # Avoid dividing by zero
-    q = riemann_eval(x/(t+1e-10))
-    if derived_variables:
-        q = derived_variables(q)
+    x, q = sample_riemann(s, riemann_eval, t, xmax, derived_variables)
 
     for i in range(num_vars):
         if color == 'multi':
@@ -378,6 +389,7 @@ def make_plot_function(states_list, speeds_list, riemann_eval_list,
         contact_index: see docstring for plot_characteristics
         show_time_legend: show time in legend
     """
+    import matplotlib.pyplot as plt
     if type(states_list) is not list:
         states_list = [states_list]
         speeds_list = [speeds_list]
@@ -510,6 +522,7 @@ def plot_riemann_trajectories(x_traj, t_traj, s, wave_types=None, color='b',
 
     Only useful for systems where one component is velocity.
     """
+    import matplotlib.pyplot as plt
     colors = {'shock': 'r', 'raref': 'b', 'contact': 'k'}
     if wave_types is None:
         wave_types = ['contact']*len(s)
@@ -548,6 +561,50 @@ def plot_riemann_trajectories(x_traj, t_traj, s, wave_types=None, color='b',
     ax.set_title('Waves and particle trajectories in x-t plane')
     return ax
 
+def characteristic_speeds(char_speed, q, xi, aux=None, contact_speed=0):
+    """Characteristic speed char_speed(q, xi[, aux]) at every point (q[:, j], xi[j]).
+
+    With aux = (aux_l, aux_r), aux_l is used where xi <= contact_speed and aux_r elsewhere.
+    The speed is computed in one call for all points.  A char_speed written for a single
+    point (for example one that tests `if h > 0`) raises an error when given arrays, and
+    is then called point by point.
+    """
+    try:
+        if aux:
+            aux_l, aux_r = (np.asarray(a, dtype=float)[..., None] for a in aux)
+            c = char_speed(q, xi, np.where(xi <= contact_speed, aux_l, aux_r))
+        else:
+            c = char_speed(q, xi)
+        c = np.asarray(c, dtype=float)
+        return np.broadcast_to(c.reshape(-1) if c.size == len(xi) else c, xi.shape)
+    except (ValueError, TypeError):
+        c = np.zeros(len(xi))
+        for j in range(len(xi)):
+            if aux:
+                point_aux = (xi[j] <= contact_speed)*aux[0] + (xi[j] > contact_speed)*aux[1]
+                c[j] = np.squeeze(char_speed(q[:, j], xi[j], point_aux))
+            else:
+                c[j] = np.squeeze(char_speed(q[:, j], xi[j]))
+        return c
+
+
+def integrate_characteristics(reval, char_speed, x0, t, aux=None, contact_speed=0):
+    """Follow characteristics dx/dt = char_speed(q(x/t), x/t) with Euler's method.
+
+    x0: starting positions; t: times, one row per characteristic (or one row for all).
+    Returns the positions, one characteristic per row.
+    """
+    t = np.broadcast_to(np.atleast_2d(t), (len(x0), np.shape(t)[-1]))
+    dt = t[:, 1] - t[:, 0]
+    chars = np.zeros(t.shape)
+    chars[:, 0] = x0
+    for i in range(1, t.shape[1]):
+        xi = chars[:, i-1]/np.maximum(t[:, i-1], dt)
+        q = np.array(reval(xi))
+        chars[:, i] = chars[:, i-1] + dt*characteristic_speeds(char_speed, q, xi, aux, contact_speed)
+    return chars
+
+
 def plot_characteristics(reval, char_speed, aux=None, axes=None,
                          extra_lines=None, speeds=None, contact_index=None):
     """
@@ -573,24 +630,8 @@ def plot_characteristics(reval, char_speed, aux=None, axes=None,
     dx = xmax-xmin
     x = np.linspace(xmin-dx, xmax+dx, 60)
     t = np.linspace(tmin,tmax,500)
-    chars = np.zeros((len(x),len(t)))  # x-t coordinates of characteristics, one curve per row
-    chars[:,0] = x
-    dt = t[1]-t[0]
-    c = np.zeros(len(x))
-    if contact_index is None:
-        contact_speed = 0
-    else:
-        contact_speed = speeds[contact_index]
-    for i in range(1,len(t)):
-        xi = chars[:,i-1]/max(t[i-1],dt)
-        q = np.array(reval(xi))
-        for j in range(len(x)):
-            if aux:
-                c[j] = np.squeeze(char_speed(q[:,j],xi[j],(xi[j]<=contact_speed)*aux[0]+(xi[j]>contact_speed)*aux[1]))
-            else:
-                c[j] = np.squeeze(char_speed(q[:,j],xi[j]))
-        chars[:,i] = chars[:,i-1] + dt*c  # Euler's method
-
+    contact_speed = 0 if contact_index is None else speeds[contact_index]
+    chars = integrate_characteristics(reval, char_speed, x, t, aux, contact_speed)
     for j in range(len(x)):
         axes.plot(chars[j,:],t,'-k',linewidth=0.2,zorder=0)
 
@@ -599,21 +640,11 @@ def plot_characteristics(reval, char_speed, aux=None, axes=None,
             begin, end = endpoints
             x = np.linspace(begin[0], end[0], 10)
             tstart = np.linspace(begin[1], end[1], 10)
+            t = np.array([np.linspace(tt, tmax, 200) for tt in tstart])
             for epsilon in (-1.e-3, 1.e-3):
-                for xx, tt in zip(x+epsilon,tstart):
-                    t = np.linspace(tt,tmax,200)
-                    dt = t[1]-t[0]
-                    char = np.zeros(len(t))
-                    char[0] = xx
-                    for i in range(1,len(t)):
-                        xi = char[i-1]/max(t[i-1],dt)
-                        q = np.array(reval(np.array([xi])))
-                        if aux:
-                            c = char_speed(q,xi,(xi<=0)*aux[0]+(xi>0)*aux[1])
-                        else:
-                            c = char_speed(q,xi)
-                        char[i] = char[i-1] + dt*c
-                    axes.plot(char,t,'-k',linewidth=0.2,zorder=0)
+                chars = integrate_characteristics(reval, char_speed, x+epsilon, t, aux, contact_speed=0)
+                for char, tt in zip(chars, t):
+                    axes.plot(char,tt,'-k',linewidth=0.2,zorder=0)
 
     axes.axis((xmin, xmax, tmin, tmax))
 

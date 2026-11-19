@@ -30,7 +30,7 @@ Rule 1 in AGENTS.md applies: only markup changes, never the wording. Acoustics i
   - The HTML files carry a small added script that scales the mpld3 figure to the page width.
 - **`%matplotlib` and `%config` magics** are removed. Import cells that only repeat names imported earlier are removed.
 - **`interact` cells** stay as they are. On the static site their figure is shown, and the widget placeholder is hidden by `book.css`.
-- **Code** may not be changed to alter what a chapter computes. Fixing warnings in the plotting code of `*_demos.py` is fine, as long as the figure is unchanged; register it in `CHANGES.md`.
+- **Code** in a chapter may be changed only if the change is small and the user approves it first; it may never alter what the chapter computes. Fixing warnings in the plotting code of `*_demos.py` is fine, as long as the figure is unchanged; register it in `CHANGES.md`.
 
 ## No horizontal scroll bars
 Nothing on a page may scroll sideways at any width. That covers the whole page, equations, code, outputs and figures.

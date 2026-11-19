@@ -59,6 +59,15 @@ These make the code run on current Python, NumPy and IPython without changing an
 - Removed unused or broken `riemann_tools` functions: `set_interact`, `plot_phase`, `plot_phase_3d`
   (it used a removed Matplotlib API), `JSAnimate_plot_riemann`, `waves_from_smoothness`, and the
   Clawpack doctest. `riemann_tools` now imports IPython only for `riemann_solution(verbose=True)`.
+- `riemann_tools` imports matplotlib only inside the plotting functions, so computing a Riemann
+  solution (e.g. in the browser) does not load it. Test: `test_computing_a_solution_does_not_load_matplotlib`.
+- `riemann_tools.plot_characteristics` calls the speed function once per time step for all
+  characteristics, instead of once per point (computing them is 5–12 times faster). Speed functions that only
+  accept one point (e.g. `shallow_water.lambda_1`) are still called point by point. The
+  integration is now `integrate_characteristics` and `characteristic_speeds`. Same
+  characteristics: `test_vectorized_characteristics_match_the_point_by_point_loop`, `test_extra_lines_match_the_point_by_point_loop`.
+- `riemann_tools.sample_riemann` (new) holds the sampling of the solution at time t, split out
+  of `plot_riemann` unchanged, so interactive figures can reuse it. Test: `test_sample_riemann_puts_a_point_between_each_pair_of_waves`.
 
 ## Project infrastructure
 
@@ -97,6 +106,8 @@ These make the code run on current Python, NumPy and IPython without changing an
     - notebook magics and repeated import cells are removed.
 - Chapters not yet converted have a temporary first cell `execute: skip: true`, so the build
   (`--execute`) does not run them. Each is removed when its chapter is converted.
+- `.gitattributes` marks `figures/phase_plane/*.html` as generated (and vendored) and `AGENTS.md` and `.agents/*.md`
+  as documentation, so GitHub leaves them out of the repository's language statistics.
 - `figures/phase_plane/*.html`: a short script appended to each file scales the figure to the
   page width.
 - `book.css` also prevents horizontal scroll bars:

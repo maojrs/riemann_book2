@@ -173,3 +173,133 @@ def test_characteristics_with_array_valued_speed():
     ax.axis((-1, 1, 0, 1))
     riemann_tools.plot_characteristics(reval, traffic_LWR.c, axes=ax)
     assert len(ax.get_lines()) == 60
+
+
+# --- Vectorized characteristics ---------------------------------------------------------
+def characteristics_point_by_point(reval, char_speed, aux, x, t, contact_speed=0):
+    """The characteristics as plot_characteristics computed them before it was vectorized:
+    Euler's method, calling char_speed once per point."""
+    chars = np.zeros((len(x), len(t)))
+    chars[:, 0] = x
+    dt = t[1] - t[0]
+    c = np.zeros(len(x))
+    for i in range(1, len(t)):
+        xi = chars[:, i-1] / max(t[i-1], dt)
+        q = np.array(reval(xi))
+        for j in range(len(x)):
+            if aux:
+                point_aux = (xi[j] <= contact_speed)*aux[0] + (xi[j] > contact_speed)*aux[1]
+                c[j] = np.squeeze(char_speed(q[:, j], xi[j], point_aux))
+            else:
+                c[j] = np.squeeze(char_speed(q[:, j], xi[j]))
+        chars[:, i] = chars[:, i-1] + dt*c
+    return chars
+
+
+def single_point_speed(q, xi):
+    """A speed function that only accepts one point, like shallow_water.lambda_1."""
+    if q[0] > 0.5:
+        return 2.0
+    return -1.0
+
+
+def book_characteristic_problems():
+    """(name, reval, char_speed, aux, contact_index, speeds): the speed functions the
+    book plots characteristics for, from exact_solvers and from the chapters."""
+    from exact_solvers import (euler, euler_tammann, nonlinear_elasticity, shallow_water,
+                               traffic_variable_speed)
+    problems = []
+    states, speeds, reval = acoustics.exact_riemann_solution(np.array([5., 0.]), np.array([1., 0.]), [1., 4.])
+    aux = (np.array([1., 4.]), np.array([1., 4.]))
+    problems += [('acoustics lambda1', reval, acoustics.lambda1, aux, None, speeds),
+                 ('acoustics lambda2', reval, acoustics.lambda2, aux, None, speeds)]
+    problems.append(('burgers', burgers.exact_riemann_solution(1., 2.)[2], burgers.speed, None, None, None))
+    problems.append(('traffic LWR', traffic_LWR.riemann_traffic_exact(0.2, 0.7)[2], traffic_LWR.c, None, None, None))
+    reval = euler.exact_riemann_solution(np.array([3., 0., 3.]), np.array([1., 0., 1.]))[2]
+    problems += [('euler lambda%d' % k, reval, f, None, None, None)
+                 for k, f in enumerate([euler.lambda1, euler.lambda2, euler.lambda3], 1)]
+    auxl, auxr = [1.4, 0.], [7., 100.]
+    states, speeds, reval, wave_types, _ = euler_tammann.exact_riemann_solution(
+        np.array([1., 0., 1e4]), np.array([1., 0., 1.]), auxl, auxr)
+    problems.append(('euler-tammann lambda1', reval, euler_tammann.lambda1,
+                     (np.array(auxl), np.array(auxr)), 1, speeds))
+    # Defined in the chapters Traffic_variable_speed and Nonlinear_elasticity
+    reval = traffic_variable_speed.exact_riemann_solution(0.4, 0.6, 1., 0.7)[2]
+    problems.append(('traffic variable speed', reval, lambda rho, xi, v: v*(1.-2*rho), (1., 0.7), None, None))
+    reval = nonlinear_elasticity.exact_riemann_solution(
+        np.array([0.1, 0.]), np.array([0., 0.]), [1., 5., 1.], [1., 5., 1.])[2]
+    problems.append(('nonlinear elasticity', reval,
+                     lambda q, xi, aux: -np.sqrt(nonlinear_elasticity.dsigma(q[0], aux[1], aux[2])/aux[0]),
+                     (np.array([1., 5., 1.]), np.array([1., 5., 1.])), None, None))
+    # Speed functions that only accept one point
+    reval = shallow_water.exact_riemann_solution(np.array([3., 0.]), np.array([1., 0.]))[2]
+    problems.append(('shallow water lambda_1', reval, shallow_water.lambda_1, None, None, None))
+    problems.append(('single point', burgers.exact_riemann_solution(0., 1.)[2], single_point_speed, None, None, None))
+    return problems
+
+
+@pytest.mark.parametrize('name, reval, char_speed, aux, contact_index, speeds', book_characteristic_problems(),
+                         ids=lambda p: p if isinstance(p, str) else '')
+def test_vectorized_characteristics_match_the_point_by_point_loop(name, reval, char_speed, aux,
+                                                                 contact_index, speeds):
+    fig, ax = plt.subplots()
+    ax.axis((-1, 1, 0, 1))
+    riemann_tools.plot_characteristics(reval, char_speed, aux, axes=ax, speeds=speeds,
+                                       contact_index=contact_index)
+    x = np.linspace(-3, 3, 60)
+    t = np.linspace(0, 1, 500)
+    contact_speed = 0 if contact_index is None else speeds[contact_index]
+    expected = characteristics_point_by_point(reval, char_speed, aux, x, t, contact_speed)
+    plotted = np.array([line.get_xdata() for line in ax.get_lines()])
+    np.testing.assert_allclose(plotted, expected, rtol=0, atol=1e-12)
+
+
+def test_extra_lines_match_the_point_by_point_loop():
+    """Characteristics started along a line (Traffic_variable_speed: the interface x = 0)."""
+    from exact_solvers import traffic_variable_speed
+    reval = traffic_variable_speed.exact_riemann_solution(0.4, 0.6, 1., 0.7)[2]
+    c = lambda rho, xi, v: v*(1.-2*rho)
+    fig, ax = plt.subplots()
+    ax.axis((-1, 1, 0, 1))
+    riemann_tools.plot_characteristics(reval, c, (1., 0.7), axes=ax, extra_lines=[[[0, 0], [0, 1]]])
+    lines = ax.get_lines()[60:]
+    assert len(lines) == 20
+    starts = [(x + eps, tt) for eps in (-1e-3, 1e-3) for x, tt in zip(np.zeros(10), np.linspace(0, 1, 10))]
+    for line, (x0, t0) in zip(lines, starts):
+        t = np.linspace(t0, 1, 200)
+        expected = characteristics_point_by_point(reval, c, (1., 0.7), np.array([x0]), t)[0]
+        np.testing.assert_allclose(line.get_xdata(), expected, rtol=0, atol=1e-12)
+        np.testing.assert_array_equal(line.get_ydata(), t)
+
+
+def test_characteristic_speeds_in_one_call_or_point_by_point():
+    xi = np.linspace(-1, 1, 7)
+    q = np.array([np.linspace(0, 1, 7)])
+    np.testing.assert_array_equal(riemann_tools.characteristic_speeds(burgers.speed, q, xi), q[0])
+    np.testing.assert_array_equal(riemann_tools.characteristic_speeds(single_point_speed, q, xi),
+                                  np.where(q[0] > 0.5, 2.0, -1.0))
+    # Constant speed with left and right aux values, split at the contact speed
+    lam = lambda q, xi, aux: aux[0]
+    speeds = riemann_tools.characteristic_speeds(lam, q, xi, aux=([1.], [3.]), contact_speed=0.2)
+    np.testing.assert_array_equal(speeds, np.where(xi <= 0.2, 1., 3.))
+
+
+# --- Sampling and imports ---------------------------------------------------------------
+def test_sample_riemann_puts_a_point_between_each_pair_of_waves():
+    """Acoustics: waves at x = -c t and c t; the middle state must be sampled."""
+    states, speeds, reval = acoustics.exact_riemann_solution(np.array([5., 0.]), np.array([1., 0.]), [1., 4.])
+    t = 0.5
+    x, q = riemann_tools.sample_riemann(speeds, lambda xi: np.array(reval(xi)), t, xmax=10)
+    assert len(x) == 1001 and np.all(np.diff(x) >= 0)
+    assert 0.0 in x                              # midway between -c t = -1 and c t = 1
+    np.testing.assert_allclose(q[:, x == 0.0].ravel(), states[:, 1])
+    np.testing.assert_allclose(q, np.array(reval(x/(t + 1e-10))))
+
+
+def test_computing_a_solution_does_not_load_matplotlib():
+    """So the browser (Pyodide) can compute Riemann solutions without loading matplotlib."""
+    import subprocess
+    import sys
+    code = ("import sys; from exact_solvers import acoustics; from utils import riemann_tools; "
+            "assert 'matplotlib' not in sys.modules")
+    subprocess.run([sys.executable, '-c', code], check=True)
