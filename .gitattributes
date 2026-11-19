@@ -1,0 +1,5 @@
+# The phase-plane figures are mpld3-generated HTML: leave them out of GitHub's language statistics.
+figures/**/*.html linguist-generated
+# Agent notes are documentation, not book code.
+AGENTS.md linguist-documentation
+.agents/**/*.md linguist-documentation
