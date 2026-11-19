@@ -62,6 +62,12 @@ def test_fv_compare_shocktube_classic(riemann_solver):
 
 
 @pytest.mark.parametrize("riemann_solver", ['Roe', 'HLL'])
+def test_fv_compare_shocktube_sharpclaw(riemann_solver):
+    assert_matches_reference(f"fv_compare_shocktube_{riemann_solver}_sharpclaw",
+                             book_setups.shocktube(riemann_solver, 'sharpclaw'))
+
+
+@pytest.mark.parametrize("riemann_solver", ['Roe', 'HLL'])
 def test_fv_compare_blastwave(riemann_solver):
     assert_matches_reference(f"fv_compare_blastwave_{riemann_solver}",
                              book_setups.blastwave(riemann_solver))
@@ -75,6 +81,24 @@ def test_python_euler_solvers_match_clawpack_pointwise(name, rs):
     out = rs(ref[key + 'q_l'], ref[key + 'q_r'], None, None, {'gamma': 1.4, 'gamma1': 0.4, 'efix': False})
     for field, value in zip(('wave', 's', 'amdq', 'apdq'), out):
         np.testing.assert_allclose(value, ref[key + field], rtol=1e-13, atol=1e-13)
+
+
+@pytest.mark.parametrize("rs", ['traffic_vc_1D', 'traffic_vc_fwave_1D'])
+@pytest.mark.parametrize("rho_l, rho_r, v_l, v_r", [(0.7, 0.5, 1.0, 1.5), (0.7, 0.2, 1.0, 1.0)])
+def test_traffic_variable_speed(rho_l, rho_r, v_l, v_r, rs):
+    assert_matches_reference(f"traffic_variable_speed_{rho_l}_{rho_r}_{v_l}_{v_r}_{rs}",
+                             book_setups.traffic_variable_speed(rho_l, rho_r, v_l, v_r,
+                                                                getattr(riemann, rs)))
+
+
+def test_nonlinear_elasticity_solver_matches_clawpack_pointwise():
+    ref = load('riemann_py')
+    key = 'nonlinear_elasticity__'
+    out = riemann.nonlinear_elasticity_1D_py.nonlinear_elasticity_1D(
+        ref[key + 'q_l'], ref[key + 'q_r'], ref[key + 'aux_l'], ref[key + 'aux_r'],
+        {'stress_relation': 'quadratic'})
+    for field, value in zip(('wave', 's', 'amdq', 'apdq'), out):
+        np.testing.assert_allclose(value, ref[key + field], rtol=1e-14, atol=1e-14)
 
 
 def test_python_burgers_solver_matches_clawpack_pointwise():

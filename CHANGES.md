@@ -48,10 +48,11 @@ These make the code run on current Python, NumPy and IPython without changing an
 - `tests/reference/`: results of the book's PyClaw runs with real Clawpack 5.14, made by
   `generate_reference.py` (needs Clawpack, not a book dependency), to test miniclaw against.
   The runs are defined once in `book_setups.py`, for both Clawpack and miniclaw.
-- `miniclaw/` (new, in progress): pure-Python replacement for the PyClaw features the book
-  uses, with PyClaw's names (`from miniclaw import pyclaw, riemann`). It follows PyClaw's
+- `miniclaw/` (new): pure-Python replacement for the PyClaw features the book uses
+  (classic and SharpClaw solvers and all its Riemann solvers), with PyClaw's names (`from miniclaw import pyclaw, riemann`). It follows PyClaw's
   algorithm and step-size rule, and reproduces the book's Burgers, acoustics, shallow-water,
-  Euler (FV_compare) and Kitchen-sink runs exactly. Tests: `test_miniclaw_*.py`.
+  Euler (FV_compare, including SharpClaw/WENO5), Kitchen-sink and variable-speed traffic runs
+  exactly, and matches Clawpack's nonlinear elasticity f-wave solver pointwise. Tests: `test_miniclaw_*.py`.
   - `shallow_roe_tracer_1D`: Clawpack's Fortran version adds the tracer fluctuation through a stale
     loop index and an uninitialized `apdq`. miniclaw splits the tracer wave by the sign of its
     speed, as intended. It is only used by `shallow_water.macro_riemann_plot`, which no chapter calls.

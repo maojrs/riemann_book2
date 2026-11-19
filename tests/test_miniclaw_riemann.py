@@ -245,3 +245,98 @@ def test_euler_hll_middle_state_is_physical_for_strong_rarefaction():
     wave, _, _, _ = riemann.euler_1D_py.euler_hll_1D(q_l[:, None], q_r[:, None], None, None, EULER)
     rho, mom, E = q_l + wave[:, 0, 0]
     assert rho > 0 and (GAMMA - 1) * (E - 0.5 * mom**2 / rho) > 0
+
+
+# --- Variable-speed traffic -----------------------------------------------------------
+def traffic_inputs(q_l, q_r, v_l, v_r):
+    as_row = lambda a: np.atleast_1d(np.asarray(a, dtype=float))[np.newaxis, :]
+    return as_row(q_l), as_row(q_r), as_row(v_l), as_row(v_r)
+
+
+def random_traffic_states(n, seed):
+    rng = np.random.default_rng(seed)
+    return rng.uniform(0, 1, n), rng.uniform(0, 1, n), rng.uniform(0.5, 2, n), rng.uniform(0.5, 2, n)
+
+
+@pytest.mark.parametrize("rs", [riemann.traffic_vc_1D, riemann.traffic_vc_fwave_1D])
+def test_traffic_fluctuations_sum_to_flux_difference(rs):
+    q_l, q_r, v_l, v_r = traffic_inputs(*random_traffic_states(300, seed=9))
+    _, _, amdq, apdq = rs(q_l, q_r, v_l, v_r, {})
+    np.testing.assert_allclose(amdq + apdq, v_r * q_r * (1 - q_r) - v_l * q_l * (1 - q_l), atol=1e-14)
+
+
+def test_traffic_godunov_flux_is_the_exact_flux_at_the_interface():
+    """f0 = f_l + A-dQ must be the flux at x = 0 of the exact Riemann solution."""
+    from exact_solvers import traffic_variable_speed
+    cases = [(0.4, 0.9, 1.0, 1.5), (0.1, 0.3, 1.0, 1.5), (0.3, 0.2, 1.0, 0.5), (0.7, 0.6, 0.5, 1.0),
+             (0.9, 0.1, 1.0, 0.8), (0.9, 0.1, 0.8, 1.0), (0.9, 0.6, 1.0, 1.0), (0.4, 0.1, 1.0, 1.0)]
+    cases += list(zip(*random_traffic_states(100, seed=10)))
+    for q_l, q_r, v_l, v_r in cases:
+        _, _, amdq, _ = riemann.traffic_vc_1D(*traffic_inputs(q_l, q_r, v_l, v_r), {})
+        f0 = v_l * q_l * (1 - q_l) + amdq[0, 0]
+        _, _, reval, _ = traffic_variable_speed.exact_riemann_solution(q_l, q_r, v_l, v_r)
+        q_0 = reval(np.array([-1e-12]))[0, 0]
+        assert f0 == pytest.approx(v_l * q_0 * (1 - q_0), abs=1e-12), (q_l, q_r, v_l, v_r)
+
+
+def test_traffic_fwave_splits_by_characteristic_direction():
+    # All characteristics left-going: everything to A-dQ.
+    q_l, q_r, v_l, v_r = traffic_inputs([0.8], [0.9], [1.0], [1.0])
+    _, _, amdq, apdq = riemann.traffic_vc_fwave_1D(q_l, q_r, v_l, v_r, {})
+    assert apdq[0, 0] == 0.0 and amdq[0, 0] == pytest.approx(0.09 - 0.16)
+    # Transonic rarefaction: split at the maximum flux min(v_l, v_r)/4.
+    q_l, q_r, v_l, v_r = traffic_inputs([0.9], [0.1], [1.0], [0.8])
+    _, _, amdq, apdq = riemann.traffic_vc_fwave_1D(q_l, q_r, v_l, v_r, {})
+    assert amdq[0, 0] == pytest.approx(0.2 - 0.09)
+    assert apdq[0, 0] == pytest.approx(0.8 * 0.09 - 0.2)
+
+
+# --- Nonlinear elasticity (f-wave) -----------------------------------------------------
+ELASTICITY_SOLVER = riemann.nonlinear_elasticity_1D_py.nonlinear_elasticity_1D
+QUADRATIC = {'stress_relation': 'quadratic'}
+
+
+def elasticity_flux(q, aux, problem_data):
+    """f(q, x) = (-u, -sigma(eps, x))."""
+    from miniclaw.riemann.elasticity import sigma
+    return np.array([-q[1] / aux[0], -sigma(q, aux, problem_data)])
+
+
+@pytest.mark.parametrize("problem_data, aux_l, aux_r", [
+    (QUADRATIC, (1.0, 5.0, 1.0), (1.0, 2.0, 1.0)),       # the chapter's materials
+    (QUADRATIC, (2.0, 1.0, 0.5), (1.0, 3.0, 2.0)),
+    ({}, (1.0, 2.0), (3.0, 0.5)),                        # default exponential stress law
+])
+def test_elasticity_fwaves_sum_to_flux_jump(problem_data, aux_l, aux_r):
+    rng = np.random.default_rng(11)
+    n = 50
+    q_l = np.array([rng.uniform(0, 0.5, n), rng.uniform(-1, 1, n)])
+    q_r = np.array([rng.uniform(0, 0.5, n), rng.uniform(-1, 1, n)])
+    aux_l = np.tile(np.array(aux_l)[:, None], n)
+    aux_r = np.tile(np.array(aux_r)[:, None], n)
+    fwave, s, amdq, apdq = ELASTICITY_SOLVER(q_l, q_r, aux_l, aux_r, problem_data)
+    jump = elasticity_flux(q_r, aux_r, problem_data) - elasticity_flux(q_l, aux_l, problem_data)
+    np.testing.assert_allclose(fwave.sum(axis=1), jump, atol=1e-13)
+    np.testing.assert_allclose(amdq + apdq, jump, atol=1e-13)
+    assert np.all(s[0] < 0) and np.all(s[1] > 0)
+
+
+def test_elasticity_fwave_solution_converges_to_exact_for_small_jumps():
+    """The linearized f-wave states approach the exact middle states at second order.
+    (Same material on both sides: with different materials the stress jumps at x = 0
+    even when q_l = q_r, so the Riemann problem does not become small.)"""
+    from exact_solvers import nonlinear_elasticity
+    from utils import riemann_tools
+    aux_l = aux_r = np.array([1.0, 5.0, 1.0])
+    q_l = np.array([0.2, 0.0])
+    errors = []
+    for delta in (0.1, 0.05, 0.025):
+        q_r = q_l + np.array([delta, -delta])
+        fw_states, _, _ = riemann_tools.riemann_solution(ELASTICITY_SOLVER, q_l, q_r, aux_l, aux_r,
+                                                         problem_data=QUADRATIC,
+                                                         stationary_wave=True, fwave=True)
+        exact_states, *_ = nonlinear_elasticity.exact_riemann_solution(q_l, q_r, aux_l, aux_r)
+        np.testing.assert_allclose(fw_states[:, [0, -1]], exact_states[:, [0, -1]])
+        errors.append(np.abs(fw_states[:, 1:3] - exact_states[:, 1:3]).max())
+    rates = np.log2(np.array(errors[:-1]) / errors[1:])
+    assert np.all(rates > 1.8), rates
