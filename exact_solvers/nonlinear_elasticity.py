@@ -64,7 +64,7 @@ def exact_riemann_solution(q_l,q_r,aux_l,aux_r,phase_plane_curves=False):
     # Define the integral curves and hugoniot loci (u as a function of eps)
     integral_curve_1   = lambda eps: u_l + 1./(3*K2_l*np.sqrt(rho_l))*( dsigma(eps,K1_l,K2_l)**1.5 - dsigma(eps_l,K1_l,K2_l)**1.5 )
     integral_curve_2   = lambda eps: u_r - 1./(3*K2_r*np.sqrt(rho_r))*( dsigma(eps,K1_r,K2_r)**1.5 - dsigma(eps_r,K1_r,K2_r)**1.5 )
-    hugoniot_locus_1   = lambda eps: u_l - np.sqrt((sigma(eps,K1_l,K2_l)-sigma_l)*(eps-eps_l)/rho_l)
+    hugoniot_locus_1   = lambda eps: u_l + np.sqrt((sigma(eps,K1_l,K2_l)-sigma_l)*(eps-eps_l)/rho_l)
     hugoniot_locus_2   = lambda eps: u_r - np.sqrt((sigma(eps,K1_r,K2_r)-sigma_r)*(eps-eps_r)/rho_r)
 
     # Check whether the 1-wave is a shock or rarefaction
@@ -107,7 +107,7 @@ def exact_riemann_solution(q_l,q_r,aux_l,aux_r,phase_plane_curves=False):
     # Find shock and rarefaction speeds
     if eps_star_l > eps_l:  # 1-Shock
         wave_types[0] = 'shock'
-        ws[0] = np.sqrt((sigma(eps_star_l,K1_l,K2_l)-sigma_l)/(rho_l*(eps_star_l-eps_l)))
+        ws[0] = -np.sqrt((sigma(eps_star_l,K1_l,K2_l)-sigma_l)/(rho_l*(eps_star_l-eps_l)))
         ws[1] = ws[0]
     else:  # 1-Rarefaction
         wave_types[0] = 'raref'
@@ -193,7 +193,7 @@ def phase_plane_plot(q_l, q_r, aux_l, aux_r, ax=None):
 
     integral_curve_1   = lambda eps: u_l + 1./(3*K2_l*np.sqrt(rho_l))*( dsigma(eps,K1_l,K2_l)**1.5 - dsigma(eps_l,K1_l,K2_l)**1.5 )
     integral_curve_2   = lambda eps: u_r - 1./(3*K2_r*np.sqrt(rho_r))*( dsigma(eps,K1_r,K2_r)**1.5 - dsigma(eps_r,K1_r,K2_r)**1.5 )
-    hugoniot_locus_1   = lambda eps: u_l - np.sqrt((sigma(eps,K1_l,K2_l)-sigma_l)*(eps-eps_l)/rho_l)
+    hugoniot_locus_1   = lambda eps: u_l + np.sqrt((sigma(eps,K1_l,K2_l)-sigma_l)*(eps-eps_l)/rho_l)
     hugoniot_locus_2   = lambda eps: u_r - np.sqrt((sigma(eps,K1_r,K2_r)-sigma_r)*(eps-eps_r)/rho_r)
 
     # Solve Riemann problem

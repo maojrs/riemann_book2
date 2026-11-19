@@ -16,7 +16,7 @@ def pospart(x):
 
 def primitive_to_conservative(rho, u, p, gamma, pinf):
     mom = rho*u
-    E   = (p - gamma * pinf)/(gamma-1.) + 0.5*rho*u**2
+    E   = (p + gamma * pinf)/(gamma-1.) + 0.5*rho*u**2
     return rho, mom, E
 
 def conservative_to_primitive(rho, mom, E, gamma, pinf):

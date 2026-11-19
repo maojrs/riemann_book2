@@ -15,7 +15,7 @@ def exact_riemann_solution(q_l,q_r,v_l,v_r):
     c_l = c(q_l,v_l)
     c_r = c(q_r,v_r)
 
-    if f_r == f_l:
+    if f_r == f_l and not (q_l > 0.5 and q_r < 0.5):
         states = [q_l, q_r]
         speeds = [0]
         wave_types = ['contact']

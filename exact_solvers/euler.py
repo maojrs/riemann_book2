@@ -26,7 +26,7 @@ def conservative_to_primitive(rho, mom, E, gamma=1.4):
     return rho, u, p
 
 def cons_to_prim(q, gamma=1.4):
-    return conservative_to_primitive(*q,gamma=1.4)
+    return conservative_to_primitive(*q,gamma=gamma)
 
 def sound_speed(rho, p, gamma=1.4):
     return np.sqrt(gamma*p/pospart(rho))
@@ -80,8 +80,8 @@ def exact_riemann_solution(q_l, q_r, gamma=1.4, phase_plane_curves=False):
        If phase_plane_curves==True, then the appropriate Hugoniot Locus and/or
        integral curve is returned for the 1- and 3-waves.
     """
-    rho_l, u_l, p_l = conservative_to_primitive(*q_l)
-    rho_r, u_r, p_r = conservative_to_primitive(*q_r)
+    rho_l, u_l, p_l = conservative_to_primitive(*q_l, gamma=gamma)
+    rho_r, u_r, p_r = conservative_to_primitive(*q_r, gamma=gamma)
 
     # Compute left and right state sound speeds
     c_l = sound_speed(rho_l, p_l, gamma)
@@ -201,8 +201,8 @@ def exact_riemann_solution(q_l, q_r, gamma=1.4, phase_plane_curves=False):
         p3 = p_r*(rho3/pospart(rho_r))**gamma
         return rho3, u3, p3
 
-    q_l_star = np.squeeze(np.array(primitive_to_conservative(rho_l_star,u,p)))
-    q_r_star = np.squeeze(np.array(primitive_to_conservative(rho_r_star,u,p)))
+    q_l_star = np.squeeze(np.array(primitive_to_conservative(rho_l_star,u,p,gamma)))
+    q_r_star = np.squeeze(np.array(primitive_to_conservative(rho_r_star,u,p,gamma)))
 
     states = np.column_stack([q_l,q_l_star,q_r_star,q_r])
     speeds = [[], ws[2], []]
@@ -241,7 +241,7 @@ def exact_riemann_solution(q_l, q_r, gamma=1.4, phase_plane_curves=False):
                  + (xi>ws[2]   )*(xi<=ws[3])*p       \
                  + (xi>ws[3])*(xi<=ws[4])*rar3[2] \
                  + (xi>ws[4]                   )*p_r
-        return primitive_to_conservative(rho_out,u_out,p_out)
+        return primitive_to_conservative(rho_out,u_out,p_out,gamma)
 
     if phase_plane_curves:
         if wave_types[0] == 'raref':
@@ -272,11 +272,11 @@ def phase_plane_plot(left_state, right_state, gamma=1.4, ax=None, approx_states=
     if cons_inputs:
         q_left = left_state.copy()
         q_right = right_state.copy()
-        left_state = Primitive_State(*conservative_to_primitive(*q_left))
-        right_state = Primitive_State(*conservative_to_primitive(*q_right))
+        left_state = Primitive_State(*conservative_to_primitive(*q_left, gamma=gamma))
+        right_state = Primitive_State(*conservative_to_primitive(*q_right, gamma=gamma))
     else:
-        q_left  = primitive_to_conservative(*left_state)
-        q_right = primitive_to_conservative(*right_state)
+        q_left  = primitive_to_conservative(*left_state, gamma=gamma)
+        q_right = primitive_to_conservative(*right_state, gamma=gamma)
     # Solve Riemann problem
     ex_states, ex_speeds, reval, wave_types, ppc = \
                         exact_riemann_solution(q_left, q_right, gamma,

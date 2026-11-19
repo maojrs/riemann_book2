@@ -74,9 +74,6 @@ def nonconvex_solutions(f, q_left, q_right, xi_left=None, xi_right=None):
     qv = linspace(q_min, q_max, 1000)
     
      
-    xi = linspace(xi_left, xi_right, 1000)
-    q = qtilde(xi)
-    
     # The rest is just for plotting purposes:
     fv = f(qv)
     dfdq = diff(fv) / (qv[1] - qv[0])
@@ -91,6 +88,9 @@ def nonconvex_solutions(f, q_left, q_right, xi_left=None, xi_right=None):
         xi_left = min(0,dfdq_min) - 0.1*dfdq_range
     if xi_right is None: 
         xi_right = max(0,dfdq_max) + 0.1*dfdq_range
+
+    xi = linspace(xi_left, xi_right, 1000)
+    q = qtilde(xi)
         
     q_char = hstack((q_min, 0.5*(qv[:-1] + qv[1:]), q_max))
     
