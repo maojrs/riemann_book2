@@ -47,9 +47,13 @@ These make the code run on current Python, NumPy and IPython without changing an
 - `tests/`: scientific test suite (pytest). It is not part of the deployed book.
 - `tests/reference/`: results of the book's PyClaw runs with real Clawpack 5.14, made by
   `generate_reference.py` (needs Clawpack, not a book dependency), to test miniclaw against.
+  The runs are defined once in `book_setups.py`, for both Clawpack and miniclaw.
 - `miniclaw/` (new, in progress): pure-Python replacement for the PyClaw features the book
   uses, with PyClaw's names (`from miniclaw import pyclaw, riemann`). It follows PyClaw's
-  algorithm and step-size rule, and reproduces the book's Burgers and acoustics runs exactly.
-  Tests: `test_miniclaw_*.py`.
+  algorithm and step-size rule, and reproduces the book's Burgers, acoustics, shallow-water,
+  Euler (FV_compare) and Kitchen-sink runs exactly. Tests: `test_miniclaw_*.py`.
+  - `shallow_roe_tracer_1D`: Clawpack's Fortran version adds the tracer fluctuation through a stale
+    loop index and an uninitialized `apdq`. miniclaw splits the tracer wave by the sign of its
+    speed, as intended. It is only used by `shallow_water.macro_riemann_plot`, which no chapter calls.
 - Not carried over: `make_html.py`, `make_pdf.py`, `make_html_bib.sh`, the Docker files, `html/`,
   `files_for_*`.

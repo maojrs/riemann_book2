@@ -15,6 +15,7 @@ whose Courant number exceeds ``cfl_max`` is redone with a smaller dt.
 import numpy as np
 
 from miniclaw.limiters import tvd
+from miniclaw.riemann.solver_info import wave_sum
 
 
 class BC:
@@ -123,7 +124,7 @@ class ClawSolver1D:
             else:
                 coef = np.abs(s)
             weights = 0.5 * coef * (1.0 - dtdx * np.abs(s))           # (num_waves, interfaces)
-            F = np.einsum('wk,mwk->mk', weights, limited)              # correction fluxes
+            F = wave_sum(weights, limited)                             # correction fluxes
             q[:, g:g + num_cells] -= dtdx * (F[:, g:g + num_cells] - F[:, g - 1:g + num_cells - 1])
 
         state.q = q[:, g:g + num_cells]

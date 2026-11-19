@@ -14,6 +14,10 @@ from types import SimpleNamespace
 
 from miniclaw.riemann.acoustics import acoustics_1D
 from miniclaw.riemann.burgers import burgers_1D, burgers_1D_py
+from miniclaw.riemann.euler import euler_hll_1D, euler_roe_1D, euler_with_efix_1D
+from miniclaw.riemann.shallow_water import (shallow_hlle_1D, shallow_roe_tracer_1D,
+                                            shallow_roe_with_efix_1D)
 
 # Same access paths as clawpack.riemann, e.g. riemann.burgers_1D_py.burgers_1D
 burgers_1D_py = SimpleNamespace(burgers_1D=burgers_1D_py, num_eqn=1, num_waves=1)
+euler_1D_py = SimpleNamespace(euler_roe_1D=euler_roe_1D, euler_hll_1D=euler_hll_1D, num_eqn=3)
