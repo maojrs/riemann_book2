@@ -16,7 +16,10 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ["pytest"]
+dev = [
+    "jupyter-book>=2",
+    "pytest",
+]
 
 [tool.hatch.build.targets.wheel]
 packages = ["exact_solvers", "utils", "miniclaw"]

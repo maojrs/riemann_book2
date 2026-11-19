@@ -7,7 +7,9 @@ Every change compared with the original
 
 ## Text changes
 
-None so far.
+- New front page `index.md` (title, authors, SIAM edition, about this web edition, license),
+  replacing `Index.ipynb`/`Index2.ipynb`, whose chapter lists are now the book's navigation.
+  **Draft, pending the authors' approval.**
 
 ## Bug fixes in the solvers
 
@@ -71,5 +73,10 @@ These make the code run on current Python, NumPy and IPython without changing an
   - `shallow_roe_tracer_1D`: Clawpack's Fortran version adds the tracer fluctuation through a stale
     loop index and an uninitialized `apdq`. miniclaw splits the tracer wave by the sign of its
     speed, as intended. It is only used by `shallow_water.macro_riemann_plot`, which no chapter calls.
+- Book structure (Jupyter Book 2): `myst.yml` with the table of contents of `Index.ipynb` and
+  `Index2.ipynb` (Parts I–VI; Part VI's two external nbviewer notebooks left out for now).
+  The notebooks are in `chapters/`, copied from master with their outputs removed (the build
+  regenerates them). Figures and phase-plane HTML are in `figures/`, `riemann.bib` is now
+  `references.bib`, and `LICENSE-CODE` and `LICENSE-TEXT.md` are copied unchanged.
 - Not carried over: `make_html.py`, `make_pdf.py`, `make_html_bib.sh`, the Docker files, `html/`,
-  `files_for_*`.
+  `files_for_*`, `html_animations/`, `Index.ipynb`, `Index2.ipynb`, `Make_html_animations.ipynb`.

@@ -28,8 +28,18 @@
 - No Clawpack imports are left.
 - 285 tests in `tests/`, checking the science and agreement with the Clawpack reference results in `tests/reference/`.
 
-### Phase 2: next (not started)
+### Phase 2: in progress
+- Step 1, book skeleton: done. `chapters/` (22 notebooks, outputs stripped, sources unchanged), `figures/`, `references.bib`, `myst.yml`, draft front page `index.md`. Builds 23 pages with `uv run jupyter-book build --html`.
+- Waiting for the user:
+  - approval of the wording of the draft front page `index.md`;
+  - Part VI's two external nbviewer notebooks (multidimensional acoustics and elasticity) are left out of the table of contents for now. **Ask the user later** whether to include them.
+- Next: convert a pilot chapter (Acoustics, compared with jbook2test) and settle the conversion script.
+
 Notes collected so far:
+- First build warnings to fix during conversion:
+  - image paths (`./figures/...`) are relative to the old layout;
+  - the equation label `swa:hll_middle_state` is defined in both Shallow_water_approximate and Euler_approximate;
+  - cross-references to headings are missing in Shallow_water and Traffic_variable_speed.
 - Headless execution (nbclient) stalls on `interact` cells until the cell timeout. CI needs a per-cell timeout or static rendering for them.
 - The removed Matplotlib style `seaborn-talk` is used in Pressureless_flow and Kitchen_sink_problem.
 - Warnings in notebook code, previously hidden by a global filter in `shallow_water.py`:

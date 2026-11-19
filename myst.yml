@@ -1,0 +1,60 @@
+# Jupyter Book 2 (mystmd) configuration: https://mystmd.org/guide/frontmatter
+version: 1
+project:
+  title: Riemann Problems and Jupyter Solutions
+  subtitle: Theory and Approximate Solvers for Hyperbolic PDEs
+  authors:
+    - name: David I. Ketcheson
+    - name: Randall J. LeVeque
+    - name: Mauricio J. del Razo
+  license:
+    content: CC-BY-NC-ND-4.0
+    code: BSD-3-Clause
+  github: https://github.com/clawpack/riemann_book
+  bibliography:
+    - references.bib
+  # Explicit table of contents (from Index.ipynb and Index2.ipynb). Only the files listed here
+  # become pages; AGENTS.md, CHANGES.md and .agents/ are not part of the book.
+  toc:
+    - file: index.md
+    - file: chapters/Preface.ipynb
+    - title: "Part I: The Riemann problem and its solution"
+      children:
+        - file: chapters/Introduction.ipynb
+        - file: chapters/Advection.ipynb
+        - file: chapters/Acoustics.ipynb
+        - file: chapters/Burgers.ipynb
+        - file: chapters/Traffic_flow.ipynb
+        - file: chapters/Nonconvex_scalar.ipynb
+        - file: chapters/Shallow_water.ipynb
+        - file: chapters/Shallow_tracer.ipynb
+        - file: chapters/Euler.ipynb
+    - title: "Part II: Approximate solvers"
+      children:
+        - file: chapters/Approximate_solvers.ipynb
+        - file: chapters/Burgers_approximate.ipynb
+        - file: chapters/Shallow_water_approximate.ipynb
+        - file: chapters/Euler_approximate.ipynb
+        - file: chapters/FV_compare.ipynb
+    - title: "Part III: Riemann problems with spatially-varying flux"
+      children:
+        - file: chapters/Acoustics_heterogeneous.ipynb
+        - file: chapters/Traffic_variable_speed.ipynb
+        - file: chapters/Nonlinear_elasticity.ipynb
+        - file: chapters/Euler_Tammann.ipynb
+    - title: "Part IV: Source terms"
+      children:
+        - file: chapters/Traffic_with_ramps.ipynb
+    - title: "Part V: Non-classical problems"
+      children:
+        - file: chapters/Pressureless_flow.ipynb
+    - title: "Part VI: Multidimensional systems"
+      children:
+        - file: chapters/Kitchen_sink_problem.ipynb
+site:
+  template: book-theme
+  options:
+    logo: figures/clawlogo.jpg
+    logo_dark: figures/clawlogodark.jpg
+    logo_text: Riemann Problems and Jupyter Solutions
+    hide_myst_branding: true
