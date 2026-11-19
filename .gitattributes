@@ -2,4 +2,4 @@
 figures/**/*.html linguist-generated
 # Agent notes are documentation, not book code.
 AGENTS.md linguist-documentation
-.agents/**/*.md linguist-documentation
+.agents/*.md linguist-documentation
