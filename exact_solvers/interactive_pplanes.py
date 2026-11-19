@@ -72,6 +72,7 @@ def euler_phase_plane_plot():
             # This should not happen:
             if ier != 1:
                 print('Warning: fsolve did not converge.')
+        p_star = p_star[0]  # fsolve returns a 1-element array
         u_star = 0.5*(phi_l(p_star) + phi_r(p_star))
 
         # Set plot bounds
@@ -130,7 +131,7 @@ def euler_interactive_phase_plane(ql=(1.0, -3.0, 100.0),
     qr1_widget = widgets.FloatSlider(value=qr[0],min=0.01,max=100.0, description=r'$\rho_r$')
     qr2_widget = widgets.FloatSlider(value=qr[1],min=-15,max=15.0, description='$u_r$')
     qr3_widget = widgets.FloatSlider(value=qr[2],min=1,max=200.0, description='$p_r$')
-    gamm_widget = widgets.FloatSlider(value=gamma,min=0.01,max=10.0, description='$\gamma$')
+    gamm_widget = widgets.FloatSlider(value=gamma,min=0.01,max=10.0, description=r'$\gamma$')
     xmin_widget = widgets.BoundedFloatText(value=0.0000001, description='$p_{min}:$')
     xmax_widget = widgets.FloatText(value=200, description='$p_{max}:$')
     ymin_widget = widgets.FloatText(value=-15, description='$u_{min}:$')
@@ -139,7 +140,7 @@ def euler_interactive_phase_plane(ql=(1.0, -3.0, 100.0),
     show_unphysical = widgets.Checkbox(value=True, description='Unphysical solution')
     # Additional control widgets not called by function
     rhomax_widget = widgets.FloatText(value=100, description=r'$\rho_{max}$')
-    gammax_widget = widgets.FloatText(value=10, description='$\gamma_{max}$')
+    gammax_widget = widgets.FloatText(value=10, description=r'$\gamma_{max}$')
 
     # Allow for dependent widgets to update
     def update_xmin(*args):
@@ -263,6 +264,7 @@ def euler_tammann_phase_plane_plot():
             # This should not happen:
             if ier != 1:
                 print('Warning: fsolve did not converge.')
+        p_star = p_star[0]  # fsolve returns a 1-element array
         u_star = 0.5*(phi_l(p_star) + phi_r(p_star))
 
         # Set plot bounds
@@ -322,10 +324,10 @@ def euler_tammann_interactive_phase_plane(ql=(600.0, 10.0, 50000.0),
     qr1_widget = widgets.FloatSlider(value=qr[0],min=0.01,max=1000.0, description=r'$\rho_r$')
     qr2_widget = widgets.FloatSlider(value=qr[1],min=-15,max=15.0, description='$u_r$')
     qr3_widget = widgets.FloatSlider(value=qr[2],min=1,max=200000.0, description='$p_r$')
-    gamml_widget = widgets.FloatSlider(value=paramsl[0],min=0.01,max=10.0, description='$\gamma_l$')
-    gammr_widget = widgets.FloatSlider(value=paramsr[0],min=0.01,max=10.0, description='$\gamma_r$')
-    pinfl_widget = widgets.FloatSlider(value=paramsl[1],min=0.0,max=300000.0, description='$p_{\infty l}$')
-    pinfr_widget = widgets.FloatSlider(value=paramsr[1],min=0.0,max=300000.0, description='$p_{\infty r}$')
+    gamml_widget = widgets.FloatSlider(value=paramsl[0],min=0.01,max=10.0, description=r'$\gamma_l$')
+    gammr_widget = widgets.FloatSlider(value=paramsr[0],min=0.01,max=10.0, description=r'$\gamma_r$')
+    pinfl_widget = widgets.FloatSlider(value=paramsl[1],min=0.0,max=300000.0, description=r'$p_{\infty l}$')
+    pinfr_widget = widgets.FloatSlider(value=paramsr[1],min=0.0,max=300000.0, description=r'$p_{\infty r}$')
     xmin_widget = widgets.BoundedFloatText(value=0.0000001, description='$p_{min}:$')
     xmax_widget = widgets.FloatText(value=200000, description='$p_{max}:$')
     ymin_widget = widgets.FloatText(value=-15, description='$u_{min}:$')
@@ -334,8 +336,8 @@ def euler_tammann_interactive_phase_plane(ql=(600.0, 10.0, 50000.0),
     show_unphysical = widgets.Checkbox(value=True, description='Unphysical solution')
     # Additional control widgets not called by function
     rhomax_widget = widgets.FloatText(value=1000, description=r'$\rho_{max}$')
-    gammax_widget = widgets.FloatText(value=10, description='$\gamma_{max}$')
-    pinfmax_widget = widgets.FloatText(value=300000, description='$p_{\infty max}$')
+    gammax_widget = widgets.FloatText(value=10, description=r'$\gamma_{max}$')
+    pinfmax_widget = widgets.FloatText(value=300000, description=r'$p_{\infty max}$')
 
     # Allow for dependent widgets to update
     def update_xmin(*args):

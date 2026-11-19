@@ -132,6 +132,7 @@ def exact_riemann_solution(q_l, q_r, grav=1., force_waves=None,
                 print('Warning: fsolve did not converge.')
                 print(msg)
 
+        h_m = h_m[0]  # fsolve returns a 1-element array
         u_m = phi_l(h_m)
         hu_m = u_m * h_m
 

@@ -30,7 +30,7 @@ def sound_speed(eps, K1, K2, rho):
 
 
 def exact_riemann_solution(q_l,q_r,aux_l,aux_r,phase_plane_curves=False):
-    """
+    r"""
     Return the exact solution to the Riemann problem with initial states
     q_l, q_r.  The solution is given in terms of a list of states, a list of
     speeds (each of which may be a pair in case of a rarefaction fan), and a
@@ -213,7 +213,7 @@ def phase_plane_plot(q_l, q_r, aux_l, aux_r, ax=None):
     scalefac = 1.2
     ax.set_xlim(0, xmax*scalefac)
     ax.set_ylim(-scalefac*ymax, scalefac*ymax)
-    ax.set_xlabel('Strain ($\epsilon$)')
+    ax.set_xlabel(r'Strain ($\epsilon$)')
     ax.set_ylabel('Velocity (u)')
 
     # Plot curves

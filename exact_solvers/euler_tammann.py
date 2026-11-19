@@ -162,6 +162,7 @@ def exact_riemann_solution(ql, qr, auxl, auxr, varin = 'primitive', varout = 'pr
             print('Warning: fsolve did not converge.')
             print(msg)
 
+    p_star = p_star[0]  # fsolve returns a 1-element array
     # Calculate middle states ustar and rho_star in terms of p_star
     pbsl = p_star + pinfl
     pbsr = p_star + pinfr

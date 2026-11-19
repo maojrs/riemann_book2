@@ -158,6 +158,7 @@ def exact_riemann_solution(q_l, q_r, gamma=1.4, phase_plane_curves=False):
                 print('Warning: fsolve did not converge.')
                 print(msg)
 
+        p = p[0]  # fsolve returns a 1-element array
         u = phi_l(p)
 
         ws[2] = u
