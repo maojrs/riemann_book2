@@ -414,7 +414,7 @@ def phase_plane_plot(q_l, q_r, g=1., ax=None, force_waves=None, y_axis='u',
     handle = mlines.Line2D([], [], color='k', linestyle='', marker='>',
                             markersize=msize, label='Right state')
     handles.append(handle)
-    plt.legend(handles=handles, fontsize=6)
+    ax.legend(handles=handles, fontsize=6)
 
     if approx_states is not None:
         u = approx_states[1,:]/(approx_states[0,:]+1.e-15)

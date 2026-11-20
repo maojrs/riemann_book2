@@ -69,3 +69,16 @@ def test_frames_are_kept():
     figure.update(a=1)
     assert figure.frame() is first
     plt.close('all')
+
+
+def test_style_is_the_chapters():
+    """InteractiveFigure(style=...): the figure is made and drawn in that style (the chapter's
+    plt.style.use), and pyplot's own style is left as it was."""
+    from utils.live_figure import InteractiveFigure, slider
+    spec = InteractiveFigure.redraw(line_on_current_figure, [slider('a', 0., 1000., 500.)],
+                                    style={'lines.linewidth': 7.})
+    figure = spec.build()
+    figure.update(a=500.)
+    figure.frame()
+    assert figure.fig.axes[0].lines[0].get_linewidth() == 7.
+    assert plt.rcParams['lines.linewidth'] != 7.

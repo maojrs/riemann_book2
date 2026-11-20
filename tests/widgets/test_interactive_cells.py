@@ -45,7 +45,8 @@ def chapters_with_widgets():
 def run_chapter(name, monkeypatch):
     """Run the code cells; return {code cell index: [recorded interactive figures]} and the
     web models {code cell index: [models of the widget cells after it]}. An interact figure
-    is recorded as (ipywidgets.interactive, the layout its function displays or None)."""
+    is recorded as (ipywidgets.interactive, the layout its function displays or None), with
+    its picture as the notebook shows it after the cell has run."""
     recorded, models, current = {}, {}, []
     patched = {'interact': ipywidgets.interact, 'display': IPython.display.display}
 
@@ -96,7 +97,9 @@ def run_chapter(name, monkeypatch):
         with warnings.catch_warnings():
             warnings.simplefilter('ignore')
             exec(compile(text, f'{name}[{i}]', 'exec'), namespace)
-        recorded[i] = [tuple(r) for r in current]
+        # the notebook's picture now: a later cell may change the globals its function reads
+        recorded[i] = [(kind, record, notebook_picture(record[0]) if kind == 'interact' else None)
+                       for kind, record in current]
         plt.close('all')
     return recorded, models
 
@@ -143,6 +146,10 @@ def check_controls(spec, values, figure):
             assert (c['min'], c['max'], c['step']) == pytest.approx((w.min, w.max, w.step)), name
         elif isinstance(w, ipywidgets.Checkbox):
             assert c['kind'] == 'checkbox'
+        elif isinstance(w, ipywidgets.BoundedFloatText):
+            assert c['kind'] == 'number' and (c['min'], c['max']) == pytest.approx((w.min, w.max)), name
+        elif isinstance(w, ipywidgets.FloatText):
+            assert c['kind'] == 'number' and c['min'] is None, name
         elif isinstance(w, (ipywidgets.Dropdown, ipywidgets.RadioButtons)):
             kind = 'radio' if isinstance(w, ipywidgets.RadioButtons) else 'dropdown'
             assert c['kind'] == kind and tuple(c['options']) == tuple(w.options), name
@@ -153,14 +160,25 @@ def check_controls(spec, values, figure):
 def original_rows(figure, layout):
     """The notebook's controls, by name, row by row: the function's own layout (rows of
     HBoxes in a VBox, or an HBox of controls and VBox columns; None where a column has no
-    control), or else interact's, one per line."""
+    control), or else interact's, one per line. Controls that are not arguments of the
+    function (they only set the range of others) are named None."""
     if layout is None:
         return [[w._kwarg] for w in figure.kwargs_widgets if not isinstance(w, ipywidgets.fixed)]
-    lines = [[w._kwarg for w in box.children] if isinstance(box, ipywidgets.Box) else [box._kwarg]
-             for box in layout.children]
+    lines = [[getattr(w, '_kwarg', None) for w in box.children] if isinstance(box, ipywidgets.Box)
+             else [box._kwarg] for box in layout.children]
     if isinstance(layout, ipywidgets.VBox):
         return lines
     return [list(row) for row in itertools.zip_longest(*lines)]
+
+
+def original_layout(figure, layout):
+    """The notebook's rows of controls and its plot options: in tabs, the rows of all tabs
+    but the last, and the function's arguments in the last ("Plot options")."""
+    if isinstance(layout, ipywidgets.Tab):
+        rows = [row for tab in layout.children[:-1] for row in original_rows(figure, tab)]
+        options = [n for row in original_rows(figure, layout.children[-1]) for n in row if n]
+        return rows, options
+    return original_rows(figure, layout), []
 
 
 def check_fixed(spec, setup, figure):
@@ -177,7 +195,7 @@ def test_web_figures_match_the_notebook(name, monkeypatch):
     assert models, 'no widget cells'
     for cell, cell_models in models.items():
         assert len(cell_models) == len(recorded[cell]), f'cell {cell}: widget cells and interact calls'
-        for model, (kind, record) in zip(cell_models, recorded[cell]):
+        for model, (kind, record, notebook) in zip(cell_models, recorded[cell]):
             spec, setup = _find(model['figure']), model.get('setup', {})
             values = spec.initial_values(**model.get('values', {}))
             if kind == 'InteractiveFigure':                  # the cell already uses the same figure
@@ -187,18 +205,18 @@ def test_web_figures_match_the_notebook(name, monkeypatch):
                 continue
             figure, layout = record
             check_controls(spec, values, figure)
-            assert spec.options == []
+            rows, options = original_layout(figure, layout)
+            assert spec.options == options
             if layout is None:      # interact's one per line: the web may pair them in rows
-                assert sorted(n for row in spec.rows for n in row) == sorted(n for [n] in original_rows(figure, None)), \
+                assert sorted(n for row in spec.rows for n in row) == sorted(n for [n] in rows), \
                     f'cell {cell} {model["figure"]}: every control of the notebook, once'
             else:                   # the cell's own layout: the same on the web
-                assert spec.rows == original_rows(figure, layout), \
+                assert spec.rows == rows, \
                     f'cell {cell} {model["figure"]}: controls laid out as in the notebook'
             check_fixed(spec, setup, figure)
             web = spec.build(setup)
             web.update(**values)
             web_pixels = png_pixels(web.png())
-            notebook = notebook_picture(figure)
             assert web_pixels.shape == notebook.shape, f'cell {cell} {model["figure"]}'
             differing = (np.abs(web_pixels - notebook).max(axis=2) > 40).mean()
             assert differing < 0.002, f'cell {cell} {model["figure"]}: {100*differing:.2f}% of the pixels differ'

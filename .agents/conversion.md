@@ -22,7 +22,7 @@ Rule 1 in AGENTS.md applies: only markup changes, never the wording. Acoustics i
   - Numbered environments (`align`, `equation`) stay exactly as written. A `\label{X}` inside them works in MyST.
   - Unnumbered displays (`align*`, `equation*`, `$$…$$`) become `{math}` blocks with `:enumerated: false`, with the LaTeX unchanged. MyST would otherwise number them, shifting all equation numbers.
   - MyST gives a math block one label and one number: an `align` with several `\label`s becomes one `align` per labelled row (the converter does it; the LaTeX of each row is unchanged).
-  - A one-row `align` with at most one top-level `&` becomes an `equation` (a one-row `align*` plain display math), with that `&` removed. It looks the same, but KaTeX draws `align` as a table that cannot wrap, while an `equation` can break after an `=` when it is too long (`book.css`). Rows with two `&` (two equations side by side) stay `align`.
+  - A one-row `align` with at most one top-level `&` becomes an `equation` (a one-row `align*` an unnumbered `{math}` block), with that `&` removed. It looks the same, but KaTeX draws `align` as a table that cannot wrap, while an `equation` can break after an `=` when it is too long (`book.css`). Rows with two `&` (two equations side by side) stay `align`.
 - **Equation references:** `(\ref{X})` and `\eqref{X}` become `` {eq}`X` ``, which renders as "(n)". A bare `\ref{X}` is reported, to decide by hand.
 - **Citations:** cite2c `<cite data-cite="key">…</cite>` becomes `[@key]`. The key must exist in `references.bib`.
 - **Equation labels are global** in the web book: a label defined in two chapters (copied text) is renamed in the later one, with its references.

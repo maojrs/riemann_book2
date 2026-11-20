@@ -13,6 +13,7 @@ dependencies = [
     "matplotlib",
     "ipywidgets",
     "ipython",
+    "seaborn>=0.13.2",
 ]
 
 [dependency-groups]
@@ -23,7 +24,7 @@ dev = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["exact_solvers", "utils", "miniclaw", "widgets", "widgets.figures"]
+packages = ["exact_solvers", "utils", "miniclaw", "widgets"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

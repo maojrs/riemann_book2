@@ -94,7 +94,7 @@ def unalign_single_rows(src):
             return m.group(0)
         changes['one-row align -> equation'] += 1
         inner = remove_top_level(body, '&')
-        return inner.strip() if star else f"\\begin{{equation}}{inner}\\end{{equation}}"
+        return unnumbered_math(inner) if star else f"\\begin{{equation}}{inner}\\end{{equation}}"
     return re.sub(r'\\begin\{(align)(\*?)\}(.*?)\\end\{align\2\}', single, src, flags=re.S)
 
 

@@ -100,11 +100,11 @@ def interactive_phase_plane(ql=(10.0, -5.0),
 
     # Allow for dependent widgets to update
     def update_xmin(*args):
-        ql3_widget.min = xmin_widget.value
-        qr3_widget.min = xmin_widget.value
+        ql1_widget.min = xmin_widget.value
+        qr1_widget.min = xmin_widget.value
     def update_xmax(*args):
-        ql3_widget.max = xmax_widget.value
-        qr3_widget.max = xmax_widget.value
+        ql1_widget.max = xmax_widget.value
+        qr1_widget.max = xmax_widget.value
     def update_ymin(*args):
         ql2_widget.min = ymin_widget.value
         qr2_widget.min = ymin_widget.value

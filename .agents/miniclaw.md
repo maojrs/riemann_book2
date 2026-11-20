@@ -40,7 +40,8 @@ miniclaw/
 ├── limiters.py     # minmod, superbee, van Leer, MC
 ├── sharpclaw.py    # SharpClawSolver1D (last)
 ├── controller.py   # Controller: run to output times, frames
-└── riemann/        # one module per system
+├── riemann/        # one module per system
+└── visclaw/        # ianimate: Clawpack's 1D animation of a run's frames (Kitchen_sink_problem)
 ```
 
 ## Algorithm

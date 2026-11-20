@@ -95,19 +95,25 @@ class TimeFigure(LiveFigure):
 
     live: the names of the values given to at_time (by name) instead of building the figure
     again; by default only the time. If at_time moves an axis, the rest of the figure is
-    drawn again too."""
+    drawn again too. background: names of values also given to at_time, which changes (e.g.
+    shows or hides) parts of the figure that are not returned as live; a new value draws
+    the figure again but does not build it again."""
 
-    def __init__(self, draw, figsize, live=('t',)):
+    def __init__(self, draw, figsize, live=('t',), background=()):
         self.draw = draw
         self.figsize = figsize
         self.live_names = live
+        self.background_names = background
         self._values = None
 
     def update(self, fig=None, **values):
-        live = {name: values.pop(name) for name in self.live_names}
+        live = {name: values.pop(name) for name in self.live_names if name in values}
+        shown = {name: values.pop(name) for name in self.background_names if name in values}
+        live.update(shown)
         if values != self._values:
             super().__init__(figsize=self.figsize)
             self._values = values
+            self._shown = shown
             self._at_time = self.draw(self.fig, **live, **values)
             self._live = self._time_artists(live)
             for ax in self.fig.axes:
@@ -121,6 +127,9 @@ class TimeFigure(LiveFigure):
                 artist.remove()
         if limits != [(ax.get_xlim(), ax.get_ylim()) for ax in self.fig.axes]:
             self.static_changed(refit=True)   # new ticks: draw and fit the figure again
+        elif shown != self._shown:
+            self.static_changed()             # draw the rest of the figure again
+        self._shown = shown
         if self._fitted:                      # see frame(): not in the saved background
             for artist in artists:
                 artist.set_animated(True)
@@ -216,6 +225,17 @@ def png(frame):
     return buffer.getvalue()
 
 
+def in_style(style, function):
+    """function, called with the matplotlib style in effect."""
+    import matplotlib.style
+
+    @functools.wraps(function)
+    def styled(*args, **kwargs):
+        with matplotlib.style.context(style):
+            return function(*args, **kwargs)
+    return styled
+
+
 # --- Controls ---------------------------------------------------------------------------
 def slider(name, min, max, value, label=None, step=0.1, integer=False):
     """A slider; integer=True for whole numbers (ipywidgets' IntSlider, step 1)."""
@@ -252,7 +272,9 @@ class InteractiveFigure:
     ipywidgets descriptions (math between $...$, e.g. r'$\\rho_l$');
     rows: names of the controls shown
     side by side, row by row (None leaves a column empty); options: names of controls shown apart (under "Plot options"
-    on the web, in a second tab in the notebook, titled tab_titles).
+    on the web, in a second tab in the notebook, titled tab_titles); style: a matplotlib style
+    (name or dict of rcParams) that the chapter sets for all its figures, for the web book,
+    where the chapter's code does not run.
     """
     figure: type
     controls: list
@@ -262,6 +284,7 @@ class InteractiveFigure:
     function: object = None          # for redraw figures
     factory: bool = False
     fixed: dict = field(default_factory=dict)
+    style: object = None
 
     @classmethod
     def redraw(cls, function, controls, rows=None, factory=False, fixed=None, **options):
@@ -284,8 +307,12 @@ class InteractiveFigure:
             arguments = {**(plot.keywords if plot is not function else {}), **self.fixed}
             if arguments:                         # setup and fixed() arguments, at every update
                 figure.update = functools.partial(figure.update, **arguments)
-            return figure
-        return RedrawFigure(functools.partial(plot, **self.fixed))
+        else:
+            figure = RedrawFigure(functools.partial(plot, **self.fixed))
+        if self.style:                            # made in update, drawn in frame and png
+            for name in ('update', 'frame', 'png'):
+                setattr(figure, name, in_style(self.style, getattr(figure, name)))
+        return figure
 
     def initial_values(self, **values):
         """The control values, with the given ones replacing the defaults."""

@@ -46,6 +46,12 @@ These make the code run on current Python, NumPy and IPython without changing an
 - `euler.py`, `shallow_water.py`, `euler_tammann.py`, `interactive_pplanes.py`: take the scalar
   root from `fsolve`'s 1-element array (`p = p[0]`). NumPy ≥ 2.4 rejected it.
 - `nonlinear_elasticity.py`, `interactive_pplanes.py`: LaTeX strings made raw (`r'$\gamma$'`).
+- `acoustics_heterogeneous_demos.interactive_phase_plane`: its $p_{min}$ and $p_{max}$ boxes
+  set the range of `ql3_widget`/`qr3_widget`, which do not exist there (copied from the Euler
+  version): changing them raised a `NameError`. They now set the pressure sliders.
+- `shallow_water.phase_plane_plot` puts its legend on its own axes (`ax.legend`) instead of
+  pyplot's current axes (`plt.legend`): the same figure in the notebook, and the legend no
+  longer goes to another figure when drawn elsewhere (Pressureless_flow on the web).
 - `utils/__init__.py`: no longer imports `nbtools`, which fails on IPython 9.
 - `utils/riemann_tools.py`: removed the `__future__`, `six` and unused JSAnimation imports.
 - `utils/riemann_tools.py`: `plot_characteristics` crashed (NumPy ≥ 2.4) when the characteristic
@@ -198,6 +204,29 @@ These make the code run on current Python, NumPy and IPython without changing an
     - Euler_approximate: its equation label `SWA:hll_middle_state` (a copy of
       Shallow_water_approximate's) is `EA:hll_middle_state`, since labels are global in the web
       book.
+  - **Further topics:** Acoustics_heterogeneous, Traffic_variable_speed, Nonlinear_elasticity,
+    Euler_Tammann, Traffic_with_ramps, Pressureless_flow, Kitchen_sink_problem. Besides the
+    conventions below:
+    - Code, to be approved: Traffic_variable_speed, Nonlinear_elasticity, Traffic_with_ramps and
+      Kitchen_sink_problem import `pyclaw`/`riemann` from `miniclaw` instead of `clawpack`, and
+      Kitchen_sink_problem `ianimate` from `miniclaw.visclaw.ianimate` (new: Clawpack's 1D
+      animation of a run, returning the animation as the chapter expects;
+      `test_miniclaw_visclaw.py`); Pressureless_flow and Kitchen_sink_problem use the style
+      `seaborn-v0_8-talk`, the current name of `seaborn-talk` (removed in Matplotlib 3.6).
+    - `seaborn` is a dependency again (Acoustics_heterogeneous imports it for its style).
+    - Nonlinear_elasticity and Pressureless_flow asked for a Python 2 kernel; their metadata now
+      names `python3`.
+    - Warnings that the original hid or that current libraries add are hidden with
+      `remove-stderr` (code unchanged): Pressureless_flow's two `'$\log_{10}(g)$'` strings
+      (invalid escape), Kitchen_sink_problem's `'$F=\infty$'` (invalid escape), its YouTube
+      `HTML` iframe (IPython suggests `IFrame`) and scipy's `ODEintWarning` in the four
+      jump-location cells.
+    - Links to headings of other chapters use labels added to those headings (Traffic_flow
+      `traffic:jam`, `traffic:green-light`; Euler `euler:characteristic-velocities`,
+      `euler:entropy-condition`; Shallow_water `sw:all-shock`; Traffic_variable_speed
+      `tvs:admissible-regions`; Euler_Tammann `tammann:strong-rarefaction`). Euler_Tammann's
+      "(\ref{CDvel-1}, \ref{CDvel-2})" outside math became links showing the equation numbers
+      (`[%s](#CDvel-1)`).
       Bug fix in its `compare_solutions` (code, approved): it read the global `right` instead of
       its argument `right_state` (same values in every call of the chapter, so no output changes).
   - What the conversion does is described in `.agents/conversion.md`:
@@ -238,6 +267,8 @@ These make the code run on current Python, NumPy and IPython without changing an
   - display equations that cannot wrap and are wider than a phone (Shallow_water_approximate:
     two equations side by side; Euler_approximate: two long aligned rows) are wrapped in a
     `{div}` with class `math-fit` (markup; the LaTeX is unchanged) and shrink to the column.
+  - embedded YouTube videos (Kitchen_sink_problem, 560px wide) shrink to the column, keeping
+    their 16:9 shape.
 - Interactive figures on the web (`widgets/`, new): the book's own Python runs in the reader's
   browser (Pyodide, in one worker per page, `widgets/python.mjs`), installed from the wheel that
   `myst.yml` publishes with the site (`static_files`). Before Python is ready the build-time figure
@@ -271,6 +302,24 @@ These make the code run on current Python, NumPy and IPython without changing an
     figure first goes live; FV_compare's blast wave with its fine 4000-cell reference takes
     about 10 s natively. Sliders can be integer (`slider(..., integer=True)`, ipywidgets'
     IntSlider). Same test.
+  - Further topics: the interactive cells of Acoustics_heterogeneous, Traffic_variable_speed,
+    Nonlinear_elasticity, Euler_Tammann, Traffic_with_ramps and Pressureless_flow (35 figures),
+    in `widgets/figures/` (`acoustics_heterogeneous.py`, `traffic_variable_speed.py`,
+    `nonlinear_elasticity.py`, `euler_tammann.py`, `traffic_ramps.py`, `pressureless.py`).
+    The chapters' own plot functions with a time slider are drawn on live figures with the
+    same calls (`plot_riemann_at_time`): 1–11 ms per time step natively; the "all in one"
+    figures and the phase planes are drawn again in full (50–440 ms natively). The two tabbed
+    phase planes show their state and parameter tabs as rows and their "Plot options" tab
+    under "Plot options"; the boxes that only set slider ranges are left out. Chapters that
+    set a global style (seaborn's `white`, `seaborn-v0_8-talk`) give it to their web figures
+    (`InteractiveFigure(style=...)`, test in `test_redraw_figure.py`). Same test, which now
+    also reads tabbed layouts and number boxes, and takes each notebook picture right after
+    its cell (a later cell may change the globals a plot function reads).
+  - Riemann solution figures (`riemann_tools.make_plot_function`, every chapter): choosing
+    which characteristics to show no longer builds the figure again. Each family is drawn
+    when first chosen and then shown or hidden, under the waves as before
+    (`TimeFigure(background=...)`); `plot_riemann_at_time` also moves the filled areas of
+    `fill`. Tests: `test_riemann_figure.py`.
   - Fixes after review:
     - Each figure draws on a figure of its own. Some plotting functions draw on pyplot's
       current figure, which could be another figure of the page, so a figure could change its
