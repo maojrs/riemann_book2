@@ -117,13 +117,13 @@ These make the code run on current Python, NumPy and IPython without changing an
     - citations become `[@key]`;
     - unnumbered displays are kept unnumbered;
     - an `align` with several `\label`s becomes one `align` per label (MyST gives a math block
-      one label and one number; in Shallow_water the second labels were lost);
+      one label and one number; in Shallow_water the second labels were lost; approved);
     - a one-row `align` (at most one `&`) becomes an `equation`, and a one-row `align*` plain
       display math: same look and numbers, but a long one can now break after an `=` on narrow
-      screens instead of scrolling;
+      screens instead of scrolling (approved);
     - `Image` cells become `{image}`;
     - the phase-plane `IFrame` becomes embedded HTML (and `HTML` is added to the cell's
-      `IPython.display` import); the acoustics phase plane is the drag explorer on the web
+      `IPython.display` import, approved); the acoustics phase plane is the drag explorer on the web
       (Introduction, Acoustics);
     - links to a heading of a notebook (`Shallow_water.ipynb#Dam-break-…`) get an explicit
       heading label;
@@ -171,8 +171,8 @@ These make the code run on current Python, NumPy and IPython without changing an
   - `shallow_water_explorer.mjs` (new): drag q_l, q_r in the h-hu plane and the time in the
     x-t plane (Hugoniot loci and integral curves, middle state, waves, depth and momentum at t;
     `exact_solvers.shallow_water` solution). It replaces the mpld3 shallow-water figure on the
-    web in Introduction and Shallow_water (that cell is tagged `remove-cell`; the file stays for
-    Jupyter). Test: `test_shallow_water_explorer_is_the_exact_solution`.
+    web in Introduction and Shallow_water (that cell is tagged `remove-cell`, approved; the
+    file stays for Jupyter). Test: `test_shallow_water_explorer_is_the_exact_solution`.
   - In the browser, modules that import ipywidgets or IPython (notebook only) get empty
     stand-ins, and a missing package (scipy for some chapters) is loaded when first needed.
   - `widgets/assets.py` prepares what the widgets load, in `_build/assets`: the wheel of the
