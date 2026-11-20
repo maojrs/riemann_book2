@@ -4,7 +4,7 @@
 // D3 draws it. MyST markup:
 //
 //   ```{anywidget} ../widgets/acoustics_explorer.mjs
-//   :css: ../widgets/acoustics_explorer.css
+//   :css: ../widgets/phase_plane_explorer.css
 //   {"ql": [-2, 2], "qr": [0, -3], "rho": 1, "bulk": 4, "t": 1, "range": 5}
 //   ```
 // D3 is published next to this file (widgets/assets.py); it defines the global d3
@@ -21,20 +21,20 @@ function render({ model, el }) {
   };
   const range = model.get('range') ?? 5;     // all three plots use [-range, range]
 
-  el.classList.add('acoustics-explorer');
-  const status = d3.select(el).append('div').attr('class', 'ae-status')
+  el.classList.add('phase-plane-explorer');
+  const status = d3.select(el).append('div').attr('class', 'pe-status')
     .text('This figure becomes interactive when Python starts in your browser.');
   const svg = d3.select(el).append('svg').attr('role', 'img')
     .attr('aria-label', 'Acoustics phase plane and solution');
   const panels = ['Phase plane', 'Pressure', 'Velocity'].map((title, i) => {
     const g = svg.append('g');
-    const clipId = `ae-clip-${Math.random().toString(36).slice(2)}-${i}`;
+    const clipId = `pe-clip-${Math.random().toString(36).slice(2)}-${i}`;
     const clip = g.append('clipPath').attr('id', clipId).append('rect');
-    g.append('g').attr('class', 'ae-xaxis');
-    g.append('g').attr('class', 'ae-yaxis');
-    g.append('text').attr('class', 'ae-xlabel').attr('text-anchor', 'middle');
-    g.append('text').attr('class', 'ae-ylabel').attr('text-anchor', 'middle');
-    g.append('g').attr('class', 'ae-plot').attr('clip-path', `url(#${clipId})`);
+    g.append('g').attr('class', 'pe-xaxis');
+    g.append('g').attr('class', 'pe-yaxis');
+    g.append('text').attr('class', 'pe-xlabel').attr('text-anchor', 'middle');
+    g.append('text').attr('class', 'pe-ylabel').attr('text-anchor', 'middle');
+    g.append('g').attr('class', 'pe-plot').attr('clip-path', `url(#${clipId})`);
     return { title, g, clip };
   });
   let data = null;
@@ -62,11 +62,11 @@ function render({ model, el }) {
       panel.clip.attr('x', MARGIN.left).attr('y', MARGIN.top)
         .attr('width', w - MARGIN.left - MARGIN.right).attr('height', h - MARGIN.top - MARGIN.bottom);
       const ticks = h < 220 ? 3 : 5;
-      panel.g.select('.ae-xaxis').attr('transform', `translate(0,${h - MARGIN.bottom})`).call(d3.axisBottom(panel.x).ticks(5));
-      panel.g.select('.ae-yaxis').attr('transform', `translate(${MARGIN.left},0)`).call(d3.axisLeft(panel.y).ticks(ticks));
-      panel.g.select('.ae-xlabel').attr('x', (MARGIN.left + w - MARGIN.right) / 2).attr('y', h - 6)
+      panel.g.select('.pe-xaxis').attr('transform', `translate(0,${h - MARGIN.bottom})`).call(d3.axisBottom(panel.x).ticks(5));
+      panel.g.select('.pe-yaxis').attr('transform', `translate(${MARGIN.left},0)`).call(d3.axisLeft(panel.y).ticks(ticks));
+      panel.g.select('.pe-xlabel').attr('x', (MARGIN.left + w - MARGIN.right) / 2).attr('y', h - 6)
         .text(i === 0 ? 'Pressure' : 'x');
-      panel.g.select('.ae-ylabel').attr('transform', `translate(12,${(h - MARGIN.bottom + MARGIN.top) / 2}) rotate(-90)`)
+      panel.g.select('.pe-ylabel').attr('transform', `translate(12,${(h - MARGIN.bottom + MARGIN.top) / 2}) rotate(-90)`)
         .text(i === 0 ? 'Velocity' : panel.title);
     });
     size = { width, height };
@@ -79,12 +79,12 @@ function render({ model, el }) {
     const line = (panel, xs, ys) => d3.line().x((_, i) => panel.x(xs[i])).y((_, i) => panel.y(ys[i]))(xs);
 
     // Phase plane: eigenvector lines, the three states, and their labels
-    pp.g.select('.ae-plot').selectAll('path').data(data.lines).join('path')
-      .attr('class', d => d.physical ? 'ae-line' : 'ae-line ae-dashed')
+    pp.g.select('.pe-plot').selectAll('path').data(data.lines).join('path')
+      .attr('class', d => d.physical ? 'pe-line' : 'pe-line pe-dashed')
       .attr('d', d => line(pp, d.p, d.u));
     const names = ['q_l', 'q_m', 'q_r'];
-    const points = pp.g.select('.ae-plot').selectAll('g.ae-point').data(data.states).join(enter => {
-      const g = enter.append('g').attr('class', (_, i) => i === 1 ? 'ae-point' : 'ae-point ae-drag')
+    const points = pp.g.select('.pe-plot').selectAll('g.pe-point').data(data.states).join(enter => {
+      const g = enter.append('g').attr('class', (_, i) => i === 1 ? 'pe-point' : 'pe-point pe-drag')
         .attr('data-index', (_, i) => i);
       g.append('circle').attr('r', 7);
       g.append('text').attr('dx', 10).attr('dy', -8).html((_, i) =>
@@ -92,11 +92,11 @@ function render({ model, el }) {
       return g;
     });
     points.attr('transform', d => `translate(${pp.x(d[0])},${pp.y(d[1])})`);
-    points.filter('.ae-drag').call(drag);
+    points.filter('.pe-drag').call(drag);
 
     // Pressure and velocity at time t
-    pq.g.select('.ae-plot').selectAll('path').data([data.p]).join('path').attr('class', 'ae-line').attr('d', d => line(pq, data.x, d));
-    pu.g.select('.ae-plot').selectAll('path').data([data.u]).join('path').attr('class', 'ae-line').attr('d', d => line(pu, data.x, d));
+    pq.g.select('.pe-plot').selectAll('path').data([data.p]).join('path').attr('class', 'pe-line').attr('d', d => line(pq, data.x, d));
+    pu.g.select('.pe-plot').selectAll('path').data([data.u]).join('path').attr('class', 'pe-line').attr('d', d => line(pu, data.x, d));
   }
 
   // Dragging q_l or q_r moves the point at once; the solution follows as soon as Python

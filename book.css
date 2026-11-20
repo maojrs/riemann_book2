@@ -61,3 +61,8 @@ article :is(h1, h2, h3, h4, h5, h6) { overflow-x: clip; }
    their labels are not larger than the text; never wider than the column. The interactive
    figures are sized the same way (widgets/interact.mjs). */
 article [data-name="safe-output-image"] img { zoom: 0.8; max-width: 100%; }
+
+/* The accent of the interactive figures' controls (widgets/interact.css): the blue of the
+   book's states, lighter on the dark theme. */
+:root { --book-accent: #2456a6; }
+html.dark { --book-accent: #8db4ff; }

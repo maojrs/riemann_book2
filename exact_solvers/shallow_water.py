@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from ipywidgets import interact
 from ipywidgets import widgets, Checkbox, fixed
 from utils import riemann_tools
+from utils.live_figure import TimeFigure
 from collections import namedtuple
 
 conserved_variables = ('Depth', 'Momentum')
@@ -541,39 +542,47 @@ def make_demo_plot_function(h_l=3., h_r=1., u_l=0., u_r=0,
     num_vars = len(primitive_variables)
 
     def plot_shallow_water_demo(t=0.5, fig=0):
-        if t == 0:
-            q = np.zeros((2,len(x)))
-            q[0,:] = q_l[0]*(x<=0) + q_r[0]*(x>0)
-            q[1,:] = q_l[1]*(x<=0) + q_r[1]*(x>0)
-        else:
-            q = np.array(reval(x/t))
-
-        if t<0.02:
-            q[1] = np.where(x<0, q_l[1], q_r[1])
-
-        primitive = conservative_to_primitive(q[0],q[1])
-
         if fig == 0:
-            fig = plt.figure(figsize=figsize)
-            show_fig = True
-        else:
-            show_fig = False
+            return figure.show(t=t)
+        draw(fig, t)
 
+    def draw(fig, t=0.5):
+        """plot_shallow_water_demo on fig; returns at_time(t) (utils.live_figure.TimeFigure)."""
         axes = [0]*num_vars
+        curves = [0]*num_vars
         for i in range(num_vars):
             axes[i] = fig.add_subplot(1,num_vars,i+1)
-            q = primitive[i]
-            plt.plot(x,q,'-k',linewidth=3)
-            plt.title(primitive_variables[i])
-            if t != 0:
-                plt.suptitle('Solution at time $t='+str(t)+'$',fontsize=12)
-            else:
-                plt.suptitle('Initial data',fontsize=12)
+            curves[i], = axes[i].plot(x,0*x,'-k',linewidth=3)
+            axes[i].set_title(primitive_variables[i])
             axes[i].set_xlim(-1,1)
+        title = fig.suptitle('',fontsize=12)
+        axes[0].set_ylim(hlim)
+        axes[1].set_ylim(ulim)
 
-            if i==0 and force_waves != 'raref':
+        def at_time(t):
+            if t == 0:
+                q = np.zeros((2,len(x)))
+                q[0,:] = q_l[0]*(x<=0) + q_r[0]*(x>0)
+                q[1,:] = q_l[1]*(x<=0) + q_r[1]*(x>0)
+            else:
+                q = np.array(reval(x/t))
+
+            if t<0.02:
+                q[1] = np.where(x<0, q_l[1], q_r[1])
+
+            primitive = conservative_to_primitive(q[0],q[1])
+            for i in range(num_vars):
+                curves[i].set_ydata(primitive[i])
+            if t != 0:
+                title.set_text('Solution at time $t='+str(t)+'$')
+            else:
+                title.set_text('Initial data')
+
+            stripes = []
+            if force_waves != 'raref':
                 # plot stripes only on depth plot
                 # (and suppress if nonphysical solution plotted)
+                q = primitive[0]
                 n = np.where(t > t_traj)[0]
                 if len(n)==0:
                     n = 0
@@ -609,13 +618,14 @@ def make_demo_plot_function(h_l=3., h_r=1., u_l=0., u_r=0,
                         else:
                             c = 'cornflowerblue'
                             alpha = 1.0
-                    plt.fill_between(x[j1:j2],q[j1:j2],0,color=c,alpha=alpha)
+                    stripes.append(axes[0].fill_between(x[j1:j2],q[j1:j2],0,color=c,alpha=alpha))
+            return curves + [title] + stripes
+        return at_time
 
-        axes[0].set_ylim(hlim)
-        axes[1].set_ylim(ulim)
-        if show_fig:
-            plt.show()
-
+    # drawn on a figure built once; moving t only redraws what depends on it
+    plot_shallow_water_demo.draw = draw
+    plot_shallow_water_demo.live_figure = lambda: TimeFigure(draw, figsize)
+    figure = plot_shallow_water_demo.live_figure()
     return plot_shallow_water_demo
 
 def macro_riemann_plot(which,context='notebook',figsize=(10,3)):

@@ -241,7 +241,7 @@ def sample_riemann(s, riemann_eval, t, xmax, derived_variables=None):
 def plot_riemann(states, s, riemann_eval, wave_types=None, t=0.1, ax=None,
                  color='multi', layout='horizontal', variable_names=None,
                  t_pointer=False, extra_axes=False, fill=(),
-                 derived_variables=None, xmax=None):
+                 derived_variables=None, xmax=None, fig=None):
     """
     Take an array of states and speeds s and plot the solution at time t.
     For rarefaction waves, the corresponding entry in s should be a tuple of two values,
@@ -258,6 +258,8 @@ def plot_riemann(states, s, riemann_eval, wave_types=None, t=0.1, ax=None,
                            number of conserved variables.
 
         layout: 'horizontal' or 'vertical'
+        fig: without ax, the axes are made on this matplotlib figure (default: a new
+             pyplot figure)
         variable_names: used to label the plots of q
         extra_axes: if True, add an extra axis for plotting one more thing
         fill: a list of integers; if i is in fill, then q[i] uses a
@@ -294,15 +296,19 @@ def plot_riemann(states, s, riemann_eval, wave_types=None, t=0.1, ax=None,
                 fig_width = 10
             else:
                 fig_width = 3*num_axes
-            fig, ax = plt.subplots(1,num_axes,figsize=(fig_width,3))
-            plt.subplots_adjust(wspace=0.5)
-            plt.tight_layout()
+            if fig is None:
+                fig = plt.figure(figsize=(fig_width,3))
+            ax = fig.subplots(1,num_axes)
+            fig.subplots_adjust(wspace=0.5)
+            fig.tight_layout()
         elif layout == 'vertical':
             # Plots on top of each other, with shared x-axis
             fig_width = 8
             fig_height = 1.5*(num_axes-1)
-            fig, ax = plt.subplots(num_axes,1,figsize=(fig_width,fig_height),sharex=True)
-            plt.subplots_adjust(hspace=0)
+            if fig is None:
+                fig = plt.figure(figsize=(fig_width,fig_height))
+            ax = fig.subplots(num_axes,1,sharex=True)
+            fig.subplots_adjust(hspace=0)
             ax[-1].set_xlabel('x')
             ax[0].set_ylabel('t')
             ax[0].set_title('t = %6.3f' % t)
@@ -390,10 +396,10 @@ def make_plot_function(states_list, speeds_list, riemann_eval_list,
         show_time_legend: show time in legend
 
     The figure is built once (for each choice of characteristics) and then only what
-    depends on t is drawn again (utils.riemann_figure.RiemannSolutionFigure); the plot
-    function shows it as an image. The web book draws plot_function.figure itself.
+    depends on t is drawn again (utils.riemann_figure); the plot function shows it as an
+    image. plot_function.live_figure() gives that figure, for the web book.
     """
-    from utils.riemann_figure import RiemannSolutionFigure
+    from utils.riemann_figure import riemann_solution_figure
     if type(states_list) is not list:
         states_list = [states_list]
         speeds_list = [speeds_list]
@@ -404,25 +410,25 @@ def make_plot_function(states_list, speeds_list, riemann_eval_list,
     if wave_types_list is None:
         wave_types_list= [['contact']*len(speeds_list[0])]*len(speeds_list)
 
-    figure = RiemannSolutionFigure(
-        list(zip(states_list, speeds_list, riemann_eval_list, wave_types_list)), names=names,
-        layout=layout, variable_names=variable_names, colors=colors, plot_chars=plot_chars,
-        derived_variables=derived_variables, aux=aux, contact_index=contact_index,
-        vertical_spacing=vertical_spacing, show_time_legend=show_time_legend)
+    def live_figure():
+        return riemann_solution_figure(
+            list(zip(states_list, speeds_list, riemann_eval_list, wave_types_list)), names=names,
+            layout=layout, variable_names=variable_names, colors=colors, plot_chars=plot_chars,
+            derived_variables=derived_variables, aux=aux, contact_index=contact_index,
+            vertical_spacing=vertical_spacing, show_time_legend=show_time_legend)
+    figure = live_figure()
 
     def plot_function(t, which_char=None):
-        from IPython.display import Image, display
-        figure.update(t=t, which_char=which_char)
-        display(Image(data=figure.png()))
+        figure.show(t=t, which_char=which_char)
 
     if plot_chars:
-        plot_function.figure = figure
+        plot_function.live_figure = live_figure
         return plot_function
     else:
         def real_plot_function(t):
             plot_function(t,None)
 
-        real_plot_function.figure = figure
+        real_plot_function.live_figure = live_figure
         return real_plot_function
 
 

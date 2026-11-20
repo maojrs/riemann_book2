@@ -80,14 +80,30 @@ These make the code run on current Python, NumPy and IPython without changing an
   sliders are laid out in rows (`char_solution`: t, then ρ and K). `ipywidgets` and `IPython`
   are imported only by the notebook functions. Tests: `test_acoustics_demos.py`, against
   the previous module kept in `tests/reference/acoustics_demos_before.py`.
-- `riemann_tools.make_plot_function` draws on a live figure (`utils/riemann_figure.py`, new):
-  the x-t plane, waves and characteristics are drawn once, and moving the time slider only
-  redraws the time line, the solution curves, the titles and the legend. Same arguments and
-  same pictures; the plot function shows the figure as an image, and the web book draws its
-  `figure` attribute. A slider step in a notebook takes about 20 ms instead of 240–460 ms
-  (Advection, Burgers, Euler, Acoustics and the chapters of Parts II–V that use it). Test:
-  `test_riemann_figure.py`, against the previous version kept in
-  `tests/reference/riemann_tools_before.py` (at most 0.005% of the pixels differ).
+- Plotting functions with a time slider draw on a live figure (`utils.live_figure.TimeFigure`,
+  new): the figure is built once for the other values, and moving t only redraws what
+  depends on it (time lines, solution curves, stripes, titles). Same names, arguments and
+  pictures; in a notebook the function shows the figure as an image, and the web book draws
+  `function.live_figure()`. Each drawing function is split into the part drawn once and an
+  inner `at_time(t)`, with its original lines; `plt.` calls on the current axes became calls
+  on the axes. A notebook slider step takes 17–26 ms instead of 245–430 ms (80–100 ms instead
+  of 390–590 ms for the figures with stripes).
+  - `riemann_tools.make_plot_function` (`utils/riemann_figure.py`, new): Advection, Burgers,
+    Euler, Acoustics and the chapters of Parts II–V that use it. Test: `test_riemann_figure.py`,
+    against the previous version in `tests/reference/riemann_tools_before.py` (at most 0.005%
+    of the pixels differ).
+  - `burgers.plot_riemann`, `traffic_LWR.plot_riemann_traffic`, `traffic_demos.jam` and
+    `green_light`, `nonconvex_demos.make_plot_function` and `make_plot_function_qsliders`,
+    `shallow_water.make_demo_plot_function` (also the stripes of `plot_riemann_SW`), and
+    `euler_demos.plot_with_stripes`. Test: `test_time_figures.py`, against the previous
+    versions in `tests/reference/plotting_before.py`.
+  - `riemann_tools.plot_riemann` takes an optional `fig` to make its axes on;
+    `nonconvex_demos.plot_waves` labels its own axes instead of pyplot's current ones.
+- `euler_demos.plot_with_stripes` (and so `euler_demo1`): the vertical axes hold every value of
+  the solution, at all times, so they no longer move with t and the curves always fit; at t = 0
+  the pressure is now that of the initial states (the energy row was never set, the momentum
+  row twice). `euler_demo1` shows the time slider on top, full width. Tests:
+  `test_euler_stripes_stay_inside_their_axes`, `test_euler_stripes_at_time_zero_are_the_initial_states`.
 
 ## Project infrastructure
 
@@ -158,7 +174,7 @@ These make the code run on current Python, NumPy and IPython without changing an
 - Interactive figures on the web (`widgets/`, new): the book's own Python runs in the reader's
   browser (Pyodide, in one worker per page, `widgets/python.mjs`), installed from the wheel that
   `myst.yml` publishes with the site (`static_files`). Before Python is ready the build-time figure
-  is shown; without JavaScript it stays. Tests for the Python side: `test_widgets_compute.py`.
+  is shown; without JavaScript it stays. Tests of the interactive figures are in `tests/widgets/`; the Python side: `test_widgets_compute.py`.
   - `interact.mjs`: the live version of an interactive cell, with the notebook's controls
     (`utils/live_figure.InteractiveFigure`), drawn by the same code as in the notebook.
   - `acoustics_explorer.mjs`: drag q_l and q_r in the acoustics phase plane (D3 drawing,
@@ -188,6 +204,15 @@ These make the code run on current Python, NumPy and IPython without changing an
       the window high. The figures output by code cells are shown at 80% too (`book.css`).
     - The "Computed in your browser" line only shows while Python loads (or if it fails), so it
       no longer appears twice when a cell has two figures (`plot_riemann_SW`).
+    - Controls redesigned (`interact.css`): one accent colour (the blue of the book's states,
+      `--book-accent` in `book.css`, lighter on the dark theme), sliders filled up to their
+      value, symbols in the math font. A time slider alone in its row spans the width;
+      checkboxes sit in one line; other controls the notebook shows one per line sit side by
+      side when there is room (the rows a function lays out itself are kept).
+    - When a figure cannot be drawn for some values (e.g. the Euler solver does not converge),
+      the figure says so instead of keeping the previous picture; values chosen meanwhile are
+      still drawn (`latestOnly` in `python.mjs`).
+    - `acoustics_explorer.css` is now `phase_plane_explorer.css`, shared by both drag explorers.
   - `RedrawFigure` draws each frame once, straight to pixels, cropped as Jupyter crops it
     (`savefig(bbox_inches='tight')`) but with a crop that only grows, so the figure no longer
     jumps a few pixels when a tick label widens. The crop is measured again only when the axes

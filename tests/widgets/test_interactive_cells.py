@@ -29,7 +29,7 @@ from PIL import Image  # noqa: E402
 from utils.live_figure import InteractiveFigure  # noqa: E402
 from widgets.compute import _find  # noqa: E402
 
-CHAPTERS = pathlib.Path(__file__).resolve().parent.parent / 'chapters'
+CHAPTERS = pathlib.Path(__file__).resolve().parents[2] / 'chapters'
 WIDGET = re.compile(r'```\{anywidget\} \.\./widgets/interact\.mjs\n:css: [^\n]*\n(\{.*\})\n```', re.S)
 SLOW = ('_animation(',)          # cells not needed here (miniclaw animations)
 

@@ -122,15 +122,19 @@ export function python(fn, kwargs = {}) {
 }
 
 // Each figure asks for its next picture only after the previous one has arrived, always
-// with the latest values, so fast slider or mouse movements never queue up.
+// with the latest values, so fast slider or mouse movements never queue up. Values that
+// came in meanwhile are drawn next, even if the previous picture failed (its error is then
+// replaced by the outcome of the latest values).
 export function latestOnly(fn, kwargsOf, onResult) {
   let busy = false, again = false;
   return async function update() {
     if (busy) { again = true; return; }
     busy = true;
-    try { onResult(await python(fn, kwargsOf())); }
-    finally { busy = false; }
-    if (again) { again = false; update(); }
+    let failure = null;
+    try { onResult(await python(fn, kwargsOf())); } catch (error) { failure = error; }
+    busy = false;
+    if (again) { again = false; return update(); }
+    if (failure) throw failure;
   };
 }
 

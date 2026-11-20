@@ -8,6 +8,7 @@ from ipywidgets import widgets
 from ipywidgets import interact
 from IPython.display import display
 import matplotlib.pyplot as plt
+from utils.live_figure import TimeFigure
 
 
 
@@ -62,19 +63,28 @@ def unphysical_riemann_solution(q_l,q_r):
     return states, speeds, reval, wave_types
 
 def plot_riemann(q_l,q_r,t,x_range=1):
+    plot_riemann.figure.show(q_l=q_l, q_r=q_r, t=t, x_range=x_range)
+
+def draw_riemann(fig,q_l,q_r,t,x_range=1):
+    """plot_riemann on fig; returns at_time(t) (utils.live_figure.TimeFigure)."""
+    from utils.riemann_figure import plot_riemann_at_time
     states, speeds, reval, wave_types = exact_riemann_solution(q_l,q_r)
-    ax = riemann_tools.plot_riemann(states, speeds, reval,
+    ax, at_time = plot_riemann_at_time(states, speeds, reval,
                                     wave_types,t=t,
                                     layout='horizontal',
-                                    t_pointer=0, 
+                                    t_pointer=0,
                                     extra_axes=False,
                                     variable_names=['q'],
-                                    xmax=x_range);
+                                    xmax=x_range, fig=fig)
     riemann_tools.plot_characteristics(reval, speed, axes=ax[0])
     ax[1].set_ylim(-0.05,1.05)
     for a in ax:
         a.set_xlim(-x_range,x_range)
-    plt.show() 
+    return at_time
+
+# plot_riemann draws on a figure built once; moving t only redraws what depends on it
+plot_riemann.live_figure = lambda: TimeFigure(draw_riemann, figsize=(6,3))
+plot_riemann.figure = plot_riemann.live_figure()
 
 def riemann_solution_interact():
     ql_widget = widgets.FloatSlider(min=0., max=1., value=0.5, description=r'$q_l$')

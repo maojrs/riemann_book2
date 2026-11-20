@@ -229,7 +229,7 @@ def plot_flux(f, q_left, q_right, plot_zero=True):
 
 
 # --- Interactive figures for the web book (utils.live_figure): the controls of the notebook
-from utils.live_figure import InteractiveFigure, checkbox, radio, slider  # noqa: E402
+from utils.live_figure import InteractiveFigure, TimeFigure, checkbox, radio, slider  # noqa: E402
 
 HUGONIOT_LOCI = InteractiveFigure.redraw(          # y_axis ('hu' or 'u') given by each cell
     shallow_water.plot_hugoniot_loci,
@@ -257,6 +257,15 @@ def exact_riemann_solution_plot(h_l=3., u_l=0., h_r=1., u_r=0., t=0.2, fig=0):
     """plot_exact_riemann_solution of the chapter's last cell."""
     plot_function = shallow_water.make_demo_plot_function(h_l, h_r, u_l, u_r, hlim=(0, 6), ulim=(-3, 3))
     plot_function(t, fig)
+
+
+def _draw_exact_riemann_solution(fig, h_l=3., u_l=0., h_r=1., u_r=0., t=0.2):
+    plot_function = shallow_water.make_demo_plot_function(h_l, h_r, u_l, u_r, hlim=(0, 6), ulim=(-3, 3))
+    return plot_function.draw(fig, t)
+
+
+# moving t only redraws what depends on it (utils.live_figure.TimeFigure)
+exact_riemann_solution_plot.live_figure = lambda: TimeFigure(_draw_exact_riemann_solution, (10, 3))
 
 
 EXACT_RIEMANN_SOLUTION = InteractiveFigure.redraw(

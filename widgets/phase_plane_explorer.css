@@ -1,0 +1,17 @@
+/* Phase-plane drag explorers: acoustics (acoustics_explorer.mjs) and shallow water (shallow_water_explorer.mjs) */
+.phase-plane-explorer { width: 100%; max-width: 100%; overflow: hidden; }
+.phase-plane-explorer svg { display: block; max-width: 100%; height: auto; font-size: 12px; }
+.phase-plane-explorer .pe-status { font-size: 0.85rem; opacity: 0.75; margin-bottom: 0.25rem; }
+.phase-plane-explorer .pe-line { fill: none; stroke: currentColor; stroke-width: 1.8; }
+.phase-plane-explorer .pe-dashed { stroke-dasharray: 6 4; opacity: 0.6; }
+.phase-plane-explorer .pe-point circle { fill: currentColor; }
+.phase-plane-explorer .pe-point text { fill: currentColor; font-size: 15px; }
+.phase-plane-explorer .pe-drag { cursor: grab; touch-action: none; }   /* drag, not scroll, on phones */
+.phase-plane-explorer .pe-drag circle { fill: #2563eb; }
+.phase-plane-explorer .pe-xlabel, .phase-plane-explorer .pe-ylabel { fill: currentColor; font-size: 13px; }
+/* Shallow water explorer (shallow_water_explorer.mjs), same look */
+.phase-plane-explorer .pe-title { fill: currentColor; font-size: 13px; }
+.phase-plane-explorer .sw-shock { stroke: #dc2626; }
+.phase-plane-explorer .sw-rarefaction { stroke: #2563eb; }
+.phase-plane-explorer .sw-ray { stroke: currentColor; stroke-width: 1.2; }
+.phase-plane-explorer .sw-handle { fill: #2563eb; cursor: grab; touch-action: none; }

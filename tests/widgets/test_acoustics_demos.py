@@ -17,7 +17,7 @@ from PIL import Image  # noqa: E402
 
 from exact_solvers import acoustics_demos  # noqa: E402
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'reference'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'reference'))
 import acoustics_demos_before as before  # noqa: E402
 
 DPI = 100

@@ -5,6 +5,7 @@ import numpy as np
 from . import nonconvex
 
 from utils import riemann_tools
+from utils.live_figure import TimeFigure
 
 figsize =(8,4)
 
@@ -42,7 +43,7 @@ def plot_waves(f,q_left, q_right, xi_left, xi_right, n=1000, axes=None, t=0.2):
     riemann_tools.plot_waves(None,speeds,None,wave_types,ax=axes,
                              t_pointer=False,t=t)
     #plt.xlim(xi_left, xi_right)
-    plt.xlabel('x')
+    axes.set_xlabel('x')
 
 def make_plot_function(f, q_left, q_right, xi_left, xi_right):
     
@@ -54,40 +55,53 @@ def make_plot_function(f, q_left, q_right, xi_left, xi_right):
         Nonzero fig is used only by jsanimate_widgets when
         converting to html files.
         """
-        if fig==0: 
-            plt.figure(figsize=figsize);
-            
+        if fig==0:
+            return figure.show(t=t)
+        draw(fig, t)
+
+    def draw(fig, t=0.2):
+        """plot_function on fig; returns at_time(t) (utils.live_figure.TimeFigure)."""
         # plot solution q(x,t):
-        plt.subplot(1,3,1)
+        ax1 = fig.add_subplot(1,3,1)
         # from characteristic-based solution:
-        plt.plot(xi_char*t,q_char,'k--') 
+        char_line, = ax1.plot(xi_char*t,q_char,'k--') 
 
         # single-valued solution, extended full domain:
         xi_plot = np.hstack((xi_left,xi*t,xi_right))
         q_plot = np.hstack((q_left,qxi,q_right))
-        plt.plot(xi_plot, q_plot, 'k', linewidth=2)
-        plt.title('Solution q(x,t)\n at t = %4.2f' % t)
-        plt.xlabel('x')
-        plt.xlim(xi_left,xi_right)
+        solution, = ax1.plot(xi_plot, q_plot, 'k', linewidth=2)
+        ax1.set_title('Solution q(x,t)\n at t = %4.2f' % t)
+        ax1.set_xlabel('x')
+        ax1.set_xlim(xi_left,xi_right)
         
-        ax = plt.subplot(1,3,2)
+        ax = fig.add_subplot(1,3,2)
         plot_waves(f,q_left,q_right,xi_left,xi_right,n=1000,axes=ax,t=t)
+        time_line = ax.lines[-1]
         #ax.set_xlim(xi_left,xi_right)
                 
         # plot flux function and convex hull:
-        plt.subplot(1,3,3)
+        ax3 = fig.add_subplot(1,3,3)
         q_plot = np.linspace(q_left, q_right, 1000)
         f_plot = f(q_plot)
-        plt.plot(q_plot, f_plot, 'k--', label='f(q)')
-        plt.plot(qxi, f(qxi),'k', label='Convex hull')
-        plt.plot([q_left,q_right],[f(q_left),f(q_right)],'bo')
-        plt.title('Flux function (dashed)\n Convex hull (solid)')
-        plt.xlabel('q')
-        plt.tight_layout()
+        ax3.plot(q_plot, f_plot, 'k--', label='f(q)')
+        ax3.plot(qxi, f(qxi),'k', label='Convex hull')
+        ax3.plot([q_left,q_right],[f(q_left),f(q_right)],'bo')
+        ax3.set_title('Flux function (dashed)\n Convex hull (solid)')
+        ax3.set_xlabel('q')
+        fig.tight_layout()
         #plt.legend()
 
-        if fig==0: plt.show()
-        return None
+        def at_time(t):
+            char_line.set_xdata(xi_char*t)
+            solution.set_xdata(np.hstack((xi_left,xi*t,xi_right)))
+            ax1.set_title('Solution q(x,t)\n at t = %4.2f' % t)
+            time_line.set_ydata([t,t])
+            return [char_line, solution, ax1.title, time_line]
+        return at_time
+
+    # drawn on a figure built once; moving t only redraws what depends on it
+    plot_function.live_figure = lambda: TimeFigure(draw, figsize)
+    figure = plot_function.live_figure()
     return plot_function
 
 def demo1():
@@ -155,55 +169,65 @@ def make_plot_function_qsliders(f):
         Nonzero fig is used only by jsanimate_widgets when
         converting to html files.
         """
-        if fig==0: 
-            plt.figure(figsize=figsize)
+        if fig==0:
+            return figure.show(t=t, q_left=q_left, q_right=q_right)
+        draw(fig, t, q_left, q_right)
 
+    def draw(fig, t=0.2, q_left=1, q_right=0):
+        """plot_function on fig; returns at_time(t) (utils.live_figure.TimeFigure)."""
         xi_left = -3.
         xi_right = 3.
         xi, qxi, q_char, xi_char = \
                     nonconvex.nonconvex_solutions(f, q_left, q_right, 
                                                   xi_left, xi_right)
         # plot solution q(x,t):
-        plt.subplot(1,3,1)
+        ax1 = fig.add_subplot(1,3,1)
         # from characteristic-based solution:
-        plt.plot(xi_char*t,q_char,'k--') 
+        char_line, = ax1.plot(xi_char*t,q_char,'k--') 
 
         # single-valued solution, extended full domain:
         xi_plot = np.hstack((xi_left,xi*t,xi_right))
         q_plot = np.hstack((q_left,qxi,q_right))
-        plt.plot(xi_plot, q_plot, 'k', linewidth=2)
-        plt.title('Solution q(x,t)\n at t = %4.2f' % t)
-        plt.xlabel('x')
-        plt.ylim(-4,4)
+        solution, = ax1.plot(xi_plot, q_plot, 'k', linewidth=2)
+        ax1.set_title('Solution q(x,t)\n at t = %4.2f' % t)
+        ax1.set_xlabel('x')
+        ax1.set_ylim(-4,4)
 
-        plt.xlim(xi_left,xi_right)
+        ax1.set_xlim(xi_left,xi_right)
         
-        ax = plt.subplot(1,3,2)
+        ax = fig.add_subplot(1,3,2)
         plot_waves(f,q_left,q_right,xi_left,xi_right,n=1000,axes=ax,t=t)
+        time_line = ax.lines[-1]
         ax.set_xlim(-1.5,1.5)
 
         # plot flux function and convex hull:
-        plt.subplot(1,3,3)
+        ax3 = fig.add_subplot(1,3,3)
         ql_plot = -4
         qr_plot = 4
         q_plot = np.linspace(ql_plot,qr_plot, 1000)
         f_plot = f(q_plot)
-        plt.plot(q_plot, f_plot, 'k--', label='f(q)')
-        plt.plot(qxi, f(qxi),'k', label='Convex hull')
-        plt.plot([q_left,q_right],[f(q_left),f(q_right)],'bo')
-        plt.title('Flux function (dashed)\n Convex hull (solid)')
-        plt.xlabel('q')
-        plt.xlim(ql_plot,qr_plot)
-        plt.ylim(-0.8,1.2)
-        plt.tight_layout()
+        ax3.plot(q_plot, f_plot, 'k--', label='f(q)')
+        ax3.plot(qxi, f(qxi),'k', label='Convex hull')
+        ax3.plot([q_left,q_right],[f(q_left),f(q_right)],'bo')
+        ax3.set_title('Flux function (dashed)\n Convex hull (solid)')
+        ax3.set_xlabel('q')
+        ax3.set_xlim(ql_plot,qr_plot)
+        ax3.set_ylim(-0.8,1.2)
+        fig.tight_layout()
         #plt.legend()
 
+        def at_time(t):
+            char_line.set_xdata(xi_char*t)
+            solution.set_xdata(np.hstack((xi_left,xi*t,xi_right)))
+            ax1.set_title('Solution q(x,t)\n at t = %4.2f' % t)
+            time_line.set_ydata([t,t])
+            return [char_line, solution, ax1.title, time_line]
+        return at_time
 
-        
-        if fig==0: plt.show()
-        return None
+    # drawn on a figure built once; moving t only redraws what depends on it
+    plot_function.live_figure = lambda: TimeFigure(draw, figsize)
+    figure = plot_function.live_figure()
     return plot_function
-
 
 # --- Interactive figures for the web book (utils.live_figure): the controls of the notebook
 from utils.live_figure import InteractiveFigure, slider  # noqa: E402

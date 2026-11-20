@@ -139,13 +139,13 @@ def test_plot_riemann_with_derived_variables():
 @pytest.mark.filterwarnings("ignore:FigureCanvasAgg is non-interactive")
 def test_make_plot_function():
     states, speeds, reval, wave_types = burgers.exact_riemann_solution(2.0, 1.0)
-    plot = riemann_tools.make_plot_function(states, speeds, reval, wave_types)
-    plot.figure.update(t=0.3)
-    assert len(plot.figure.fig.axes) == 2
+    plot = riemann_tools.make_plot_function(states, speeds, reval, wave_types).live_figure()
+    plot.update(t=0.3)
+    assert len(plot.fig.axes) == 2
     plot_chars = riemann_tools.make_plot_function(states, speeds, reval, wave_types,
-                                                  plot_chars=[burgers.speed])
-    plot_chars.figure.update(t=0.3, which_char=1)        # with the characteristics of family 1
-    assert len(plot_chars.figure.fig.axes[0].lines) > len(plot.figure.fig.axes[0].lines)
+                                                  plot_chars=[burgers.speed]).live_figure()
+    plot_chars.update(t=0.3, which_char=1)        # with the characteristics of family 1
+    assert len(plot_chars.fig.axes[0].lines) > len(plot.fig.axes[0].lines)
 
 
 def test_plot_riemann_trajectories():

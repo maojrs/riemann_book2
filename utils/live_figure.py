@@ -56,6 +56,9 @@ class LiveFigure:
             pos = ax.get_position()
             ax.set_position([(pos.x0*width - box.x0)/box.width, (pos.y0*height - box.y0)/box.height,
                              pos.width*width/box.width, pos.height*height/box.height])
+        for text in self.fig.texts:           # suptitle: placed in figure fractions too
+            x, y = text.get_position()
+            text.set_position(((x*width - box.x0)/box.width, (y*height - box.y0)/box.height))
         self.fig.set_size_inches(box.width, box.height)
         self._fitted = True
 
@@ -72,7 +75,7 @@ class LiveFigure:
             self._background = self.canvas.copy_from_bbox(self.fig.bbox)
         else:
             self.canvas.restore_region(self._background)
-        for artist in self._live:
+        for artist in sorted(self._live, key=lambda a: a.get_zorder()):   # as matplotlib orders them
             self.fig.draw_artist(artist)
         width, height = self.canvas.get_width_height()
         return {'width': width, 'height': height, 'rgba': bytes(self.canvas.buffer_rgba())}
@@ -80,6 +83,51 @@ class LiveFigure:
     def png(self):
         """frame() as PNG data: for showing the figure in a notebook."""
         return png(self.frame())
+
+
+class TimeFigure(LiveFigure):
+    """A figure with a time slider: draw(fig, t=..., **values) draws the figure on fig at
+    time t and returns at_time(t), which draws (or moves) what depends on the time and
+    returns those artists. A new time only calls at_time; new values of anything else build
+    the figure again. The axis limits found in the first frame of a build are kept, so the
+    axes do not move with t. update() ignores `fig`, the figure argument of the book's
+    notebook plotting functions."""
+
+    def __init__(self, draw, figsize, time='t'):
+        self.draw = draw
+        self.figsize = figsize
+        self.time = time
+        self._values = None
+
+    def update(self, fig=None, **values):
+        t = values.pop(self.time)
+        if values != self._values:
+            super().__init__(figsize=self.figsize)
+            self._values = values
+            self._at_time = self.draw(self.fig, **{self.time: t}, **values)
+            self._live = self._time_artists(t)
+            for ax in self.fig.axes:
+                ax.set_xlim(ax.get_xlim())
+                ax.set_ylim(ax.get_ylim())
+            return
+        artists = self._time_artists(t)
+        for artist in self._live:
+            if not any(artist is a for a in artists):
+                artist.remove()
+        if self._fitted:                      # see frame(): not in the saved background
+            for artist in artists:
+                artist.set_animated(True)
+        self._live = artists
+
+    def _time_artists(self, t):
+        """at_time(t), each artist once (two curves may share a title)."""
+        return list({id(a): a for a in self._at_time(t)}.values())
+
+    def show(self, **values):
+        """Draw the figure for these values, as an image in the notebook."""
+        from IPython.display import Image, display
+        self.update(**values)
+        display(Image(data=self.png()))
 
 
 class RedrawFigure:
@@ -219,10 +267,12 @@ class InteractiveFigure:
         if self.function is None:
             return self.figure(**setup)
         plot = self.function(**setup) if self.factory else functools.partial(self.function, **setup)
-        figure = getattr(plot, 'figure', None)
-        if isinstance(figure, LiveFigure):        # a plotting function drawn on a live figure
-            if self.fixed:                        # the cell's fixed() arguments, at every update
-                figure.update = functools.partial(figure.update, **self.fixed)
+        function = plot.func if isinstance(plot, functools.partial) else plot
+        if hasattr(function, 'live_figure'):      # a plotting function drawn on a live figure
+            figure = function.live_figure()
+            arguments = {**(plot.keywords if plot is not function else {}), **self.fixed}
+            if arguments:                         # setup and fixed() arguments, at every update
+                figure.update = functools.partial(figure.update, **arguments)
             return figure
         return RedrawFigure(functools.partial(plot, **self.fixed))
 

@@ -22,7 +22,7 @@ const GREEK = { alpha: 'α', beta: 'β', gamma: 'γ', lambda: 'λ', rho: 'ρ', s
 function labelElement(label) {
   const span = document.createElement('span');
   span.className = 'bi-name';
-  const math = label.match(/^\$(.*)\$$/);
+  const math = label.match(/^\$(.*)\$$/) ?? label.match(/^([a-z])$/i);    // a one-letter name is a symbol
   if (!math) {
     span.textContent = label;
     return span;
@@ -35,17 +35,15 @@ function labelElement(label) {
   return span;
 }
 
-// One control, laid out as ipywidgets does: the label, then the control (and a slider's
-// value); a checkbox sits under the controls, with its label after it
+// One control: its label (as the ipywidgets description), the control and, for a slider,
+// its value. Checkboxes and radio buttons keep their labels after the box or dot.
 function controlElement(c, onChange) {
   const row = document.createElement(c.kind === 'radio' ? 'div' : 'label');
   if (c.kind === 'checkbox') {
     const input = Object.assign(document.createElement('input'), { type: 'checkbox', checked: c.value });
     input.addEventListener('change', () => onChange(input.checked));
-    const box = document.createElement('span');
-    box.append(input, labelElement(c.label));
     row.className = 'bi-check';
-    row.append(document.createElement('span'), box);
+    row.append(input, labelElement(c.label));
     return row;
   }
   row.appendChild(labelElement(c.label));
@@ -53,6 +51,7 @@ function controlElement(c, onChange) {
   if (c.kind === 'radio') {
     input = document.createElement('span');
     input.className = 'bi-options';
+    row.setAttribute('role', 'radiogroup');
     const group = `bi-${Math.random().toString(36).slice(2)}`;
     for (const option of c.options) {
       const choice = input.appendChild(document.createElement('label'));
@@ -71,8 +70,12 @@ function controlElement(c, onChange) {
     input = Object.assign(document.createElement('input'),
       { type: 'range', min: c.min, max: c.max, step: c.step, value: c.value });
     readout = document.createElement('output');
-    readout.textContent = (+c.value).toFixed(2);
-    input.addEventListener('input', () => { readout.textContent = (+input.value).toFixed(2); onChange(+input.value); });
+    const show = () => {               // the value, and how far the track is filled
+      readout.textContent = (+input.value).toFixed(2);
+      input.style.setProperty('--fill', (input.value - c.min) / (c.max - c.min));
+    };
+    show();
+    input.addEventListener('input', () => { show(); onChange(+input.value); });
   } else {
     input = Object.assign(document.createElement('input'), { type: 'number', step: 'any', value: c.value });
     if (c.min != null) Object.assign(input, { min: c.min, max: c.max });
@@ -84,6 +87,24 @@ function controlElement(c, onChange) {
   row.append(input);
   if (readout) row.append(readout);
   return row;
+}
+
+// The rows of controls as the notebook lays them out, grouped for the page: a time slider
+// alone in its row spans the width ('time'); controls of one kind that the notebook shows
+// one per line sit side by side as space allows ('flow'), checkboxes in one line
+// ('checks'); rows of several controls (the function's own layout) keep their columns ('row').
+function controlBlocks(rows, byName) {
+  const blocks = [];
+  for (const names of rows) {
+    const c = names.length === 1 ? byName[names[0]] : null;
+    const kind = !c ? 'row' : c.name === 't' && c.kind === 'slider' ? 'time'
+      : c.kind === 'checkbox' ? 'checks' : 'flow';
+    const last = blocks.at(-1);
+    const joins = last && last.kind === kind && (kind === 'checks' || (kind === 'flow' && last.of === c.kind));
+    if (joins) last.names.push(...names);
+    else blocks.push({ kind, of: c?.kind, names: [...names] });
+  }
+  return blocks;
 }
 
 // The image output of the code cell above this widget (other widgets in between are
@@ -147,22 +168,30 @@ async function render({ model, el }) {
     });
 
     const byName = Object.fromEntries(controls.map(c => [c.name, { ...c, value: values[c.name] }]));
-    // Every row has as many columns as the widest one, so that controls have the same width,
-    // as in ipywidgets
-    const addRow = (names, parent, columns) => {
-      const row = parent.appendChild(Object.assign(document.createElement('div'), { className: 'bi-row' }));
-      row.style.setProperty('--columns', columns);
+    // Rows of several controls all have as many columns as the widest one, so that the
+    // controls have the same width, as in ipywidgets
+    const addBlock = ({ kind, names }, parent, columns) => {
+      const block = parent.appendChild(Object.assign(document.createElement('div'), { className: `bi-${kind}` }));
+      block.style.setProperty('--columns', columns);
       for (const name of names) {          // None (undefined here): an empty column
-        row.appendChild(name == null ? document.createElement('span')
-          : controlElement(byName[name], value => { values[name] = value; update(); }));
+        block.appendChild(name == null ? document.createElement('span')
+          : controlElement(byName[name], value => { values[name] = value; redraw(); }));
       }
     };
+    // A failed drawing (e.g. a solver that does not converge for these values) is said so,
+    // instead of leaving the previous picture as if it were the answer
+    const redraw = () => update().then(() => { status.hidden = true; }, error => {
+      status.textContent = 'This figure could not be drawn for these values: ' + error.message.split('\n').at(-1);
+      status.hidden = false;
+    });
     await update();
-    rows.forEach(names => addRow(names, form, Math.max(...rows.map(r => r.length))));
+    const blocks = controlBlocks(rows, byName);
+    const columns = Math.max(1, ...blocks.filter(b => b.kind === 'row').map(b => b.names.length));
+    blocks.forEach(block => addBlock(block, form, columns));
     if (options.length) {
       const details = form.appendChild(document.createElement('details'));
       details.appendChild(document.createElement('summary')).textContent = 'Plot options';
-      for (let i = 0; i < options.length; i += 2) addRow(options.slice(i, i + 2), details, 2);
+      for (let i = 0; i < options.length; i += 2) addBlock({ kind: 'row', names: options.slice(i, i + 2) }, details, 2);
     }
     status.hidden = true;
     el.dataset.state = 'ready';

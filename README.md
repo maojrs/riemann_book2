@@ -64,6 +64,7 @@ riemann_book2/
 ├── miniclaw/         minimal pure-Python version of the PyClaw methods used in the book
 ├── widgets/          browser side of the interactive figures (JavaScript + Python bridge)
 ├── tests/            the test suite and reference results from the original book
+│   └── widgets/      tests of the interactive figures (notebook and web book)
 ├── myst.yml          book configuration and table of contents
 ├── book.css          small style adjustments for the web
 ├── references.bib    bibliography

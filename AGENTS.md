@@ -31,7 +31,7 @@ riemann_book2/
 ├── utils/            # riemann_tools (compute and plot Riemann solutions), live_figure (interactive figures); may be rewritten
 ├── miniclaw/         # new: minimal educational reimplementation of Clawpack/PyClaw
 ├── widgets/          # interactive figures of the web book (anywidget .mjs) + compute.py for Python in the browser
-├── tests/
+├── tests/            # pytest: the science; tests/widgets/: the interactive figures (notebook and web)
 └── .github/, .agents/   # CI and agent notes (hidden)
 ```
 

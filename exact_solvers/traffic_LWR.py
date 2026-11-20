@@ -2,6 +2,7 @@ import sys, os
 import numpy as np
 from utils import riemann_tools
 import matplotlib.pyplot as plt
+from utils.live_figure import TimeFigure
 from ipywidgets import widgets, FloatSlider
 from ipywidgets import interact
 
@@ -63,19 +64,33 @@ def c(rho, xi):
     return 1.-2*rho
 
 def plot_riemann_traffic(rho_l,rho_r,t,xrange=1.):
+    plot_riemann_traffic.figure.show(rho_l=rho_l, rho_r=rho_r, t=t, xrange=xrange)
+
+def draw_riemann_traffic(fig,rho_l,rho_r,t,xrange=1.):
+    """plot_riemann_traffic on fig; returns at_time(t) (utils.live_figure.TimeFigure)."""
+    from utils.riemann_figure import plot_riemann_at_time
     states, speeds, reval, wave_types = \
             riemann_traffic_exact(rho_l,rho_r)
-    ax = riemann_tools.plot_riemann(states,speeds,reval,
+    ax, solution_at_time = plot_riemann_at_time(states,speeds,reval,
                                     wave_types,t=t,
                                     t_pointer=0,extra_axes=True,
                                     variable_names=['Density'],
-                                    xmax=xrange)
+                                    xmax=xrange, fig=fig)
     riemann_tools.plot_characteristics(reval,c,axes=ax[0])
     plot_car_trajectories(rho_l,rho_r,ax[2],t=t,xmax=xrange)
+    time_line = ax[2].lines[-1]     # drawn last by plot_riemann_trajectories
     ax[1].set_ylim(-0.05,1.05); ax[2].set_ylim(0,1)
     for a in ax:
         a.set_xlim(-xrange,xrange)
-    plt.show()
+
+    def at_time(t):
+        time_line.set_ydata([t,t])
+        return solution_at_time(t) + [time_line]
+    return at_time
+
+# plot_riemann_traffic draws on a figure built once; moving t only redraws what depends on it
+plot_riemann_traffic.live_figure = lambda: TimeFigure(draw_riemann_traffic, figsize=(9,3))
+plot_riemann_traffic.figure = plot_riemann_traffic.live_figure()
 
 def riemann_solution_interact():
     rho_l_widget = widgets.FloatSlider(min=0., max=1., value=0.5, description=r'$\rho_l$')

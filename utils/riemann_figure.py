@@ -1,84 +1,79 @@
-"""The figure of riemann_tools.make_plot_function as a live figure (utils.live_figure).
-
-The figure shows the x-t plane and each variable q(x, t) at time t, for one or more Riemann
-solutions. Only the time line, the solution curves, the titles and the legend depend on t:
-they are the live artists. The rest (waves, characteristics, axes) is drawn once for each
-choice of characteristics.
-"""
-from utils.live_figure import LiveFigure
+"""Riemann solution figures with a time slider, drawn on a utils.live_figure.TimeFigure:
+the x-t plane, waves and characteristics are drawn once, and a new time only moves the
+time line and the solution curves q(x, t) (and the titles and legend that show t)."""
+from utils.live_figure import TimeFigure
 from utils.riemann_tools import plot_characteristics, plot_riemann, sample_riemann
 
 
-class RiemannSolutionFigure(LiveFigure):
-    """solutions: list of (states, speeds, riemann_eval, wave_types); the other arguments are
-    those of make_plot_function."""
+def plot_riemann_at_time(states, s, riemann_eval, wave_types, t, ax=None, derived_variables=None,
+                         **options):
+    """riemann_tools.plot_riemann(states, s, riemann_eval, wave_types, t, ax, ...); returns
+    its axes and at_time(t), which moves the time line and the solution curves (and the
+    'q at t = ...' titles of the horizontal layout) to time t and returns them."""
+    ax = plot_riemann(states, s, riemann_eval, wave_types, t, ax, derived_variables=derived_variables,
+                      **options)
+    num_vars = len(derived_variables(states[:, 0])) if derived_variables else states.shape[0]
+    time_line = ax[0].lines[-1]                   # drawn last by plot_waves
+    curves = [a.lines[-1] for a in ax[1:1 + num_vars]]       # q(x, t), drawn last in each axes
+    xmax = ax[0].get_xlim()[1]                     # the x range plot_riemann sampled
+    horizontal = options.get('layout', 'horizontal') == 'horizontal'
+    titles = [a.title for a in ax[1:1 + num_vars]] if horizontal else []
 
-    def __init__(self, solutions, names=None, layout='horizontal', variable_names=None,
-                 colors=('multi', 'green', 'orange'), plot_chars=None, derived_variables=None,
-                 aux=None, contact_index=None, vertical_spacing=0, show_time_legend=False):
-        self.solutions = solutions
-        self.names = names
-        self.layout = layout
-        self.variable_names = variable_names
-        self.colors = colors
-        self.plot_chars = plot_chars
-        self.derived_variables = derived_variables
-        self.aux = aux
-        self.contact_index = contact_index
-        self.vertical_spacing = vertical_spacing
-        self.show_time_legend = show_time_legend
-        self.which_char = 'not built'
-
-    def update(self, t, which_char=None):
-        if which_char != self.which_char:
-            self._build(t, which_char)
-        for curves, time_line, (states, speeds, riemann_eval, wave_types), xmax in self._parts:
-            x, q = sample_riemann(speeds, riemann_eval, t, xmax, self.derived_variables)
-            for i, curve in enumerate(curves):
-                curve.set_data(x, q[i])
-            time_line.set_ydata([t, t])
-        for title in self._titles:        # "q at t =  0.500"
+    def at_time(t):
+        x, q = sample_riemann(s, riemann_eval, t, xmax, derived_variables)
+        for i, curve in enumerate(curves):
+            curve.set_data(x, q[i])
+        time_line.set_ydata([t, t])
+        for title in titles:                       # "q at t =  0.500"
             text = title.get_text()
             title.set_text(text[:text.rindex(' at t = ')] + ' at t = %6.3f' % t)
-        if self.show_time_legend:
-            self._legend.set_title('time = %.2f' % t)
+        return [time_line, *curves, *titles]
+    return ax, at_time
 
-    def _build(self, t, which_char):
-        """Draw the whole figure at time t, as make_plot_function's plot_function(t, which_char)."""
-        num_axes = self.solutions[0][0].shape[0] + 1
-        if self.layout == 'horizontal':
-            super().__init__(figsize=(9, 3))
-            ax = self.fig.subplots(1, num_axes)
+
+def riemann_solution_figure(solutions, names=None, layout='horizontal', variable_names=None,
+                            colors=('multi', 'green', 'orange'), plot_chars=None,
+                            derived_variables=None, aux=None, contact_index=None,
+                            vertical_spacing=0, show_time_legend=False):
+    """The figure of riemann_tools.make_plot_function (same arguments; solutions is a list of
+    (states, speeds, riemann_eval, wave_types)), for update(t=..., which_char=...)."""
+    num_axes = solutions[0][0].shape[0] + 1
+    if layout == 'horizontal':
+        figsize = (9, 3)
+    else:
+        figsize = (6, (2 + vertical_spacing)*(num_axes - 1))
+
+    def draw(fig, which_char=None, t=None):
+        if layout == 'horizontal':
+            ax = fig.subplots(1, num_axes)
         else:
-            super().__init__(figsize=(6, (2 + self.vertical_spacing)*(num_axes - 1)))
-            ax = self.fig.subplots(num_axes, 1, sharex=True)
-            self.fig.subplots_adjust(hspace=self.vertical_spacing)
+            ax = fig.subplots(num_axes, 1, sharex=True)
+            fig.subplots_adjust(hspace=vertical_spacing)
             ax[-1].set_xlabel('x')
             ax[0].set_ylabel('t')
-        self.which_char = which_char
-        self._parts = []
-        for i, solution in enumerate(self.solutions):
-            states, speeds, riemann_eval, wave_types = solution
-            plot_riemann(states, speeds, riemann_eval, wave_types, t, ax, self.colors[i],
-                         layout=self.layout, variable_names=self.variable_names, t_pointer=False,
-                         derived_variables=self.derived_variables)
-            # the curves q(x, t) and the time line it just drew, and the x range it sampled
-            self._parts.append(([a.lines[-1] for a in ax[1:]], ax[0].lines[-1], solution,
-                                ax[0].get_xlim()[1]))
-            if self.names is not None and self.show_time_legend:
-                ax[1].legend(self.names, loc='best', title='time = %.2f' % t)
-            if self.names is not None and not self.show_time_legend:
-                ax[1].legend(self.names, loc='best')
-            if self.names is None and self.show_time_legend:
+        at_times = []
+        for i, (states, speeds, riemann_eval, wave_types) in enumerate(solutions):
+            at_times.append(plot_riemann_at_time(
+                states, speeds, riemann_eval, wave_types, t, ax, derived_variables, color=colors[i],
+                layout=layout, variable_names=variable_names, t_pointer=False)[1])
+            if names is not None and show_time_legend:
+                ax[1].legend(names, loc='best', title='time = %.2f' % t)
+            if names is not None and not show_time_legend:
+                ax[1].legend(names, loc='best')
+            if names is None and show_time_legend:
                 ax[1].legend([], loc='best', title='time = %.2f' % t)
             if which_char:
-                plot_characteristics(riemann_eval, self.plot_chars[which_char - 1], aux=self.aux,
-                                     axes=ax[0], speeds=speeds, contact_index=self.contact_index)
-        for curves, time_line, _, _ in self._parts:
-            self.live(time_line)
-            for curve in curves:
-                self.live(curve)
-        self._titles = [self.live(a.title) for a in ax[1:]] if self.layout == 'horizontal' else []
-        self._legend = ax[1].get_legend()
-        if self._legend is not None:      # its place (loc='best') depends on the curves
-            self.live(self._legend)
+                plot_characteristics(riemann_eval, plot_chars[which_char - 1], aux=aux, axes=ax[0],
+                                     speeds=speeds, contact_index=contact_index)
+        legend = ax[1].get_legend()
+
+        def at_time(t):
+            artists = [a for at in at_times for a in at(t)]
+            if legend is None:
+                return artists
+            if show_time_legend:
+                legend.set_title('time = %.2f' % t)
+            return artists + [legend]              # its place (loc='best') depends on the curves
+        return at_time
+
+    return TimeFigure(draw, figsize)

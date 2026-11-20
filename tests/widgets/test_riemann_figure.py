@@ -18,7 +18,7 @@ from PIL import Image  # noqa: E402
 from exact_solvers import acoustics, advection, burgers, euler, shallow_water  # noqa: E402
 from utils import riemann_tools  # noqa: E402
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'reference'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'reference'))
 import riemann_tools_before as before  # noqa: E402
 
 
@@ -70,7 +70,7 @@ def before_picture(args, kwargs, t, which_char):
 
 @pytest.mark.parametrize('name, args, kwargs, which_chars', cases(), ids=[c[0] for c in cases()])
 def test_live_figure_is_the_whole_figure(name, args, kwargs, which_chars):
-    figure = riemann_tools.make_plot_function(*args, **kwargs).figure
+    figure = riemann_tools.make_plot_function(*args, **kwargs).live_figure()
     for which_char in which_chars:
         figure.update(t=0.9, which_char=which_char)          # built at another time
         figure.png()
@@ -89,12 +89,14 @@ def test_plot_function_shows_the_figure(monkeypatch):
     monkeypatch.setattr(IPython.display, 'display', shown.append)
     plot_function = riemann_tools.make_plot_function(*advection.riemann_solution(0., 1., 1.))
     plot_function(0.5)
-    assert len(shown) == 1 and shown[0].data == plot_function.figure.png()
+    figure = plot_function.live_figure()
+    figure.update(t=0.5)
+    assert len(shown) == 1 and shown[0].data == figure.png()
 
 
 def test_only_the_time_dependent_parts_are_drawn_again():
     figure = riemann_tools.make_plot_function(*euler_solution(1., 0., 1., .125, 0., .1),
-                                              plot_chars=[euler.lambda1, euler.lambda2, euler.lambda3]).figure
+                                              plot_chars=[euler.lambda1, euler.lambda2, euler.lambda3]).live_figure()
     figure.update(t=0.5, which_char=2)
     built = figure.fig
     figure.update(t=0.6, which_char=2)

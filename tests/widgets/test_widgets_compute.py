@@ -67,7 +67,7 @@ def test_browser_and_assets_use_the_same_pyodide_version():
     """widgets/python.mjs loads Pyodide from the CDN, or the copy made by widgets/assets.py."""
     import pathlib
     import re
-    root = pathlib.Path(__file__).resolve().parent.parent
+    root = pathlib.Path(__file__).resolve().parents[2]
     in_browser = re.search(r"PYODIDE_VERSION = '([\d.]+)'", (root/'widgets'/'python.mjs').read_text()).group(1)
     in_assets = re.search(r"PYODIDE_VERSION = '([\d.]+)'", (root/'widgets'/'assets.py').read_text()).group(1)
     assert in_browser == in_assets
