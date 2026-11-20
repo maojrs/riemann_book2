@@ -6,6 +6,9 @@
 //   whenNear(el)       resolves when el is about one screen away, so that Python is only
 //                      started for readers who reach an interactive figure.
 //
+// The widgets import this file as python.mjs?v=<page load time>: its name is fixed, so
+// without that a browser could use an old cached copy with newer widgets.
+//
 // Pyodide comes from the jsDelivr CDN, which is fast; if that fails, from the copy published
 // with the book (prepared by widgets/assets.py, myst.yml static_files). The book's own code
 // (exact_solvers, utils, miniclaw, widgets) is a wheel published next to this file.
@@ -13,7 +16,8 @@
 const PYODIDE_VERSION = '0.28.3';      // the same as in widgets/assets.py
 const SOURCES = [`https://cdn.jsdelivr.net/pyodide/v${PYODIDE_VERSION}/full/`,
                  new URL('pyodide/', import.meta.url).href];
-const WHEEL = new URL('riemann_book-0.1.0-py3-none-any.whl', import.meta.url).href;
+const WHEEL_NAME = 'riemann_book-0.1.0-py3-none-any.whl';
+const WHEEL = new URL(WHEEL_NAME, import.meta.url).href;
 const NEEDS_MATPLOTLIB = ['figure_controls', 'figure_frame', 'render_figure'];   // they import plotting code
 
 const WORKER_SOURCE = `
@@ -34,7 +38,12 @@ async function startFrom(indexURL) {
   importScripts(indexURL + 'pyodide.js');
   const py = await loadPyodide({ indexURL });
   await loadPackages(py, ['numpy', 'micropip']);
-  await py.pyimport('micropip').install.callKwargs('${WHEEL}', { deps: false });
+  // The book's code: checked with the server each time ('no-cache'), so a new version of
+  // the book is never mixed with an old copy in the browser's cache
+  const wheel = await fetch('${WHEEL}', { cache: 'no-cache' });
+  if (!wheel.ok) throw new Error('could not download the book\\'s code (' + wheel.status + ')');
+  py.FS.writeFile('/tmp/${WHEEL_NAME}', new Uint8Array(await wheel.arrayBuffer()));
+  await py.pyimport('micropip').install.callKwargs('emfs:/tmp/${WHEEL_NAME}', { deps: false });
   py.runPython("import os, json; os.environ['MPLBACKEND'] = 'Agg'; from widgets import compute");
   return py;
 }

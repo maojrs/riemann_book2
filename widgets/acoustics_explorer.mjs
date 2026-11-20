@@ -10,7 +10,7 @@
 // D3 is published next to this file (widgets/assets.py); it defines the global d3
 await import(new URL('d3.min.js', import.meta.url).href);
 const d3 = globalThis.d3;
-const { python, latestOnly, whenNear } = await import(new URL('python.mjs', import.meta.url).href);
+const { python, latestOnly, whenNear } = await import(new URL(`python.mjs?v=${performance.timeOrigin}`, import.meta.url).href);   // never a stale copy
 
 const MARGIN = { top: 12, right: 12, bottom: 40, left: 46 };
 

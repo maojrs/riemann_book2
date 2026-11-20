@@ -12,7 +12,7 @@
 //
 // Python starts when the reader gets near the figure. Until it is ready, the figure made at
 // build time (the output of the code cell above) is shown; without JavaScript it simply stays.
-const { python, latestOnly, whenNear } = await import(new URL('python.mjs', import.meta.url).href);
+const { python, latestOnly, whenNear } = await import(new URL(`python.mjs?v=${performance.timeOrigin}`, import.meta.url).href);   // never a stale copy
 
 const GREEK = { alpha: 'α', beta: 'β', gamma: 'γ', lambda: 'λ', rho: 'ρ', sigma: 'σ', epsilon: 'ε' };
 
