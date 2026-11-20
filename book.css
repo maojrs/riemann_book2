@@ -56,3 +56,8 @@ article input[type=range].anim-slider { width: 100%; max-width: 374px; }
 /* Headings: the theme's link icon after a heading (visible on hover) is shifted 10px to the
    right; when the heading text reaches the edge of a phone screen it widens the page. */
 article :is(h1, h2, h3, h4, h5, h6) { overflow-x: clip; }
+
+/* Figures output by code cells: 80% of their size in pixels (matplotlib's 100 dpi), so that
+   their labels are not larger than the text; never wider than the column. The interactive
+   figures are sized the same way (widgets/interact.mjs). */
+article [data-name="safe-output-image"] img { zoom: 0.8; max-width: 100%; }

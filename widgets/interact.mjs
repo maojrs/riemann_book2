@@ -97,10 +97,10 @@ function buildTimeFigure(el, output) {
   return images[output ?? images.length - 1] ?? null;
 }
 
-// Figures are shown at 3/4 of their size in pixels, at most 60% of the window high, and
-// never wider than the column
+// Figures are shown at 80% of their size in pixels (wide, short ones at 95%), at most 60%
+// of the window high, and never wider than the column. Static outputs: book.css.
 function setSize(element, width, height) {
-  element.style.width = `${0.75 * width}px`;
+  element.style.width = `${(width / height >= 1.6 ? 0.95 : 0.8) * width}px`;
   element.style.maxWidth = `min(100%, ${60 * width / height}vh)`;
 }
 

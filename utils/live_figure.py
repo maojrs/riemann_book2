@@ -219,6 +219,11 @@ class InteractiveFigure:
         if self.function is None:
             return self.figure(**setup)
         plot = self.function(**setup) if self.factory else functools.partial(self.function, **setup)
+        figure = getattr(plot, 'figure', None)
+        if isinstance(figure, LiveFigure):        # a plotting function drawn on a live figure
+            if self.fixed:                        # the cell's fixed() arguments, at every update
+                figure.update = functools.partial(figure.update, **self.fixed)
+            return figure
         return RedrawFigure(functools.partial(plot, **self.fixed))
 
     def initial_values(self, **values):

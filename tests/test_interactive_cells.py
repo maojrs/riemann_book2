@@ -55,10 +55,12 @@ def run_chapter(name, monkeypatch):
         return types.SimpleNamespace(widget=figure)        # as interact: f.widget
     interact.recorder = True
 
-    def display(*objects, **kwargs):          # a function's own layout of its interact controls
-        for obj in objects:
+    def display(*objects, **kwargs):          # a function's own layout of its interact controls,
+        for obj in objects:                     # or the image a plotting function shows
             if isinstance(obj, ipywidgets.Box):
                 current[-1][1] = (current[-1][1][0], obj)
+            elif isinstance(obj, IPython.display.Image):
+                shown.append(obj.data)
     display.recorder = True
     recorders = {'interact': interact, 'display': display}
 
@@ -99,6 +101,9 @@ def run_chapter(name, monkeypatch):
     return recorded, models
 
 
+shown = []        # images shown with display() by the plotting functions
+
+
 def plain(x):
     """x with numpy arrays and numbers as lists and floats, to compare with the JSON of a cell."""
     return json.loads(json.dumps(x, default=lambda a: np.asarray(a).tolist()))
@@ -109,11 +114,15 @@ def png_pixels(png):
 
 
 def notebook_picture(figure):
-    """The interact figure as Jupyter shows it, with its initial control values."""
+    """The interact figure as Jupyter shows it, with its initial control values: the image
+    its function shows, or else its pyplot figure."""
     plt.close('all')
+    shown.clear()
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
         figure.f(**figure.kwargs)
+    if shown:
+        return png_pixels(shown[-1])
     buffer = io.BytesIO()
     plt.gcf().savefig(buffer, format='png', bbox_inches='tight')
     plt.close('all')

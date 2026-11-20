@@ -388,8 +388,12 @@ def make_plot_function(states_list, speeds_list, riemann_eval_list,
         aux: auxiliary variables to be passed to plot_characteristics
         contact_index: see docstring for plot_characteristics
         show_time_legend: show time in legend
+
+    The figure is built once (for each choice of characteristics) and then only what
+    depends on t is drawn again (utils.riemann_figure.RiemannSolutionFigure); the plot
+    function shows it as an image. The web book draws plot_function.figure itself.
     """
-    import matplotlib.pyplot as plt
+    from utils.riemann_figure import RiemannSolutionFigure
     if type(states_list) is not list:
         states_list = [states_list]
         speeds_list = [speeds_list]
@@ -400,56 +404,27 @@ def make_plot_function(states_list, speeds_list, riemann_eval_list,
     if wave_types_list is None:
         wave_types_list= [['contact']*len(speeds_list[0])]*len(speeds_list)
 
-    num_eqn = states_list[0].shape[0]
-
-    num_axes = num_eqn + 1
+    figure = RiemannSolutionFigure(
+        list(zip(states_list, speeds_list, riemann_eval_list, wave_types_list)), names=names,
+        layout=layout, variable_names=variable_names, colors=colors, plot_chars=plot_chars,
+        derived_variables=derived_variables, aux=aux, contact_index=contact_index,
+        vertical_spacing=vertical_spacing, show_time_legend=show_time_legend)
 
     def plot_function(t, which_char=None):
-        if layout == 'horizontal':
-            fig_width = 9
-            fig, ax = plt.subplots(1,num_axes,figsize=(fig_width, 3))
-        elif layout == 'vertical':
-            fig_width = 6
-            fig_height = (2 + vertical_spacing)*(num_axes-1)
-            fig, ax = plt.subplots(num_axes,1,figsize=(fig_width, fig_height),sharex=True)
-            plt.subplots_adjust(hspace=vertical_spacing)
-            ax[-1].set_xlabel('x')
-            ax[0].set_ylabel('t')
-
-        for i in range(len(states_list)):
-            states = states_list[i]
-            speeds = speeds_list[i]
-            riemann_eval = riemann_eval_list[i]
-            wave_types = wave_types_list[i]
-
-            plot_riemann(states, speeds, riemann_eval, wave_types, t, ax,
-                         colors[i], layout=layout,
-                         variable_names=variable_names, t_pointer=False,
-                         derived_variables=derived_variables)
-
-            if names is not None and show_time_legend:
-                # We could use fig.legend here if we had the line plot handles
-                ax[1].legend(names,loc='best', title='time = %.2f' % t)
-            if names is not None and not show_time_legend:
-                ax[1].legend(names,loc='best')
-            if names is None and show_time_legend:
-                ax[1].legend([],loc='best', title='time = %.2f' % t)
-
-            if which_char:
-                plot_characteristics(riemann_eval, plot_chars[which_char-1],
-                                     aux=aux, axes=ax[0], speeds=speeds,
-                                     contact_index=contact_index)
-
-        plt.show()
-        return None
+        from IPython.display import Image, display
+        figure.update(t=t, which_char=which_char)
+        display(Image(data=figure.png()))
 
     if plot_chars:
+        plot_function.figure = figure
         return plot_function
     else:
         def real_plot_function(t):
             plot_function(t,None)
 
+        real_plot_function.figure = figure
         return real_plot_function
+
 
 def compute_riemann_trajectories(states, s, riemann_eval, wave_types=None,
                                  i_vel=1, num_left=10, num_right=10,

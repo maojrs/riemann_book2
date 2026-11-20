@@ -80,6 +80,14 @@ These make the code run on current Python, NumPy and IPython without changing an
   sliders are laid out in rows (`char_solution`: t, then ρ and K). `ipywidgets` and `IPython`
   are imported only by the notebook functions. Tests: `test_acoustics_demos.py`, against
   the previous module kept in `tests/reference/acoustics_demos_before.py`.
+- `riemann_tools.make_plot_function` draws on a live figure (`utils/riemann_figure.py`, new):
+  the x-t plane, waves and characteristics are drawn once, and moving the time slider only
+  redraws the time line, the solution curves, the titles and the legend. Same arguments and
+  same pictures; the plot function shows the figure as an image, and the web book draws its
+  `figure` attribute. A slider step in a notebook takes about 20 ms instead of 240–460 ms
+  (Advection, Burgers, Euler, Acoustics and the chapters of Parts II–V that use it). Test:
+  `test_riemann_figure.py`, against the previous version kept in
+  `tests/reference/riemann_tools_before.py` (at most 0.005% of the pixels differ).
 
 ## Project infrastructure
 
@@ -176,7 +184,8 @@ These make the code run on current Python, NumPy and IPython without changing an
     - The controls follow the notebook's layout and widget kinds (radio buttons in
       Shallow_water's comparison of integral curves and Hugoniot loci), styled like ipywidgets:
       the same width for every control, checkboxes under the controls, labels not cut.
-    - Figures are shown at 3/4 of their pixel size, at most 60% of the window high.
+    - Figures are shown at 80% of their pixel size (wide, short ones at 95%), at most 60% of
+      the window high. The figures output by code cells are shown at 80% too (`book.css`).
     - The "Computed in your browser" line only shows while Python loads (or if it fails), so it
       no longer appears twice when a cell has two figures (`plot_riemann_SW`).
   - `RedrawFigure` draws each frame once, straight to pixels, cropped as Jupyter crops it
@@ -200,6 +209,11 @@ These make the code run on current Python, NumPy and IPython without changing an
     retried. Python only starts when the reader gets near an interactive figure.
   - `python.mjs` and the wheel have fixed names, so the widgets load them in a way that never
     uses an old cached copy (otherwise a new widget could meet an old `python.mjs`).
+- Figures `shallow_water_riemann` and `nonlinear_elasticity_riemann` (structure of the Riemann
+  solution) redrawn as SVG from LaTeX/TikZ sources (`figures/src/`, `sh figures/src/build.sh`):
+  the same waves and states, set in Computer Modern at the size of the book's math instead of a
+  large sans-serif. The chapters link the `.svg` (Shallow_water, Nonlinear_elasticity); the PNGs
+  are removed. In Nonlinear_elasticity the states are written ϵ, as in the chapter's text.
 - CI (`.github/workflows/book.yml`): on every push and pull request, runs the tests, prepares
   the widget files and builds the book with `--execute`; pushes to `main` are published on
   GitHub Pages.

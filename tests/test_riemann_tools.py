@@ -140,11 +140,12 @@ def test_plot_riemann_with_derived_variables():
 def test_make_plot_function():
     states, speeds, reval, wave_types = burgers.exact_riemann_solution(2.0, 1.0)
     plot = riemann_tools.make_plot_function(states, speeds, reval, wave_types)
-    plot(0.3)
-    assert len(plt.gcf().axes) == 2
+    plot.figure.update(t=0.3)
+    assert len(plot.figure.fig.axes) == 2
     plot_chars = riemann_tools.make_plot_function(states, speeds, reval, wave_types,
                                                   plot_chars=[burgers.speed])
-    plot_chars(0.3, 1)                           # with the characteristics of family 1
+    plot_chars.figure.update(t=0.3, which_char=1)        # with the characteristics of family 1
+    assert len(plot_chars.figure.fig.axes[0].lines) > len(plot.figure.fig.axes[0].lines)
 
 
 def test_plot_riemann_trajectories():
