@@ -17,6 +17,7 @@ import pytest  # noqa: E402
 from PIL import Image  # noqa: E402
 
 from exact_solvers import burgers, nonconvex_demos, shallow_water, traffic_demos, traffic_LWR  # noqa: E402
+from widgets.figures.nonconvex import buckley_leverett  # noqa: E402
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'reference'))
 import plotting_before as before  # noqa: E402
@@ -38,8 +39,8 @@ def cases():
         ('traffic_demos.green_light', traffic_demos.green_light.live_figure, dict(rho_r=0.3),
          lambda t: before.green_light(0.3, t)),
         ('nonconvex_demos.make_plot_function',
-         nonconvex_demos.make_plot_function(nonconvex_demos.buckley_leverett, 1., 0., -2, 2).live_figure, {},
-         lambda t: before.make_plot_function(nonconvex_demos.buckley_leverett, 1., 0., -2, 2)(t)),
+         nonconvex_demos.make_plot_function(buckley_leverett, 1., 0., -2, 2).live_figure, {},
+         lambda t: before.make_plot_function(buckley_leverett, 1., 0., -2, 2)(t)),
         ('nonconvex_demos.make_plot_function_qsliders',
          nonconvex_demos.make_plot_function_qsliders(np.sin).live_figure, dict(q_left=-3.5, q_right=3.5),
          lambda t: before.make_plot_function_qsliders(np.sin)(t, -3.5, 3.5)),
@@ -47,10 +48,10 @@ def cases():
          {}, lambda t: before.make_demo_plot_function(3., 1., 0., 0.)(t)),
         ('shallow_water.make_demo_plot_function, stripes of plot_riemann_SW',
          shallow_water.make_plot_functions(2., 2., 1., -1.)[0].live_figure, {},
-         lambda t: before.make_demo_plot_function(2., 2., 1., -1., figsize=(7, 2), hlim=(0, 4.5), ulim=(-2, 2))(t)),
+         lambda t: before.make_demo_plot_function(2., 2., 1., -1., figsize=(7, 2), hlim=(0, 4.5), ulim=(-2.3, 2.3))(t)),
         ('shallow_water.make_demo_plot_function, forced rarefaction',
          shallow_water.make_plot_functions(4., 1., 0., 0., force_waves='raref')[0].live_figure, {},
-         lambda t: before.make_demo_plot_function(4., 1., 0., 0., figsize=(7, 2), hlim=(0, 4.5), ulim=(-2, 2),
+         lambda t: before.make_demo_plot_function(4., 1., 0., 0., figsize=(7, 2), hlim=(0, 4.5), ulim=(-2.3, 2.3),
                                                   force_waves='raref')(t)),
     ]
 

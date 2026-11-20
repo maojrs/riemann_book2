@@ -1,13 +1,11 @@
 """
 Interactive figures of the chapter Burgers_approximate, for the web book (utils.live_figure).
 setup() is the chapter's own function, verbatim; frames() runs the cell's three examples and
-returns its plot_frame.
+returns its plot_frame, drawn on a live figure.
 """
-import matplotlib.pyplot as plt
-
 from exact_solvers import burgers
 from utils import riemann_tools
-from utils.live_figure import InteractiveFigure, slider
+from utils.live_figure import InteractiveFigure, TimeFigure, slider
 
 
 def setup(q_l, q_r, N=500, efix=False):
@@ -45,7 +43,8 @@ def setup(q_l, q_r, N=500, efix=False):
 
 def frames(efix=False, N=200):
     """The cell's shock, rarefaction and transonic rarefaction (with or without the entropy
-    fix): runs them and returns its plot_frame(i)."""
+    fix): runs them and returns its plot_frame(i), drawn on a live figure (only the curves,
+    titles and time lines move with the frame i)."""
     shock = setup(2.,1.,N=N,efix=efix)
     shock.run()
     shocksol = burgers.exact_riemann_solution(2.,1.)
@@ -58,28 +57,36 @@ def frames(efix=False, N=200):
     transonic.run()
     transonicsol = burgers.exact_riemann_solution(-1.,2.)
 
-    def plot_frame(i):
-        fig, axes = plt.subplots(2,3,figsize=(8,4))
+    runs = [shock, raref, transonic]
+    names = ['Shock', 'Rarefaction', 'Transonic rarefaction']
+
+    def draw(fig, i):
+        """The cell's plot_frame(i) on fig; returns at_time(i) (utils.live_figure.TimeFigure)."""
+        axes = fig.subplots(2,3)
         for ax in axes[0]:
             ax.set_xlim((-1,1)); ax.set_ylim((-1.1,2.1))
+        curves = [ax.plot(run.frames[0].grid.x.centers, run.frames[i].q[0,:],'-k',lw=2)[0]
+                  for ax, run in zip(axes[1], runs)]
+        for ax, sol in zip(axes[0], [shocksol, rarefsol, transonicsol]):
+            riemann_tools.plot_waves(*sol,ax=ax,t=i/10.)
+        time_lines = [ax.lines[-1] for ax in axes[0]]          # drawn last by plot_waves
 
-        sxc = shock.frames[0].grid.x.centers
-        rxc = raref.frames[0].grid.x.centers
-        txc = transonic.frames[0].grid.x.centers
+        def at_time(i):
+            t = i/10.
+            for curve, run, line, ax, name in zip(curves, runs, time_lines, axes[1], names):
+                curve.set_ydata(run.frames[i].q[0,:])
+                line.set_ydata([t, t])
+                ax.set_title(name + '(t=' + str(t) + ')')
+            return curves + time_lines + [ax.title for ax in axes[1]]
+        at_time(i)
+        fig.tight_layout()                # once: the titles keep their length
+        return at_time
 
-        t = i/10.
-        axes[1][0].plot(sxc, shock.frames[i].q[0,:],'-k',lw=2)
-        axes[1][0].set_title('Shock(t=' + str(t) + ')')
-        axes[1][1].plot(rxc, raref.frames[i].q[0,:],'-k',lw=2)
-        axes[1][1].set_title('Rarefaction(t=' + str(t) + ')')
-        axes[1][2].plot(txc, transonic.frames[i].q[0,:],'-k',lw=2)
-        axes[1][2].set_title('Transonic rarefaction(t=' + str(t) + ')')
+    figure = TimeFigure(draw, (8,4), live=('i',))
 
-        riemann_tools.plot_waves(*shocksol,ax=axes[0][0],t=t)
-        riemann_tools.plot_waves(*rarefsol,ax=axes[0][1],t=t)
-        riemann_tools.plot_waves(*transonicsol,ax=axes[0][2],t=t)
-        plt.tight_layout()
-        plt.show()
+    def plot_frame(i):
+        figure.show(i=i)
+    plot_frame.live_figure = lambda: TimeFigure(draw, (8,4), live=('i',))
     return plot_frame
 
 

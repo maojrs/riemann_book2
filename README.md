@@ -63,6 +63,7 @@ riemann_book2/
 │                     (interactive figures shared by the notebooks and the web)
 ├── miniclaw/         minimal pure-Python version of the PyClaw methods used in the book
 ├── widgets/          browser side of the interactive figures (JavaScript + Python bridge)
+│   └── figures/      each web figure: a notebook cell's plotting function and its controls
 ├── tests/            the test suite and reference results from the original book
 │   └── widgets/      tests of the interactive figures (notebook and web book)
 ├── myst.yml          book configuration and table of contents

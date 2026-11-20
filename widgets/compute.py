@@ -12,7 +12,7 @@ from exact_solvers import acoustics
 
 
 def _find(path):
-    """The object at a dotted path, such as 'exact_solvers.acoustics_demos.DECOMPOSE_Q'."""
+    """The object at a dotted path, such as 'widgets.figures.acoustics.DECOMPOSE_Q'."""
     module_name, name = path.rsplit('.', 1)
     return getattr(importlib.import_module(module_name), name)
 

@@ -7,9 +7,12 @@ Every change compared with the original
 
 ## Text changes
 
-- New front page `index.md` (title, authors, SIAM edition, about this web edition, license),
+- New front page `index.md` (title, authors, SIAM edition, about this web edition: figures in
+  the browser, faster plotting, pure Python, tests; license),
   replacing `Index.ipynb`/`Index2.ipynb`, whose chapter lists are now the book's navigation.
   **Draft, pending the authors' approval.**
+- Approximate_solvers: the title "Part II.  Approximate Riemann Solvers" is "Approximate Riemann
+  Solvers" (user's request): the part is already named in the table of contents.
 
 ## Bug fixes in the solvers
 
@@ -121,6 +124,23 @@ These make the code run on current Python, NumPy and IPython without changing an
 - Euler chapter, two code cells (approved): the checkboxes of `plot_integral_curves` and
   `plot_hugoniot_loci` are named '1-wave curves'/'3-wave curves' and 'Plot 1-loci'/'Plot
   3-loci', as in Shallow_water, instead of interact's `plot_1`/`plot_3`.
+- Review fixes (2026-11-20):
+  - Shallow_water: `shallow_demos.compare_curves` has a fixed vertical range (−10 to 10, as
+    `connect_states`), so the axes do not jump with the sliders; `plot_riemann_SW` shows the
+    velocity on −2.3 to 2.3 instead of −2 to 2, so velocities of ±1.9 and the dry-bed front
+    (u = 2) are not on the edge.
+  - Acoustics: the x-t plane figure of "The Riemann problem" is 250 px wide instead of 350 px,
+    so its letters are about the size of the text.
+  - Comparisons of Riemann solutions (`riemann_tools.make_plot_function` with names, e.g.
+    `compare_solutions` in Shallow_water_approximate and Euler_approximate): the legend is
+    outside the plots (right of the last one, or of the top one in the vertical layout)
+    instead of `loc='best'`, so it no longer jumps as the time changes.
+  - Burgers_approximate: the frame slider draws on a live figure (axes drawn once, the curves,
+    titles and time lines moved): 16 ms per frame instead of 0.2–0.4 s natively
+    (`widgets/figures/burgers_approximate.frames`; tests in `tests/widgets/`).
+  - FV_compare (code, user's request): the four `plot_frame` cells draw one legend, right of
+    the top plot, instead of one per plot with `loc='best'` (they jumped as the frame changed);
+    the same in `widgets/figures/fv_compare.py`.
 
 ## Project infrastructure
 
@@ -143,6 +163,8 @@ These make the code run on current Python, NumPy and IPython without changing an
     speed, as intended. It is only used by `shallow_water.macro_riemann_plot`, which no chapter calls.
 - Book structure (Jupyter Book 2): `myst.yml` with the table of contents of `Index.ipynb` and
   `Index2.ipynb` (Parts I–VI; Part VI's two external nbviewer notebooks left out for now).
+  Parts III–VI of `Index2.ipynb` (one or a few chapters each) are one section, *Further
+  topics*, in the same order; `index.md` says so.
   The notebooks are in `chapters/`, copied from master with their outputs removed (the build
   regenerates them). Figures and phase-plane HTML are in `figures/`, `riemann.bib` is now
   `references.bib`, and `LICENSE-CODE` and `LICENSE-TEXT.md` are copied unchanged.
@@ -224,18 +246,20 @@ These make the code run on current Python, NumPy and IPython without changing an
     Nonconvex_scalar, Shallow_water, Shallow_tracer and Euler (56 figures) is live on the web
     too, with the cell's controls. They are drawn by the book's own plotting functions, again
     in full at each change (`utils.live_figure.RedrawFigure`, 0.2–1 s per change). Each figure
-    is described (controls, rows) in the chapter's demo module: `advection_demos.py` (new),
-    `burgers_demos.py`, `traffic_demos.py`, `nonconvex_demos.py` (with the chapter's fluxes,
-    named), `shallow_demos.py`, `euler_demos.py`; a few small functions there give the
-    plotting function a cell builds (e.g. `euler_demos.riemann_solution_plot`). Notebook code
+    is described (controls, rows) in `widgets/figures/`, one module per topic: `advection.py`,
+    `burgers.py`, `traffic.py`, `nonconvex.py` (with the chapter's fluxes, named),
+    `shallow_water.py`, `euler.py`; a few small functions there give the plotting function a
+    cell builds (e.g. `euler.riemann_solution_plot`). Acoustics' figures stay in
+    `acoustics_demos.py`, whose notebook functions draw through them (`widgets/figures/acoustics.py`
+    imports them). The book's `exact_solvers/*_demos.py` keep only their notebook code. Notebook code
     is unchanged. Test: `test_interactive_cells.py` runs each chapter and checks that every web
     figure has the cell's controls, values and fixed arguments, laid out as in the notebook
     (one per line, or the function's own HBox/VBox layout), and draws the same picture.
   - Part II: the interactive cells of Burgers_approximate, Shallow_water_approximate,
     Euler_approximate and FV_compare (22 figures). The chapters define their solvers and set-ups
-    in code cells; their web figures use copies of them, verbatim, in new demo modules
-    (`burgers_approximate_demos.py`, `shallow_water_approximate_demos.py`,
-    `euler_approximate_demos.py`, `fv_compare_demos.py`, where each FV_compare set-up imports
+    in code cells; their web figures use copies of them, verbatim, in `widgets/figures/`
+    (`burgers_approximate.py`, `shallow_water_approximate.py`,
+    `euler_approximate.py`, `fv_compare.py`, where each FV_compare set-up imports
     its own constants). The finite-volume runs (miniclaw) are made in the browser when the
     figure first goes live; FV_compare's blast wave with its fine 4000-cell reference takes
     about 10 s natively. Sliders can be integer (`slider(..., integer=True)`, ipywidgets'

@@ -43,20 +43,14 @@ project:
         - file: chapters/Shallow_water_approximate.ipynb
         - file: chapters/Euler_approximate.ipynb
         - file: chapters/FV_compare.ipynb
-    - title: "Part III: Riemann problems with spatially-varying flux"
+    - title: "Further topics"
       children:
         - file: chapters/Acoustics_heterogeneous.ipynb
         - file: chapters/Traffic_variable_speed.ipynb
         - file: chapters/Nonlinear_elasticity.ipynb
         - file: chapters/Euler_Tammann.ipynb
-    - title: "Part IV: Source terms"
-      children:
         - file: chapters/Traffic_with_ramps.ipynb
-    - title: "Part V: Non-classical problems"
-      children:
         - file: chapters/Pressureless_flow.ipynb
-    - title: "Part VI: Multidimensional systems"
-      children:
         - file: chapters/Kitchen_sink_problem.ipynb
 site:
   template: book-theme

@@ -77,18 +77,3 @@ def draw_green_light(fig, rho_r=0., t=0.1):
 # green_light draws on a figure built once; moving t only redraws what depends on it
 green_light.live_figure = lambda: TimeFigure(draw_green_light, figsize)
 green_light.figure = green_light.live_figure()
-
-# --- Interactive figures for the web book (utils.live_figure): the controls of the notebook
-from utils.live_figure import InteractiveFigure, slider  # noqa: E402
-
-JAM = InteractiveFigure.redraw(
-    jam, [slider('rho_l', 0.1, 0.9, 0.5, label=r'$\rho_l$'), slider('t', 0., 1., 0.5)],
-    fixed=dict(fig=0))
-GREEN_LIGHT = InteractiveFigure.redraw(
-    green_light, [slider('rho_r', 0., 0.9, 0.3, label=r'$\rho_r$'), slider('t', 0., 1., 0.)],
-    fixed=dict(fig=0))
-RIEMANN_SOLUTION = InteractiveFigure.redraw(       # traffic_LWR.riemann_solution_interact()
-    traffic_LWR.plot_riemann_traffic,
-    [slider('rho_l', 0., 1., 0.5, label=r'$\rho_l$'), slider('rho_r', 0., 1., 0., label=r'$\rho_r$'),
-     slider('t', 0., 1., 0.1), slider('xrange', 0.1, 5., 1., label='x-axis range')],
-    [['t', 'rho_l', 'xrange'], [None, 'rho_r', None]])      # rho_r under rho_l

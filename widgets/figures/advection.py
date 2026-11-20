@@ -4,7 +4,7 @@ The figures are drawn by the functions of advection.py, with the controls of the
 """
 from utils import riemann_tools
 from utils.live_figure import InteractiveFigure, slider
-from . import advection
+from exact_solvers import advection
 
 # interact(f) makes this slider for the default a=1.
 SPEED = slider('a', -1., 3., 1.)

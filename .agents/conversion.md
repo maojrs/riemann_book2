@@ -39,16 +39,16 @@ Rule 1 in AGENTS.md applies: only markup changes, never the wording. Acoustics i
   ````
   ```{anywidget} ../widgets/interact.mjs
   :css: ../widgets/interact.css
-  {"figure": "exact_solvers.acoustics_demos.PHASE_PLANE", "values": {"pl": 3, "ul": 2}, "setup": {...}}
+  {"figure": "widgets.figures.acoustics.PHASE_PLANE", "values": {"pl": 3, "ul": 2}, "setup": {...}}
   ```
   ````
-  - `figure` is an `InteractiveFigure` (`utils/live_figure.py`) in the chapter's demo module, with the cell's controls (labels exactly as the ipywidgets descriptions). Usually `InteractiveFigure.redraw(plotting_function, controls, factory=..., fixed=...)`: the book's own function, drawn again in full at each change. List the controls in the order interact shows them (the function's arguments); give `rows` only when the original lays its widgets out itself (HBox/VBox; `None` for an empty column). Use the original's widget kinds (`radio` for RadioButtons). For the most used figures, a `LiveFigure` class (fast), as in `acoustics_demos.py`.
+  - `figure` is an `InteractiveFigure` (`utils/live_figure.py`) in `widgets/figures/<topic>.py` (one module per topic, named after the book's module it draws from: `burgers.py`, `shallow_water.py`, …; the book's `exact_solvers/*_demos.py` keep only their notebook code), with the cell's controls (labels exactly as the ipywidgets descriptions). Usually `InteractiveFigure.redraw(plotting_function, controls, factory=..., fixed=...)`: the book's own function, drawn again in full at each change. List the controls in the order interact shows them (the function's arguments); give `rows` only when the original lays its widgets out itself (HBox/VBox; `None` for an empty column). Use the original's widget kinds (`radio` for RadioButtons). For the most used figures, a `LiveFigure` class (fast), as in `acoustics_demos.py`.
   - `tests/widgets/test_interactive_cells.py` checks every widget cell against its code cell (controls, values, fixed arguments, picture); it must pass.
   - A cell that shows several interactive figures (e.g. `shallow_water.plot_riemann_SW`) gets one widget cell per figure, in order, with `"output": k` (the k-th image of the cell).
   - `values` repeats the values the code cell passes (for example `ql`, `qr`), `setup` the arguments of the figure class.
   - Figures drawn with JavaScript instead (drag explorers, `widgets/acoustics_explorer.mjs`) go in the same way, after the cell they replace on the web; tag that cell `remove-cell` if its output only works in Jupyter (mpld3).
   - These cells are markup: the prose check ignores them.
-  - When the chapter defines the plotting function or the solvers it uses in its own code cells (Part II), copy them verbatim into the chapter's demo module (e.g. `shallow_water_approximate_demos.py`), with a function that returns the cell's plot function; the test checks the copy draws the same picture. Integer sliders: `slider(..., integer=True)`.
+  - When the chapter defines the plotting function or the solvers it uses in its own code cells (Part II), copy them verbatim into the chapter's figure module (e.g. `widgets/figures/shallow_water_approximate.py`), with a function that returns the cell's plot function; the test checks the copy draws the same picture. Integer sliders: `slider(..., integer=True)`.
 - **Code** in a chapter may be changed only if the change is small and the user approves it first; it may never alter what the chapter computes. Fixing warnings in the plotting code of `*_demos.py` is fine, as long as the figure is unchanged; register it in `CHANGES.md`.
 
 ## No horizontal scroll bars

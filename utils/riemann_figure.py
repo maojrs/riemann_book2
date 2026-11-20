@@ -56,24 +56,23 @@ def riemann_solution_figure(solutions, names=None, layout='horizontal', variable
             at_times.append(plot_riemann_at_time(
                 states, speeds, riemann_eval, wave_types, t, ax, derived_variables, color=colors[i],
                 layout=layout, variable_names=variable_names, t_pointer=False)[1])
-            if names is not None and show_time_legend:
-                ax[1].legend(names, loc='best', title='time = %.2f' % t)
-            if names is not None and not show_time_legend:
-                ax[1].legend(names, loc='best')
-            if names is None and show_time_legend:
-                ax[1].legend([], loc='best', title='time = %.2f' % t)
             if which_char:
                 plot_characteristics(riemann_eval, plot_chars[which_char - 1], aux=aux, axes=ax[0],
                                      speeds=speeds, contact_index=contact_index)
-        legend = ax[1].get_legend()
+        # The legend stands outside the plots (right of the last one, or of the top one in the
+        # vertical layout), so that it does not jump around as the curves move
+        legend = None
+        if names is not None or show_time_legend:
+            legend_ax = ax[-1] if layout == 'horizontal' else ax[1]
+            legend = legend_ax.legend(names or [], loc='upper left', bbox_to_anchor=(1.02, 1),
+                                      borderaxespad=0)
 
         def at_time(t):
             artists = [a for at in at_times for a in at(t)]
-            if legend is None:
+            if not show_time_legend:
                 return artists
-            if show_time_legend:
-                legend.set_title('time = %.2f' % t)
-            return artists + [legend]              # its place (loc='best') depends on the curves
+            legend.set_title('time = %.2f' % t)
+            return artists + [legend]
         return at_time
 
     return TimeFigure(draw, figsize)

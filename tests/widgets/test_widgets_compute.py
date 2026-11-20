@@ -14,7 +14,7 @@ import pytest  # noqa: E402
 from exact_solvers import acoustics, acoustics_demos  # noqa: E402
 from widgets import compute  # noqa: E402
 
-PHASE_PLANE = 'exact_solvers.acoustics_demos.PHASE_PLANE'
+PHASE_PLANE = 'widgets.figures.acoustics.PHASE_PLANE'
 
 
 def test_figure_controls_describe_the_notebook_controls():
@@ -45,7 +45,7 @@ def test_figure_frame_is_the_live_figure():
 
 
 def test_figure_frame_builds_one_figure_per_setup():
-    figure = 'exact_solvers.acoustics_demos.RIEMANN_PLOT_PPLANE'
+    figure = 'widgets.figures.acoustics.RIEMANN_PLOT_PPLANE'
     shock_tube = dict(ql=[5, 0], qr=[1, 0], rho=1., bulk=4.)
     wall = dict(ql=[2, 1], qr=[2, -1], rho=1., bulk=1.5)
     a = compute.figure_frame(figure, dict(t=0.5, which_char=None), shock_tube)

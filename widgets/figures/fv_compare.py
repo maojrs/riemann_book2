@@ -204,8 +204,8 @@ def dam_break_frames(N=40):
             ax[j].plot(xc_exact_sw,reval_sw(xc_exact_sw/(t+1.e-16))[j],'-k',lw=1)
             ax[j].plot(xc_sw, hlle_sw.frames[i].q[variable,:],'-ob',lw=2,markersize=4)
             ax[j].plot(xc_sw, roe_sw.frames[i].q[variable,:],'-or',lw=0.5,markersize=3)
-            ax[j].legend(['Exact','HLLE','Roe'],loc='best')
             ax[j].set(ylabel=variablenames[j])
+        ax[0].legend(['Exact','HLLE','Roe'],loc='upper left',bbox_to_anchor=(1.01,1))
         plt.show()
     return plot_frame
 
@@ -243,8 +243,8 @@ def shocktube_frames(N=80, solver_type='classic'):
             ax[j].plot(xc_exact_st,reval_st(xc_exact_st/(t+1.e-16))[j],'-k',lw=1)
             ax[j].plot(xc_st,hll_st.frames[i].q[variable,:],'-ob',lw=2,markersize=4)
             ax[j].plot(xc_st,roe_st.frames[i].q[variable,:],'-or',lw=0.5,markersize=3)
-            ax[j].legend(['Exact','HLL','Roe'],loc='best')
             ax[j].set(ylabel=variablenames[j])
+        ax[0].legend(['Exact','HLL','Roe'],loc='upper left',bbox_to_anchor=(1.01,1))
         plt.show()
     return plot_frame
 
@@ -275,8 +275,8 @@ def blastwave_frames(N=400):
             ax[j].plot(xc_fine_bw,fine_bw.frames[i].q[variable,:],'-k',lw=1)
             ax[j].plot(xc_bw,hll_bw.frames[i].q[variable,:],'-b',lw=2)
             ax[j].plot(xc_bw,roe_bw.frames[i].q[variable,:],'--r',lw=2)
-            ax[j].legend(['Fine','HLL','Roe'],loc='best')
             ax[j].set(ylabel=variablenames[j])
+        ax[0].legend(['Fine','HLL','Roe'],loc='upper left',bbox_to_anchor=(1.01,1))
         plt.show()
     return plot_frame
 

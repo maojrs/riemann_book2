@@ -1,8 +1,8 @@
-"""The chapters' approximate solvers (copied in exact_solvers/*_approximate_demos.py)."""
+"""The chapters' approximate solvers (copied in widgets/figures/*_approximate.py)."""
 import numpy as np
 import pytest
 
-from exact_solvers.shallow_water_approximate_demos import shallow_water_roe_with_efix
+from widgets.figures.shallow_water_approximate import shallow_water_roe_with_efix
 
 GRAV = 1.
 

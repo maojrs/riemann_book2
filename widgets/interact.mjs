@@ -5,7 +5,7 @@
 //
 //   ```{anywidget} ../widgets/interact.mjs
 //   :css: ../widgets/interact.css
-//   {"figure": "exact_solvers.acoustics_demos.PHASE_PLANE",
+//   {"figure": "widgets.figures.acoustics.PHASE_PLANE",
 //    "values": {"pl": 3, "ul": 2},          (optional: control values other than the defaults)
 //    "setup": {...},                         (optional: arguments of the figure)
 //    "output": 1}                            (optional: which image of the cell it replaces)

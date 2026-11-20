@@ -56,12 +56,27 @@ def pixels(png):
     return np.asarray(Image.open(io.BytesIO(png)).convert('RGBA')).astype(int)
 
 
+def legend_outside(fig, kwargs):
+    """The one change from before: the legend is outside the plots, right of the last one
+    (or of the top one in the vertical layout), instead of loc='best' in the first."""
+    ax = fig.axes
+    legend = ax[1].get_legend()
+    if legend is None:
+        return
+    title = legend.get_title().get_text()
+    legend.remove()
+    target = ax[1] if kwargs.get('layout', 'horizontal') == 'vertical' else ax[-1]
+    target.legend(kwargs.get('names') or [], title=title or None, loc='upper left',
+                  bbox_to_anchor=(1.02, 1), borderaxespad=0)
+
+
 def before_picture(args, kwargs, t, which_char):
     plt.close('all')
     plot_function = before.make_plot_function(*args, **kwargs)
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
         plot_function(t, which_char) if kwargs.get('plot_chars') else plot_function(t)
+    legend_outside(plt.gcf(), kwargs)
     buffer = io.BytesIO()
     plt.gcf().savefig(buffer, format='png', bbox_inches='tight')
     plt.close('all')
