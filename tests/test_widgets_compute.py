@@ -72,3 +72,13 @@ def test_acoustics_explorer_is_the_exact_solution():
         assert (u[1] - u[0])/(p[1] - p[0]) == slope
         assert np.interp(4., p, u) == -1.
     assert [line['physical'] for line in data['lines']] == [True, True, False, False]
+
+
+def test_browser_and_assets_use_the_same_pyodide_version():
+    """widgets/python.mjs loads Pyodide from the CDN, or the copy made by widgets/assets.py."""
+    import pathlib
+    import re
+    root = pathlib.Path(__file__).resolve().parent.parent
+    in_browser = re.search(r"PYODIDE_VERSION = '([\d.]+)'", (root/'widgets'/'python.mjs').read_text()).group(1)
+    in_assets = re.search(r"PYODIDE_VERSION = '([\d.]+)'", (root/'widgets'/'assets.py').read_text()).group(1)
+    assert in_browser == in_assets

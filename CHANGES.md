@@ -145,6 +145,9 @@ These make the code run on current Python, NumPy and IPython without changing an
     book's code, Pyodide 0.28.3 with only the packages used (numpy, matplotlib, micropip and
     their dependencies; checksums verified) and D3 7.9.0. They are hosted with the book (about
     25 MB), so it does not depend on an outside service.
+  - Pyodide is loaded from the jsDelivr CDN, which is much faster than GitHub Pages for large
+    files, and from the book's own copy if the CDN fails. Package downloads cut short are
+    retried. Python only starts when the reader gets near an interactive figure.
 - CI (`.github/workflows/book.yml`): on every push and pull request, runs the tests, prepares
   the widget files and builds the book with `--execute`; pushes to `main` are published on
   GitHub Pages.

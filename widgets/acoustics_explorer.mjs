@@ -10,7 +10,7 @@
 // D3 is published next to this file (widgets/assets.py); it defines the global d3
 await import(new URL('d3.min.js', import.meta.url).href);
 const d3 = globalThis.d3;
-const { python, latestOnly } = await import(new URL('python.mjs', import.meta.url).href);
+const { python, latestOnly, whenNear } = await import(new URL('python.mjs', import.meta.url).href);
 
 const MARGIN = { top: 12, right: 12, bottom: 40, left: 46 };
 
@@ -22,7 +22,8 @@ function render({ model, el }) {
   const range = model.get('range') ?? 5;     // all three plots use [-range, range]
 
   el.classList.add('acoustics-explorer');
-  const status = d3.select(el).append('div').attr('class', 'ae-status').text('Starting Python in your browser…');
+  const status = d3.select(el).append('div').attr('class', 'ae-status')
+    .text('This figure becomes interactive when Python starts in your browser.');
   const svg = d3.select(el).append('svg').attr('role', 'img')
     .attr('aria-label', 'Acoustics phase plane and solution');
   const panels = ['Phase plane', 'Pressure', 'Velocity'].map((title, i) => {
@@ -115,7 +116,10 @@ function render({ model, el }) {
 
   const resize = new ResizeObserver(layout);
   resize.observe(el);
-  update().then(() => {
+  whenNear(el).then(() => {
+    status.text('Starting Python in your browser…');
+    return update();
+  }).then(() => {
     status.text('Drag qₗ or qᵣ. Computed in your browser with Python (exact_solvers/acoustics.py).');
     el.dataset.state = 'ready';
   }).catch(error => {

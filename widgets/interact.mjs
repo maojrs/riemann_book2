@@ -10,9 +10,9 @@
 //    "setup": {...}}                         (optional: arguments of the figure class)
 //   ```
 //
-// Until Python is ready, the figure made at build time (the output of the code cell above)
-// is shown in its place; without JavaScript that output simply stays.
-const { python, latestOnly } = await import(new URL('python.mjs', import.meta.url).href);
+// Python starts when the reader gets near the figure. Until it is ready, the figure made at
+// build time (the output of the code cell above) is shown; without JavaScript it simply stays.
+const { python, latestOnly, whenNear } = await import(new URL('python.mjs', import.meta.url).href);
 
 const GREEK = { alpha: 'α', beta: 'β', gamma: 'γ', lambda: 'λ', rho: 'ρ', sigma: 'σ', epsilon: 'ε' };
 
@@ -78,7 +78,7 @@ async function render({ model, el }) {
   const setup = model.get('setup') ?? null;
   el.classList.add('book-interact');
   const status = el.appendChild(Object.assign(document.createElement('div'),
-    { className: 'bi-status', textContent: 'Starting Python in your browser… the controls appear in a few seconds.' }));
+    { className: 'bi-status', textContent: 'This figure becomes interactive when Python starts in your browser.' }));
   const form = el.appendChild(Object.assign(document.createElement('div'), { className: 'bi-controls' }));
   const placeholder = el.appendChild(document.createElement('img'));
   const canvas = el.appendChild(Object.assign(document.createElement('canvas'), { hidden: true }));
@@ -93,6 +93,8 @@ async function render({ model, el }) {
   }
 
   try {
+    await whenNear(el);
+    status.textContent = 'Starting Python in your browser… the controls appear when it is ready.';
     const spec = await python('figure_controls', { figure });
     const { rows, options } = spec;
     // Python's None arrives as undefined; make it null, which survives JSON
