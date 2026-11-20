@@ -1,8 +1,7 @@
 """What the web book's interactive figures ask Python for, in the browser (Pyodide).
 
 Every function takes plain values and returns plain values (numbers, lists, dicts, bytes),
-which the page receives as JavaScript objects. matplotlib is only loaded by the functions
-that draw.
+which the page receives as JavaScript objects.
 """
 import importlib
 import json
@@ -16,6 +15,12 @@ def _find(path):
     """The object at a dotted path, such as 'exact_solvers.acoustics_demos.DECOMPOSE_Q'."""
     module_name, name = path.rsplit('.', 1)
     return getattr(importlib.import_module(module_name), name)
+
+
+def warm_up():
+    """Imports the plotting code (matplotlib.pyplot, about 3 s in the browser) as soon as
+    the page opens, before the first figure needs it."""
+    import matplotlib.pyplot  # noqa: F401
 
 
 # --- Interactive figures (utils.live_figure.InteractiveFigure) -------------------------

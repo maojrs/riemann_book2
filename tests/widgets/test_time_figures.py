@@ -89,9 +89,9 @@ def test_live_figure_is_the_previous_figure(name, live_figure, values, draw_befo
         assert differing(pixels(figure.png()), before_picture(draw_before, TIMES[0])) > TOLERANCE  # wrong t
 
 
-def test_euler_stripes_are_the_previous_curves_and_stripes():
-    """Euler's plot_with_stripes keeps its axes for all times now (so they are not compared);
-    its curves and stripes are those of the previous function."""
+def test_euler_stripes_are_the_previous_curves():
+    """Euler's plot_with_stripes keeps its axes for all times now and its stripes cover the
+    domain (so neither is compared); its curves are those of the previous function."""
     from exact_solvers import euler_demos
     values = dict(rho_l=2., u_l=0., p_l=2.5, rho_r=3., u_r=0., p_r=5., gamma=1.4)
     figure = euler_demos.plot_with_stripes.live_figure()
@@ -104,11 +104,41 @@ def test_euler_stripes_are_the_previous_curves_and_stripes():
             before.plot_with_stripes(**values, t=t)
         for live, previous in zip(figure.fig.axes, plt.gcf().axes):
             assert np.allclose(live.lines[0].get_ydata(), previous.lines[0].get_ydata(), equal_nan=True)
-            live_stripes = [c.get_paths()[0].vertices for c in live.collections]
-            previous_stripes = [c.get_paths()[0].vertices for c in previous.collections]
-            assert len(live_stripes) == len(previous_stripes)
-            assert all(np.allclose(a, b) for a, b in zip(live_stripes, previous_stripes))
         plt.close('all')
+
+
+@pytest.mark.parametrize('values', [
+    dict(rho_l=2., u_l=0., p_l=2.5, rho_r=3., u_r=0., p_r=5.),     # the chapter's demo
+    dict(rho_l=1., u_l=5., p_l=1., rho_r=1., u_r=-5., p_r=1.),     # inflow from both sides
+    dict(rho_l=1., u_l=-2., p_l=1., rho_r=1., u_r=2., p_r=1.),     # outflow
+])
+def test_euler_stripes_cover_the_domain(values):
+    """The tracer stripes fill [-1, 1] at every time, without gaps."""
+    from exact_solvers import euler_demos
+    figure = euler_demos.plot_with_stripes.live_figure()
+    for t in np.linspace(0., 1., 6):
+        figure.update(t=t, gamma=1.4, **values)
+        extents = sorted((path.vertices[:, 0].min(), path.vertices[:, 0].max())
+                         for c in figure.fig.axes[0].collections for path in c.get_paths())
+        assert extents[0][0] <= -1 + 1e-9 and extents[-1][1] >= 1 - 1e-9, t
+        assert all(b[0] <= a[1] + 1e-9 for a, b in zip(extents, extents[1:])), t
+
+
+def test_euler_demo_axes_do_not_follow_small_changes():
+    """In euler_demo1 every slider only redraws the solution: the vertical ranges stay put
+    while the solution fits them and fills a quarter of them."""
+    from exact_solvers import euler_demos
+    figure = euler_demos.stripes_demo.live_figure()
+    values = dict(rho_l=2., u_l=0., p_l=2.5, rho_r=3., u_r=0., p_r=5., gamma=1.4, t=0.5)
+    figure.update(**values)
+    limits = [ax.get_ylim() for ax in figure.fig.axes]
+    for t in (0.1, 0.9):
+        figure.update(**{**values, 't': t})
+        assert [ax.get_ylim() for ax in figure.fig.axes] == limits
+    built = figure.fig
+    figure.update(**{**values, 'rho_l': 2.1})
+    assert figure.fig is built and len(figure.fig.axes[0].collections) == 1     # one set of stripes
+    assert figure.fig.axes[1].get_ylim() == limits[1] and figure.fig.axes[2].get_ylim() == limits[2]
 
 
 @pytest.mark.parametrize('values', [

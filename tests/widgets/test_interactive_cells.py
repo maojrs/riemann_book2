@@ -138,8 +138,8 @@ def check_controls(spec, values, figure):
         c = controls[name]
         assert values[name] == pytest.approx(w.value) if isinstance(w.value, float) else values[name] == w.value, name
         assert c['label'] == w.description, name
-        if isinstance(w, ipywidgets.FloatSlider):
-            assert c['kind'] == 'slider'
+        if isinstance(w, (ipywidgets.FloatSlider, ipywidgets.IntSlider)):
+            assert c['kind'] == 'slider' and c['integer'] == isinstance(w, ipywidgets.IntSlider), name
             assert (c['min'], c['max'], c['step']) == pytest.approx((w.min, w.max, w.step)), name
         elif isinstance(w, ipywidgets.Checkbox):
             assert c['kind'] == 'checkbox'

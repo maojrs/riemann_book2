@@ -91,37 +91,44 @@ class TimeFigure(LiveFigure):
     returns those artists. A new time only calls at_time; new values of anything else build
     the figure again. The axis limits found in the first frame of a build are kept, so the
     axes do not move with t. update() ignores `fig`, the figure argument of the book's
-    notebook plotting functions."""
+    notebook plotting functions.
 
-    def __init__(self, draw, figsize, time='t'):
+    live: the names of the values given to at_time (by name) instead of building the figure
+    again; by default only the time. If at_time moves an axis, the rest of the figure is
+    drawn again too."""
+
+    def __init__(self, draw, figsize, live=('t',)):
         self.draw = draw
         self.figsize = figsize
-        self.time = time
+        self.live_names = live
         self._values = None
 
     def update(self, fig=None, **values):
-        t = values.pop(self.time)
+        live = {name: values.pop(name) for name in self.live_names}
         if values != self._values:
             super().__init__(figsize=self.figsize)
             self._values = values
-            self._at_time = self.draw(self.fig, **{self.time: t}, **values)
-            self._live = self._time_artists(t)
+            self._at_time = self.draw(self.fig, **live, **values)
+            self._live = self._time_artists(live)
             for ax in self.fig.axes:
                 ax.set_xlim(ax.get_xlim())
                 ax.set_ylim(ax.get_ylim())
             return
-        artists = self._time_artists(t)
+        limits = [(ax.get_xlim(), ax.get_ylim()) for ax in self.fig.axes]
+        artists = self._time_artists(live)
         for artist in self._live:
             if not any(artist is a for a in artists):
                 artist.remove()
+        if limits != [(ax.get_xlim(), ax.get_ylim()) for ax in self.fig.axes]:
+            self.static_changed(refit=True)   # new ticks: draw and fit the figure again
         if self._fitted:                      # see frame(): not in the saved background
             for artist in artists:
                 artist.set_animated(True)
         self._live = artists
 
-    def _time_artists(self, t):
-        """at_time(t), each artist once (two curves may share a title)."""
-        return list({id(a): a for a in self._at_time(t)}.values())
+    def _time_artists(self, live):
+        """at_time(**live), each artist once (two curves may share a title)."""
+        return list({id(a): a for a in self._at_time(**live)}.values())
 
     def show(self, **values):
         """Draw the figure for these values, as an image in the notebook."""
@@ -210,8 +217,12 @@ def png(frame):
 
 
 # --- Controls ---------------------------------------------------------------------------
-def slider(name, min, max, value, label=None, step=0.1):
-    return dict(name=name, kind='slider', min=min, max=max, value=value, step=step, label=label or name)
+def slider(name, min, max, value, label=None, step=0.1, integer=False):
+    """A slider; integer=True for whole numbers (ipywidgets' IntSlider, step 1)."""
+    if integer:
+        step = 1
+    return dict(name=name, kind='slider', min=min, max=max, value=value, step=step, label=label or name,
+                integer=integer)
 
 
 def number(name, value, label=None, min=None, max=None):
@@ -289,13 +300,14 @@ class InteractiveFigure:
 
     def notebook_widgets(self, **values):
         """One ipywidgets control per entry of controls, by name."""
-        from ipywidgets import BoundedFloatText, Checkbox, Dropdown, FloatSlider, FloatText, RadioButtons
+        from ipywidgets import BoundedFloatText, Checkbox, Dropdown, FloatSlider, FloatText, IntSlider, RadioButtons
         widgets = {}
         for c, value in zip(self.controls, self.initial_values(**values).values()):
             description = c['label']
             if c['kind'] == 'slider':
-                widgets[c['name']] = FloatSlider(value=value, min=c['min'], max=c['max'], step=c['step'],
-                                                 description=description)
+                kind = IntSlider if c['integer'] else FloatSlider
+                widgets[c['name']] = kind(value=value, min=c['min'], max=c['max'], step=c['step'],
+                                          description=description)
             elif c['kind'] == 'number' and c['min'] is not None:
                 widgets[c['name']] = BoundedFloatText(value=value, min=c['min'], max=c['max'],
                                                       description=description)

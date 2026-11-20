@@ -25,6 +25,8 @@ Rule 1 in AGENTS.md applies: only markup changes, never the wording. Acoustics i
   - A one-row `align` with at most one top-level `&` becomes an `equation` (a one-row `align*` plain display math), with that `&` removed. It looks the same, but KaTeX draws `align` as a table that cannot wrap, while an `equation` can break after an `=` when it is too long (`book.css`). Rows with two `&` (two equations side by side) stay `align`.
 - **Equation references:** `(\ref{X})` and `\eqref{X}` become `` {eq}`X` ``, which renders as "(n)". A bare `\ref{X}` is reported, to decide by hand.
 - **Citations:** cite2c `<cite data-cite="key">…</cite>` becomes `[@key]`. The key must exist in `references.bib`.
+- **Equation labels are global** in the web book: a label defined in two chapters (copied text) is renamed in the later one, with its references.
+- **Warnings printed by chapter code** that the original hid (e.g. through the old global warning filter) are hidden on the web with the cell tag `remove-stderr`; the code is not changed.
 - **Links between notebooks** (`[Euler](Euler.ipynb)`) stay as they are: MyST resolves them.
 - **Links to a heading** (`[the section above](Shallow_water.ipynb#Dam-break-problem:-all-shock-solution)`): give the heading a label line `(sw:dam-break-all-shock)=` and link to `#sw:dam-break-all-shock`. The converter warns about them.
 - **Paths** are relative to `chapters/`: `../figures/…`, `../exact_solvers/…`.
@@ -46,6 +48,7 @@ Rule 1 in AGENTS.md applies: only markup changes, never the wording. Acoustics i
   - `values` repeats the values the code cell passes (for example `ql`, `qr`), `setup` the arguments of the figure class.
   - Figures drawn with JavaScript instead (drag explorers, `widgets/acoustics_explorer.mjs`) go in the same way, after the cell they replace on the web; tag that cell `remove-cell` if its output only works in Jupyter (mpld3).
   - These cells are markup: the prose check ignores them.
+  - When the chapter defines the plotting function or the solvers it uses in its own code cells (Part II), copy them verbatim into the chapter's demo module (e.g. `shallow_water_approximate_demos.py`), with a function that returns the cell's plot function; the test checks the copy draws the same picture. Integer sliders: `slider(..., integer=True)`.
 - **Code** in a chapter may be changed only if the change is small and the user approves it first; it may never alter what the chapter computes. Fixing warnings in the plotting code of `*_demos.py` is fine, as long as the figure is unchanged; register it in `CHANGES.md`.
 
 ## No horizontal scroll bars

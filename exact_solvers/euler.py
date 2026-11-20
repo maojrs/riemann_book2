@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.optimize import fsolve
+from scipy.optimize import brentq, fsolve
 import matplotlib.pyplot as plt
 from collections import namedtuple
 from utils import riemann_tools
@@ -153,8 +153,15 @@ def exact_riemann_solution(q_l, q_r, gamma=1.4, phase_plane_curves=False):
         # For strong rarefactions, sometimes fsolve needs help
         if ier != 1:
             p, info, ier, msg = fsolve(phi, guess, full_output=True, factor=0.1, xtol=1.e-10)
+            # For strong collisions the guess can be too far off: phi decreases with p, so
+            # if phi(0) > 0, bracket the root and use Brent's method
+            if ier != 1 and phi(0.) > 0:
+                p_high = max(guess, p_l, p_r)
+                while phi(p_high) > 0:
+                    p_high *= 2.
+                p = np.array([brentq(phi, 0., p_high, xtol=1.e-14)])
             # This should not happen:
-            if ier != 1:
+            elif ier != 1:
                 print('Warning: fsolve did not converge.')
                 print(msg)
 

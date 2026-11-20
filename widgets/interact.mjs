@@ -71,7 +71,7 @@ function controlElement(c, onChange) {
       { type: 'range', min: c.min, max: c.max, step: c.step, value: c.value });
     readout = document.createElement('output');
     const show = () => {               // the value, and how far the track is filled
-      readout.textContent = (+input.value).toFixed(2);
+      readout.textContent = (+input.value).toFixed(c.integer ? 0 : 2);
       input.style.setProperty('--fill', (input.value - c.min) / (c.max - c.min));
     };
     show();

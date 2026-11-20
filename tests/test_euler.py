@@ -113,3 +113,24 @@ def test_other_gamma(gamma):
     assert_far_field(reval, q_l, q_r)
     assert_conserves(reval, euler_flux(gamma), euler_flux(gamma), q_l, q_r,
                      L=max_speed(speeds) + 1)
+
+
+# Strong collisions of a heavy, low-pressure gas (from the ranges of euler_demo1), where the
+# two-rarefaction guess is far from the middle pressure and fsolve used to fail
+STRONG_COLLISIONS = [((5., 5., 1.), (5., -10., 1.)), ((5., 10., 1.), (10., -10., 1.)),
+                     ((10., 10., 1.), (10., -10., 1.)), ((5., 10., 1.), (5., -5., 1.)),
+                     ((10., 10., 1.), (5., -10., 5.))]
+
+
+@pytest.mark.parametrize("left, right", STRONG_COLLISIONS)
+def test_strong_collisions(left, right, capsys):
+    """Two shocks; the jump conditions hold across each wave and the solution conserves."""
+    q_l, q_r = conserved(*left), conserved(*right)
+    states, speeds, reval, wave_types = euler.exact_riemann_solution(q_l, q_r)
+    assert 'did not converge' not in capsys.readouterr().out
+    assert wave_types == ['shock', 'contact', 'shock']
+    flux = euler_flux(1.4)
+    assert_rankine_hugoniot(flux, q_l, states[:, 1], speeds[0], rtol=1e-7)
+    assert_rankine_hugoniot(flux, states[:, 1], states[:, 2], speeds[1], rtol=1e-7)
+    assert_rankine_hugoniot(flux, states[:, 2], q_r, speeds[2], rtol=1e-7)
+    assert_conserves(reval, flux, flux, q_l, q_r, L=max_speed(speeds) + 1)

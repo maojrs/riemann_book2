@@ -3,8 +3,13 @@
 //   python(fn, kwargs) calls widgets.compute.<fn>(**kwargs) and resolves with its result.
 //   latestOnly(...)    makes an update function that never queues up stale requests.
 //
-//   whenNear(el)       resolves when el is about one screen away, so that Python is only
-//                      started for readers who reach an interactive figure.
+//   whenNear(el)       resolves when el is about one screen away, so that a figure draws
+//                      only when the reader comes near it.
+//
+// Python starts as soon as a page with interactive figures opens (importing this file), and
+// then imports matplotlib in the background: most of the start-up (about 9 s) is spent
+// while the reader is still reading the text above the first figure. The book's static
+// site loads every chapter as a new page, so each chapter starts its own Python.
 //
 // The widgets import this file as python.mjs?v=<page load time>: its name is fixed, so
 // without that a browser could use an old cached copy with newer widgets.
@@ -12,13 +17,12 @@
 // Pyodide comes from the jsDelivr CDN, which is fast; if that fails, from the copy published
 // with the book (prepared by widgets/assets.py, myst.yml static_files). The book's own code
 // (exact_solvers, utils, miniclaw, widgets) is a wheel published next to this file.
-// matplotlib is only loaded when a figure needs it, since it takes most of the start-up time.
 const PYODIDE_VERSION = '0.28.3';      // the same as in widgets/assets.py
 const SOURCES = [`https://cdn.jsdelivr.net/pyodide/v${PYODIDE_VERSION}/full/`,
                  new URL('pyodide/', import.meta.url).href];
 const WHEEL_NAME = 'riemann_book-0.1.0-py3-none-any.whl';
 const WHEEL = new URL(WHEEL_NAME, import.meta.url).href;
-const NEEDS_MATPLOTLIB = ['figure_controls', 'figure_frame'];   // they import plotting code
+const NEEDS_MATPLOTLIB = ['figure_controls', 'figure_frame', 'warm_up'];   // they import plotting code
 
 const WORKER_SOURCE = `
 let ready, matplotlib;
@@ -120,6 +124,9 @@ export function python(fn, kwargs = {}) {
     worker.postMessage({ id, fn, kwargs });
   });
 }
+
+// Start Python now; a failure shows up again in the first figure that asks for a picture
+python('warm_up').catch(() => {});
 
 // Each figure asks for its next picture only after the previous one has arrived, always
 // with the latest values, so fast slider or mouse movements never queue up. Values that

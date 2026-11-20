@@ -27,6 +27,14 @@ These don't affect any of the book's own examples.
   `test_euler_tammann.py::test_primitive_conservative_round_trip`.
 - `nonconvex.py`: `nonconvex_solutions` crashed without explicit `xi_left`/`xi_right`. Test:
   `test_nonconvex.py::test_nonconvex_solutions_with_default_xi_range`.
+- `euler.py` (approved): for strong collisions of a heavy, low-pressure gas (e.g. in
+  `euler_demo1`'s ranges) `fsolve` did not converge from its two-rarefaction guess, printed a
+  warning and returned a wrong middle state. When both `fsolve` attempts fail and φ(0) > 0,
+  the middle pressure is now found by Brent's method on a bracket (φ decreases with p). Of a
+  32,400-point grid over `euler_demo1`'s ranges, 254 cases failed and 220 now solve; solutions
+  that converged before are unchanged. The other 34 are near vacuum, where the solver's
+  vacuum test and its integral curves slightly disagree; they still warn. Test:
+  `test_euler.py::test_strong_collisions` (two shocks, jump conditions, conservation).
 
 ## Compatibility fixes
 
@@ -99,11 +107,20 @@ These make the code run on current Python, NumPy and IPython without changing an
     versions in `tests/reference/plotting_before.py`.
   - `riemann_tools.plot_riemann` takes an optional `fig` to make its axes on;
     `nonconvex_demos.plot_waves` labels its own axes instead of pyplot's current ones.
-- `euler_demos.plot_with_stripes` (and so `euler_demo1`): the vertical axes hold every value of
-  the solution, at all times, so they no longer move with t and the curves always fit; at t = 0
-  the pressure is now that of the initial states (the energy row was never set, the momentum
-  row twice). `euler_demo1` shows the time slider on top, full width. Tests:
-  `test_euler_stripes_stay_inside_their_axes`, `test_euler_stripes_at_time_zero_are_the_initial_states`.
+- `euler_demos.plot_with_stripes`: the vertical axes hold every value of the solution, at all
+  times, so they no longer move with t and the curves always fit; the tracer stripes cover the
+  whole domain at all times (the particle paths now start far enough out, at the same spacing,
+  and adjacent stripes touch); at t = 0 the pressure is now that of the initial states (the
+  energy row was never set, the momentum row twice). The stripes are drawn as one collection
+  of the same polygons. Tests: `test_euler_stripes_stay_inside_their_axes`,
+  `test_euler_stripes_cover_the_domain`, `test_euler_stripes_at_time_zero_are_the_initial_states`.
+- `euler_demo1`: the time slider is on top, full width, and every slider only redraws the
+  solution (`euler_demos.stripes_demo`): the vertical ranges stay put while the solution fits
+  them and fills a quarter of them, so dragging is smooth (about 40 ms a step instead of
+  340–600 ms). Test: `test_euler_demo_axes_do_not_follow_small_changes`.
+- Euler chapter, two code cells (approved): the checkboxes of `plot_integral_curves` and
+  `plot_hugoniot_loci` are named '1-wave curves'/'3-wave curves' and 'Plot 1-loci'/'Plot
+  3-loci', as in Shallow_water, instead of interact's `plot_1`/`plot_3`.
 
 ## Project infrastructure
 
@@ -136,6 +153,24 @@ These make the code run on current Python, NumPy and IPython without changing an
 - Chapters converted to MyST (markup only; a word-level check confirms the prose is unchanged):
   - **Part I:** Introduction, Advection, Acoustics, Burgers, Traffic_flow, Nonconvex_scalar,
     Shallow_water, Shallow_tracer, Euler.
+  - **Part II:** Approximate_solvers, Burgers_approximate, Shallow_water_approximate,
+    Euler_approximate, FV_compare. Besides the conventions below:
+    - Burgers_approximate, FV_compare (code, approved): `from clawpack import pyclaw,
+      riemann` and the `clawpack.riemann...constants` imports became `miniclaw` (as in the
+      modules); nothing else changes, and miniclaw reproduces these runs exactly
+      (`test_miniclaw_*.py`).
+    - Shallow_water_approximate: the citation key `roe1981approximate`, missing from the
+      bibliography, is `Roe1981` (the same paper); the cell whose Roe solution has a negative
+      middle depth is tagged `remove-stderr`, so its `sqrt` warning (hidden in the original by
+      the warning filter removed from `shallow_water.py`) is not shown on the web.
+      Bug fix in the chapter's `shallow_water_roe_with_efix` (code, approved): the transonic
+      2-wave branch used an undefined `alpha2` (its line was commented out) and the misspelled
+      speed `lambda_2_`; now it runs and mirrors the 1-wave fix (`test_approximate_solvers.py`).
+    - Euler_approximate: its equation label `SWA:hll_middle_state` (a copy of
+      Shallow_water_approximate's) is `EA:hll_middle_state`, since labels are global in the web
+      book.
+      Bug fix in its `compare_solutions` (code, approved): it read the global `right` instead of
+      its argument `right_state` (same values in every call of the chapter, so no output changes).
   - What the conversion does is described in `.agents/conversion.md`:
     - equation references become `{eq}`;
     - citations become `[@key]`;
@@ -171,6 +206,9 @@ These make the code run on current Python, NumPy and IPython without changing an
   - animations (`to_jshtml`) shrink to the column (matplotlib fixes their slider at 374px);
   - headings clip the theme's link icon, which is shifted 10px to the right and widened the page
     on phones when a heading reached the edge.
+  - display equations that cannot wrap and are wider than a phone (Shallow_water_approximate:
+    two equations side by side; Euler_approximate: two long aligned rows) are wrapped in a
+    `{div}` with class `math-fit` (markup; the LaTeX is unchanged) and shrink to the column.
 - Interactive figures on the web (`widgets/`, new): the book's own Python runs in the reader's
   browser (Pyodide, in one worker per page, `widgets/python.mjs`), installed from the wheel that
   `myst.yml` publishes with the site (`static_files`). Before Python is ready the build-time figure
@@ -193,6 +231,15 @@ These make the code run on current Python, NumPy and IPython without changing an
     is unchanged. Test: `test_interactive_cells.py` runs each chapter and checks that every web
     figure has the cell's controls, values and fixed arguments, laid out as in the notebook
     (one per line, or the function's own HBox/VBox layout), and draws the same picture.
+  - Part II: the interactive cells of Burgers_approximate, Shallow_water_approximate,
+    Euler_approximate and FV_compare (22 figures). The chapters define their solvers and set-ups
+    in code cells; their web figures use copies of them, verbatim, in new demo modules
+    (`burgers_approximate_demos.py`, `shallow_water_approximate_demos.py`,
+    `euler_approximate_demos.py`, `fv_compare_demos.py`, where each FV_compare set-up imports
+    its own constants). The finite-volume runs (miniclaw) are made in the browser when the
+    figure first goes live; FV_compare's blast wave with its fine 4000-cell reference takes
+    about 10 s natively. Sliders can be integer (`slider(..., integer=True)`, ipywidgets'
+    IntSlider). Same test.
   - Fixes after review:
     - Each figure draws on a figure of its own. Some plotting functions draw on pyplot's
       current figure, which could be another figure of the page, so a figure could change its
@@ -231,7 +278,11 @@ These make the code run on current Python, NumPy and IPython without changing an
     book (about 40 MB), so it does not depend on an outside service.
   - Pyodide is loaded from the jsDelivr CDN, which is much faster than GitHub Pages for large
     files, and from the book's own copy if the CDN fails. Package downloads cut short are
-    retried. Python only starts when the reader gets near an interactive figure.
+    retried.
+  - Python starts as soon as a page with interactive figures opens and imports matplotlib in
+    the background (`compute.warm_up`; `test_widgets_compute.py`), so most of its start-up
+    (about 9 s) passes while the reader reads; a figure draws when the reader gets near it.
+    The static site loads each chapter as a new page, so each chapter starts its own Python.
   - `python.mjs` and the wheel have fixed names, so the widgets load them in a way that never
     uses an old cached copy (otherwise a new widget could meet an old `python.mjs`).
 - Figures `shallow_water_riemann` and `nonlinear_elasticity_riemann` (structure of the Riemann

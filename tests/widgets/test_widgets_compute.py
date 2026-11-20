@@ -1,6 +1,8 @@
 """widgets.compute: what the web book's interactive figures ask Python for."""
 
 import json
+import subprocess
+import sys
 
 import matplotlib
 
@@ -22,6 +24,15 @@ def test_figure_controls_describe_the_notebook_controls():
     assert spec['options'] == ['xmin', 'xmax', 'ymin', 'ymax']
     names = [c['name'] for c in spec['controls']]
     assert names == [c['name'] for c in acoustics_demos.PHASE_PLANE.controls]
+
+
+def test_warm_up_imports_the_plotting_code():
+    """In a fresh Python (as in the browser): compute does not import pyplot, warm_up does."""
+    code = ("import sys; from widgets import compute; "
+            "assert 'matplotlib.pyplot' not in sys.modules; "
+            "assert compute.warm_up() is None; "
+            "assert 'matplotlib.pyplot' in sys.modules")
+    subprocess.run([sys.executable, '-c', code], check=True)
 
 
 def test_figure_frame_is_the_live_figure():

@@ -66,3 +66,9 @@ article [data-name="safe-output-image"] img { zoom: 0.8; max-width: 100%; }
    book's states, lighter on the dark theme. */
 :root { --book-accent: #2456a6; }
 html.dark { --book-accent: #8db4ff; }
+
+/* Display equations that cannot wrap and are wider than a phone (an align of wide matrices,
+   two equations side by side) are wrapped in a {div} with class math-fit: they shrink to the
+   column when it is narrower than their 32em. */
+article .math-fit { container-type: inline-size; }
+article .math-fit .katex-display > .katex { font-size: min(1.21em, calc(100cqi / 32)); }
