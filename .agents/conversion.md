@@ -12,6 +12,7 @@ Rule 1 in AGENTS.md applies: only markup changes, never the wording. Acoustics i
 5. `python .agents/tools/prose_diff.py ORIGINAL.ipynb chapters/NAME.ipynb` must report **0 differences** in the prose.
 6. Build the chapter with execution and fix any errors or warnings in its output.
    - Use a scratch copy of the project whose `myst.yml` lists only this chapter, with `PATH=.venv/bin:$PATH jupyter-book build --html --execute`.
+   - Prepare the widget files first (`uv run python widgets/assets.py`: the wheel of the book's code, Pyodide and D3, published by `myst.yml`), and again after changing Python code that the web figures use.
    - The Jupyter server needs the venv on `PATH`.
 7. Check for horizontal scroll bars (see below) at 390, 768, 1280, 1440 and 1920 px, and look at the screenshots.
 8. Register the changes in `CHANGES.md`. Add any text that refers to things that no longer exist to "Text to flag for the authors" in `.agents/plan.md`.
@@ -29,7 +30,17 @@ Rule 1 in AGENTS.md applies: only markup changes, never the wording. Acoustics i
   - IFrames of local files are not copied into the site and give a 404.
   - The HTML files carry a small added script that scales the mpld3 figure to the page width.
 - **`%matplotlib` and `%config` magics** are removed. Import cells that only repeat names imported earlier are removed.
-- **`interact` cells** stay as they are. On the static site their figure is shown, and the widget placeholder is hidden by `book.css`.
+- **Interactive cells** (ipywidgets `interact`): the code cell stays as it is, so the notebook works in Jupyter, and its build-time figure is the fallback without JavaScript (`book.css` hides the widget placeholders). For the web, a markdown cell right after it shows the live figure:
+  ````
+  ```{anywidget} ../widgets/interact.mjs
+  :css: ../widgets/interact.css
+  {"figure": "exact_solvers.acoustics_demos.PHASE_PLANE", "values": {"pl": 3, "ul": 2}, "setup": {...}}
+  ```
+  ````
+  - `figure` is an `InteractiveFigure` (`utils/live_figure.py`) in the chapter's demo module; write one for each interactive function, as in `acoustics_demos.py` (a `LiveFigure` class plus its controls), with tests against the original figure (`tests/test_acoustics_demos.py`).
+  - `values` repeats the values the code cell passes (for example `ql`, `qr`), `setup` the arguments of the figure class.
+  - Figures drawn with JavaScript instead (drag explorers, `widgets/acoustics_explorer.mjs`) go in the same way, after the cell they replace on the web; tag that cell `remove-cell` if its output only works in Jupyter (mpld3).
+  - These cells are markup: the prose check ignores them.
 - **Code** in a chapter may be changed only if the change is small and the user approves it first; it may never alter what the chapter computes. Fixing warnings in the plotting code of `*_demos.py` is fine, as long as the figure is unchanged; register it in `CHANGES.md`.
 
 ## No horizontal scroll bars

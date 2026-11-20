@@ -13,6 +13,13 @@ project:
   github: https://github.com/clawpack/riemann_book
   bibliography:
     - references.bib
+  # Published next to the interactive figures (widgets/*.mjs): the Python worker, the book's
+  # code as a wheel, Pyodide and D3. Prepare them first: uv run python widgets/assets.py
+  static_files:
+    - widgets/python.mjs
+    - _build/assets/riemann_book-0.1.0-py3-none-any.whl
+    - _build/assets/pyodide
+    - _build/assets/d3.min.js
   # Explicit table of contents (from Index.ipynb and Index2.ipynb). Only the files listed here
   # become pages; AGENTS.md, CHANGES.md and .agents/ are not part of the book.
   toc:

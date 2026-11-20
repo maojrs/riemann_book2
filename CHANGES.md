@@ -68,10 +68,23 @@ These make the code run on current Python, NumPy and IPython without changing an
   characteristics: `test_vectorized_characteristics_match_the_point_by_point_loop`, `test_extra_lines_match_the_point_by_point_loop`.
 - `riemann_tools.sample_riemann` (new) holds the sampling of the solution at time t, split out
   of `plot_riemann` unchanged, so interactive figures can reuse it. Test: `test_sample_riemann_puts_a_point_between_each_pair_of_waves`.
+- `utils/live_figure.py` (new): `LiveFigure`, a matplotlib figure built once that redraws only
+  what changes, and `InteractiveFigure`, a figure with its controls (sliders, number boxes,
+  dropdowns) that gives both the notebook's ipywidgets and the web book's controls. In a
+  notebook, moving a slider also only redraws what changed (16–29 ms per step instead of
+  130–430 ms). Tests: `test_notebook_figure_is_built_once_and_updated`, `test_notebook_png_shows_the_web_frame`.
+- `acoustics_demos.py`: the interactive figures (`decompose_q`, `char_solution`,
+  `interactive_phase_plane`, `riemann_plot_pplane`) are rewritten on `utils/live_figure.py`,
+  so the notebook and the web book draw them with the same code. Same functions and
+  arguments; the figures are pixel-identical in the built Acoustics chapter. The notebook
+  sliders are laid out in rows (`char_solution`: t, then ρ and K). `ipywidgets` and `IPython`
+  are imported only by the notebook functions. Tests: `test_acoustics_demos.py`, against
+  the previous module kept in `tests/reference/acoustics_demos_before.py`.
 
 ## Project infrastructure
 
-- `pyproject.toml` makes `exact_solvers` and `utils` installable (`uv sync` or `pip install -e .`).
+- `pyproject.toml` makes `exact_solvers`, `utils`, `miniclaw` and `widgets` installable (`uv sync` or
+  `pip install -e .`).
 - `tests/`: scientific test suite (pytest) for `exact_solvers`, `utils.riemann_tools` and `miniclaw`.
   It is not part of the deployed book.
 - `tests/reference/`: results of the book's PyClaw runs with real Clawpack 5.14, made by
@@ -115,6 +128,24 @@ These make the code run on current Python, NumPy and IPython without changing an
   - long code lines wrap;
   - the top-bar title shrinks on small screens;
   - ipywidgets placeholders are hidden on the static site.
+- Interactive figures on the web (`widgets/`, new): the book's own Python runs in the reader's
+  browser (Pyodide, in one worker per page, `widgets/python.mjs`), installed from the wheel that
+  `myst.yml` publishes with the site (`static_files`). Before Python is ready the build-time figure
+  is shown; without JavaScript it stays. Tests for the Python side: `test_widgets_compute.py`.
+  - `interact.mjs`: the live version of an interactive cell, with the notebook's controls
+    (`utils/live_figure.InteractiveFigure`), drawn by the same code as in the notebook.
+  - `acoustics_explorer.mjs`: drag q_l and q_r in the acoustics phase plane (D3 drawing,
+    `exact_solvers.acoustics` solution). It replaces the mpld3 figure on the web; the mpld3
+    files stay, for the notebooks in Jupyter.
+  - Acoustics: one markdown cell (`{anywidget}`) after each of its five interactive cells and
+    after the mpld3 figure, whose cell is tagged `remove-cell` (it only works in Jupyter).
+  - `widgets/assets.py` prepares what the widgets load, in `_build/assets`: the wheel of the
+    book's code, Pyodide 0.28.3 with only the packages used (numpy, matplotlib, micropip and
+    their dependencies; checksums verified) and D3 7.9.0. They are hosted with the book (about
+    25 MB), so it does not depend on an outside service.
+- CI (`.github/workflows/book.yml`): on every push and pull request, runs the tests, prepares
+  the widget files and builds the book with `--execute`; pushes to `main` are published on
+  GitHub Pages.
 - `.agents/tools/`: the conversion script, a prose check and a browser check for horizontal scroll
   bars. These are for the editors; they are not part of the book.
 - Not carried over: `make_html.py`, `make_pdf.py`, `make_html_bib.sh`, the Docker files, `html/`,

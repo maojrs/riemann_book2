@@ -23,7 +23,7 @@ dev = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["exact_solvers", "utils", "miniclaw"]
+packages = ["exact_solvers", "utils", "miniclaw", "widgets"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -1,0 +1,17 @@
+/* Slider figure (interact.mjs) */
+.book-interact { width: 100%; max-width: 100%; overflow: hidden; }
+.book-interact [hidden] { display: none !important; }
+.book-interact .bi-status { font-size: 0.85rem; opacity: 0.75; margin-bottom: 0.25rem; }
+.book-interact .bi-controls { margin-bottom: 0.5rem; }
+/* One row of controls side by side, as in the notebook; one per line on phones */
+.book-interact .bi-row { display: grid; grid-template-columns: repeat(var(--columns), minmax(0, 1fr)); gap: 0.25rem 1.5rem; margin: 0.15rem 0; }
+@media (max-width: 600px) { .book-interact .bi-row { grid-template-columns: minmax(0, 1fr); } }
+.book-interact label { display: grid; grid-template-columns: 4em minmax(0, 1fr) 3em; align-items: center; gap: 0.5rem; font-size: 0.9rem; min-width: 0; }
+.book-interact .bi-name { font-style: italic; text-align: right; white-space: nowrap; }
+.book-interact input, .book-interact select { width: 100%; min-width: 0; box-sizing: border-box; }
+.book-interact .bi-wide > :is(input, select) { grid-column: 2 / 4; font: inherit; padding: 0.1rem 0.3rem; }
+.book-interact output { font-variant-numeric: tabular-nums; font-size: 0.85rem; }
+.book-interact details { margin-top: 0.25rem; font-size: 0.9rem; }
+.book-interact summary { cursor: pointer; opacity: 0.8; }
+.book-interact img, .book-interact canvas { display: block; max-width: 100%; height: auto; margin: 0 auto; }
+.book-interact canvas { width: 100%; }

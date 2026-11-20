@@ -28,9 +28,9 @@ riemann_book2/
 ├── chapters/         # all notebooks, book chapters and extras, original names, no numbers
 ├── figures/          # static images
 ├── exact_solvers/    # the book's exact solvers, verbatim (+ approved fixes only)
-├── utils/            # riemann_tools: compute and plot Riemann solutions (may be rewritten)
+├── utils/            # riemann_tools (compute and plot Riemann solutions), live_figure (interactive figures); may be rewritten
 ├── miniclaw/         # new: minimal educational reimplementation of Clawpack/PyClaw
-├── components/       # later: JS/anywidget interactive figures
+├── widgets/          # interactive figures of the web book (anywidget .mjs) + compute.py for Python in the browser
 ├── tests/
 └── .github/, .agents/   # CI and agent notes (hidden)
 ```
