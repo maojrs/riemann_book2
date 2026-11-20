@@ -12,7 +12,7 @@ import re
 import sys
 from collections import Counter
 
-BIB_KEYS = set(re.findall(r'^@\w+\{([^,]+),', open('references.bib').read(), re.M))
+BIB_KEYS = set(re.findall(r'^@\w+\s*\{([^,]+),', open('references.bib').read(), re.M))
 
 changes, warnings = Counter(), []
 
@@ -22,7 +22,51 @@ def unnumbered_math(body):
     return f"\n```{{math}}\n:enumerated: false\n{body.strip()}\n```\n"
 
 
+def top_level_rows(body):
+    """Split the body of an align environment at its top-level \\\\ (not inside cases,
+    matrices or other nested environments)."""
+    rows, depth, start, i = [], 0, 0, 0
+    while i < len(body):
+        if body.startswith('\\begin{', i):
+            depth += 1
+        elif body.startswith('\\end{', i):
+            depth -= 1
+        elif body.startswith('\\\\', i) and depth == 0:
+            rows.append(body[start:i])
+            start = i + 2
+            i += 2
+            continue
+        i += 1
+    rows.append(body[start:])
+    return [r for r in rows if r.strip()]
+
+
+def split_labels(src):
+    """MyST gives a math block one label (and one number), so an align with several
+    \\label{} becomes one align per labelled row (rows without a label stay with the next
+    labelled row). The LaTeX of each row is unchanged."""
+    def split(m):
+        env, body = m.group(1), m.group(2)
+        if len(re.findall(r'\\label\{', body)) < 2:
+            return m.group(0)
+        blocks, pending = [], []
+        for row in top_level_rows(body):
+            pending.append(row)
+            labels = re.findall(r'\\label\{[^}]+\}', row)
+            if labels:
+                rows = [re.sub(r'\s*\\label\{[^}]+\}', '', r).strip() for r in pending]
+                blocks.append(f"\\begin{{{env}}}\n    " + ' \\\\\n    '.join(rows) + f" {labels[0]}\n\\end{{{env}}}")
+                pending = []
+        if pending:
+            warnings.append('rows without a label after the last label kept in a separate block')
+            blocks.append(f"\\begin{{{env}}}\n    " + ' \\\\\n    '.join(r.strip() for r in pending) + f"\n\\end{{{env}}}")
+        changes['equations with several labels split'] += 1
+        return '\n\n'.join(blocks)
+    return re.sub(r'\\begin\{(align|equation)\}(.*?)\\end\{\1\}', split, src, flags=re.S)
+
+
 def convert_markdown(src, cell_index):
+    src = split_labels(src)
     # Equation references: (\ref{X}) and \eqref{X} render as "(n)", which {eq} also does.
     src, n = re.subn(r'\(\\ref\{([^}]+)\}\)', r'{eq}`\1`', src)
     changes['equation references'] += n
@@ -103,6 +147,23 @@ def convert_code(src, cell_index, seen_imports):
     return src
 
 
+def add_html_import(cells):
+    """The embedded phase-plane HTML needs HTML: add it to the IPython.display import."""
+    for cell in cells:
+        if cell['cell_type'] != 'code':
+            continue
+        lines = cell['source'].split('\n')
+        for k, line in enumerate(lines):
+            m = re.match(r'from IPython\.display import (.+)$', line.strip())
+            if m:
+                if 'HTML' not in [n.strip() for n in m.group(1).split(',')]:
+                    lines[k] = line.rstrip() + ', HTML'
+                    cell['source'] = '\n'.join(lines)
+                    changes['HTML added to the IPython.display import'] += 1
+                return
+    warnings.append('no IPython.display import found: add HTML for the embedded phase planes')
+
+
 def convert(path):
     nb = json.load(open(path))
     cells, seen_imports = [], set()
@@ -121,6 +182,8 @@ def convert(path):
                 continue
             cell['source'] = new
         cells.append(cell)
+    if changes['phase-plane IFrame -> embedded HTML']:
+        add_html_import(cells)
     nb['cells'] = cells
     with open(path, 'w') as f:
         json.dump(nb, f, indent=1, ensure_ascii=False)

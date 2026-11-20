@@ -37,3 +37,15 @@ article pre, article pre code, article pre code span { white-space: pre-wrap !im
    ("a Jupyter kernel connection is required") and the widget's text form; hide those. The
    figure drawn by the interact call is a separate output and stays visible. */
 .jp-OutputArea-child:has(.thebe-ipywidgets-placeholder) { display: none; }
+
+/* Phones: display equations the size of the text (KaTeX uses 1.21em), so that the long ones
+   fit the width of the screen. */
+@media (max-width: 480px) {
+  article .katex-display > .katex { font-size: 0.9em; }
+}
+
+/* Animations (matplotlib's to_jshtml): the frames and the time slider fit the column
+   (matplotlib fixes the slider at 374px). */
+article .animation { max-width: 100%; }
+article .animation img { max-width: 100%; height: auto; }
+article input[type=range].anim-slider { width: 100%; max-width: 374px; }

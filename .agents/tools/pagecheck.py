@@ -66,26 +66,69 @@ out.wide = out.wide.slice(0, 8);
 return out;
 """
 
+in_frame = []        # non-empty while the checks run inside the emulation frame
+
+
+def open_page(url, width):
+    """Open url `width` CSS pixels wide. Firefox windows cannot be narrower than 500 px, so
+    narrower screens are emulated with a frame of that width (as responsive-design tools
+    do); the checks and the screenshot then run inside the frame."""
+    if in_frame:
+        client.switch_to_frame()                    # back to the top page
+        in_frame.clear()
+    if width >= 500:
+        client.set_window_rect(width=width, height=1000)
+        client.navigate(url)
+        return None
+    client.set_window_rect(width=600, height=1000)
+    client.navigate(base + '/__no_such_page__')     # a plain page of the same origin
+    client.execute_script(f"""document.open();
+        document.write('<body style="margin:0"><iframe id="frame" src="{url}" style="border:0;width:{width}px;height:1000px"></iframe></body>');
+        document.close();""")
+    frame = client.find_element('id', 'frame')
+    time.sleep(2)
+    client.switch_to_frame(frame)
+    in_frame.append(True)
+    # phones overlay their scroll bars, so they take no width
+    client.execute_script("document.documentElement.style.scrollbarWidth = 'none'")
+    return frame
+
+
+def screenshot(frame):
+    """Full-page screenshot (of the frame's whole page when emulating a narrow screen)."""
+    if frame is None:
+        return client.screenshot(full=True)
+    height = client.execute_script('return document.documentElement.scrollHeight')
+    client.switch_to_frame()
+    in_frame.clear()
+    client.execute_script(f"document.getElementById('frame').style.height = '{height}px'")
+    client.set_window_rect(width=600, height=min(height + 50, 30000))
+    return client.screenshot(element=frame)
+
+
 report = {}
-for page in pages:
-    for w in widths:
-        client.set_window_rect(width=w, height=1000)
-        client.navigate(f'{base}/{page}/')
-        for _ in range(40):                     # wait until outputs are rendered
-            time.sleep(0.5)
-            if client.execute_script(OVERFLOW_JS)['loading'] == 0:
-                break
-        time.sleep(1.0)
-        res = client.execute_script(OVERFLOW_JS)
-        report[f'{page}@{w}'] = res
-        png = client.screenshot(full=True)
-        with open(os.path.join(outdir, f'{page}_{w}.png'), 'wb') as f:
-            f.write(base64.b64decode(png))
-        print(f"{page}@{w}: page_hscroll={res['page']} still_loading={res['loading']} scrollers={len(res['scrollers'])}")
-        for x in res['wide']:
-            print(f"    WIDER THAN WINDOW: {x['el']:40s} right={x['right']} {x['text']!r}")
-        for s in res['scrollers']:
-            print(f"    {s['el']:45s} {s['scrollWidth']:5d} > {s['width']:5d}  {s['text']!r}")
-json.dump(report, open(os.path.join(outdir, 'report.json'), 'w'), indent=1)
-client.delete_session()
-proc.terminate()
+try:
+    for page in pages:
+        for w in widths:
+            frame = open_page(f'{base}/{page}/', w)
+            for _ in range(40):                     # wait until outputs are rendered
+                time.sleep(0.5)
+                if client.execute_script(OVERFLOW_JS)['loading'] == 0:
+                    break
+            time.sleep(1.0)
+            res = client.execute_script(OVERFLOW_JS)
+            report[f'{page}@{w}'] = res
+            png = screenshot(frame)
+            with open(os.path.join(outdir, f'{page}_{w}.png'), 'wb') as f:
+                f.write(base64.b64decode(png))
+            if frame is not None:
+                assert res['clientWidth'] == w, res['clientWidth']   # emulated phone width
+            print(f"{page}@{w}: page_hscroll={res['page']} still_loading={res['loading']} scrollers={len(res['scrollers'])}")
+            for x in res['wide']:
+                print(f"    WIDER THAN WINDOW: {x['el']:40s} right={x['right']} {x['text']!r}")
+            for s in res['scrollers']:
+                print(f"    {s['el']:45s} {s['scrollWidth']:5d} > {s['width']:5d}  {s['text']!r}")
+finally:
+    json.dump(report, open(os.path.join(outdir, 'report.json'), 'w'), indent=1)
+    client.delete_session()
+    proc.terminate()
