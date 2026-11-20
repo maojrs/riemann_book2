@@ -4,11 +4,8 @@ Every function takes plain values and returns plain values (numbers, lists, dict
 which the page receives as JavaScript objects. matplotlib is only loaded by the functions
 that draw.
 """
-import base64
 import importlib
-import io
 import json
-import warnings
 
 import numpy as np
 
@@ -36,32 +33,10 @@ def figure_frame(figure, values, setup=None):
     'rgba'}. Each figure is built once per setup and then only redrawn where it changes."""
     key = json.dumps([figure, setup], sort_keys=True)
     if key not in _live_figures:
-        _live_figures[key] = _find(figure).figure(**(setup or {}))
+        _live_figures[key] = _find(figure).build(setup)
     live = _live_figures[key]
     live.update(**values)
     return live.frame()
-
-
-# --- Any plotting function (slower: the whole figure is drawn each time) ----------------
-_figures = {}
-
-
-def render_figure(function, values, dpi=100):
-    """Call one of the book's plotting functions and return its figure as a PNG data URL,
-    cropped as Jupyter shows it. Figures already drawn are remembered."""
-    import matplotlib.pyplot as plt
-
-    key = json.dumps([function, values, dpi], sort_keys=True)
-    if key not in _figures:
-        plt.close('all')
-        with warnings.catch_warnings():
-            warnings.filterwarnings('ignore', message='FigureCanvasAgg is non-interactive')
-            _find(function)(**values)
-        buffer = io.BytesIO()
-        plt.gcf().savefig(buffer, format='png', dpi=dpi, bbox_inches='tight')
-        plt.close('all')
-        _figures[key] = 'data:image/png;base64,' + base64.b64encode(buffer.getvalue()).decode()
-    return _figures[key]
 
 
 # --- Acoustics phase-plane explorer -------------------------------------------------------
@@ -88,3 +63,33 @@ def acoustics_explorer(ql, qr, rho, bulk, t=1.0, xmin=-5.0, xmax=5.0, pmin=-5.0,
              dict(line(ql, 2), physical=False), dict(line(qr, 1), physical=False)]
     return {'states': states.T.tolist(), 'speeds': speeds.tolist(),
             'x': x.tolist(), 'p': np.asarray(p).tolist(), 'u': np.asarray(u).tolist(), 'lines': lines}
+
+
+# --- Shallow water phase-plane explorer ---------------------------------------------------
+def shallow_water_explorer(ql, qr, t=2., g=1., hmax=10., xmax=10., n=801):
+    """The shallow water Riemann solution for the drag explorer; ql, qr = (h, hu).
+
+    Returns the states q_l, q_m, q_r, the wave types and speeds (a rarefaction has the speeds
+    of its edges), h(x, t) and hu(x, t) at n points of [-xmax, xmax], and in the h-hu plane the
+    curves through q_l (1-waves) and q_r (2-waves): integral curves (rarefactions) and Hugoniot
+    loci (shocks). As in shallow_water.phase_plane_curves, the rarefaction curve below the
+    state and the shock curve above it are the physical ones.
+    """
+    from exact_solvers import shallow_water
+
+    ql, qr = np.asarray(ql, float), np.asarray(qr, float)
+    states, speeds, reval, wave_types = shallow_water.exact_riemann_solution(ql, qr, g)
+    x = np.linspace(-xmax, xmax, n)
+    h, hu = reval(x/t)
+    curves = []
+    for (h0, hu0), family in ((ql, 1), (qr, 2)):
+        below, above = np.linspace(0., h0, 200), np.linspace(h0, hmax, 200)
+        for kind, curve, physical, unphysical in (
+                ('rarefaction', shallow_water.integral_curve, below, above),
+                ('shock', shallow_water.hugoniot_locus, above, below)):
+            for hs, is_physical in ((physical, True), (unphysical, False)):
+                curves.append({'h': hs.tolist(), 'hu': curve(hs, h0, hu0, family, g, y_axis='hu').tolist(),
+                               'kind': kind, 'family': family, 'physical': is_physical})
+    return {'states': states.T.tolist(), 'wave_types': list(wave_types),
+            'speeds': [np.atleast_1d(s).astype(float).tolist() for s in speeds],
+            'x': x.tolist(), 'h': np.asarray(h).tolist(), 'hu': np.asarray(hu).tolist(), 'curves': curves}

@@ -120,3 +120,48 @@ def euler_demo1(rho_l=2.,u_l=0.,p_l=2.5,
         display(mainwidget.widget.out)
     except:
         pass
+
+
+# --- Interactive figures for the web book (utils.live_figure): the controls of the notebook
+from utils import riemann_tools  # noqa: E402
+from utils.live_figure import InteractiveFigure, checkbox, dropdown, slider  # noqa: E402
+from . import euler  # noqa: E402
+
+# interact() adds the checkboxes plot_1 and plot_3 from the functions' default arguments
+CURVE_CONTROLS = [checkbox('plot_1', True, 'plot_1'), checkbox('plot_3', False, 'plot_3'),
+                  slider('gamma', 1.1, 3., 1.4), slider('rho_0', 0.1, 3., 1., label=r'$\rho_0$')]
+INTEGRAL_CURVES = InteractiveFigure.redraw(
+    euler.plot_integral_curves, CURVE_CONTROLS, [['gamma', 'rho_0'], ['plot_1', 'plot_3']])
+HUGONIOT_LOCI = InteractiveFigure.redraw(
+    euler.plot_hugoniot_loci, CURVE_CONTROLS, [['gamma', 'rho_0'], ['plot_1', 'plot_3']])
+
+
+def riemann_solution_plot(left_state, right_state, gamma=1.4):
+    """The plotting function of euler.riemann_solution(left_state, right_state, gamma)."""
+    q_left = euler.primitive_to_conservative(*left_state)
+    q_right = euler.primitive_to_conservative(*right_state)
+    ex_states, ex_speeds, reval, wave_types = euler.exact_riemann_solution(q_left, q_right, gamma)
+    return riemann_tools.make_plot_function(ex_states, ex_speeds, reval, wave_types,
+                                            layout='vertical',
+                                            vertical_spacing=0.15,
+                                            variable_names=euler.primitive_variables,
+                                            plot_chars=[euler.lambda1, euler.lambda2, euler.lambda3],
+                                            derived_variables=euler.cons_to_prim)
+
+
+RIEMANN_SOLUTION = InteractiveFigure.redraw(
+    riemann_solution_plot,
+    [slider('t', 0., 0.9, 0.5), dropdown('which_char', [None, 1, 2, 3], None, label='Show characteristics:')],
+    [['t', 'which_char']], factory=True)
+
+# plot_with_stripes with only a time slider (the cell's plot_with_stripes_t_slider)
+STRIPES = InteractiveFigure.redraw(plot_with_stripes, [slider('t', 0., 1., 0.5)], [['t']])
+
+# euler_demo1(...)
+DEMO1 = InteractiveFigure.redraw(
+    plot_with_stripes,
+    [slider('rho_l', 1., 10., 2., label=r'$\rho_l$'), slider('u_l', -10., 10., 0., label='$u_l$'),
+     slider('p_l', 1., 10., 2.5, label='$p_l$'), slider('rho_r', 1., 10., 3., label=r'$\rho_r$'),
+     slider('u_r', -10., 10., 0., label='$u_r$'), slider('p_r', 1., 10., 5., label='$p_r$'),
+     slider('gamma', 1.1, 2., 1.4, label=r'$\gamma$'), slider('t', 0., 1., 0.5)],
+    [['rho_l', 'rho_r', 'gamma'], ['u_l', 'u_r', 't'], ['p_l', 'p_r']])

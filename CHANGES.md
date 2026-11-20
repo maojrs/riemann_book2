@@ -110,15 +110,26 @@ These make the code run on current Python, NumPy and IPython without changing an
   the sidebar's own grid, so the sidebar and text never overlap (checked with screenshots at
   1280, 1440, 1600 and 1920 px).
 - Chapters converted to MyST (markup only; a word-level check confirms the prose is unchanged):
-  - **Acoustics.**
+  - **Part I:** Introduction, Advection, Acoustics, Burgers, Traffic_flow, Nonconvex_scalar,
+    Shallow_water, Shallow_tracer, Euler.
   - What the conversion does is described in `.agents/conversion.md`:
     - equation references become `{eq}`;
     - citations become `[@key]`;
     - unnumbered displays are kept unnumbered;
+    - an `align` with several `\label`s becomes one `align` per label (MyST gives a math block
+      one label and one number; in Shallow_water the second labels were lost);
+    - a one-row `align` (at most one `&`) becomes an `equation`, and a one-row `align*` plain
+      display math: same look and numbers, but a long one can now break after an `=` on narrow
+      screens instead of scrolling;
     - `Image` cells become `{image}`;
-    - the phase-plane `IFrame` becomes embedded HTML;
+    - the phase-plane `IFrame` becomes embedded HTML (and `HTML` is added to the cell's
+      `IPython.display` import); the acoustics phase plane is the drag explorer on the web
+      (Introduction, Acoustics);
+    - links to a heading of a notebook (`Shallow_water.ipynb#Dam-break-…`) get an explicit
+      heading label;
     - paths are made relative to `chapters/`;
     - notebook magics and repeated import cells are removed.
+  - The `python3` kernel is set where a notebook asked for `python2` (metadata only).
 - Chapters not yet converted have a temporary first cell `execute: skip: true`, so the build
   (`--execute`) does not run them. Each is removed when its chapter is converted.
 - `.gitattributes` marks `figures/phase_plane/*.html` as generated (and vendored) and `AGENTS.md` and `.agents/*.md`
@@ -130,6 +141,12 @@ These make the code run on current Python, NumPy and IPython without changing an
   - long code lines wrap;
   - the top-bar title shrinks on small screens;
   - ipywidgets placeholders are hidden on the static site.
+  - display equations can break after a top-level relation (=, <, …) when they are too long;
+  - on phones (480px and less) display equations are the size of the text (0.9em instead of
+    KaTeX's 1.21em);
+  - animations (`to_jshtml`) shrink to the column (matplotlib fixes their slider at 374px);
+  - headings clip the theme's link icon, which is shifted 10px to the right and widened the page
+    on phones when a heading reached the edge.
 - Interactive figures on the web (`widgets/`, new): the book's own Python runs in the reader's
   browser (Pyodide, in one worker per page, `widgets/python.mjs`), installed from the wheel that
   `myst.yml` publishes with the site (`static_files`). Before Python is ready the build-time figure
@@ -141,10 +158,27 @@ These make the code run on current Python, NumPy and IPython without changing an
     files stay, for the notebooks in Jupyter.
   - Acoustics: one markdown cell (`{anywidget}`) after each of its five interactive cells and
     after the mpld3 figure, whose cell is tagged `remove-cell` (it only works in Jupyter).
+  - Part I: every interactive cell of Introduction, Advection, Burgers, Traffic_flow,
+    Nonconvex_scalar, Shallow_water, Shallow_tracer and Euler (56 figures) is live on the web
+    too, with the cell's controls. They are drawn by the book's own plotting functions, again
+    in full at each change (`utils.live_figure.RedrawFigure`, 0.2–1 s per change). Each figure
+    is described (controls, rows) in the chapter's demo module: `advection_demos.py` (new),
+    `burgers_demos.py`, `traffic_demos.py`, `nonconvex_demos.py` (with the chapter's fluxes,
+    named), `shallow_demos.py`, `euler_demos.py`; a few small functions there give the
+    plotting function a cell builds (e.g. `euler_demos.riemann_solution_plot`). Notebook code
+    is unchanged. Test: `test_interactive_cells.py` runs each chapter and checks that every web
+    figure has the cell's controls, values and fixed arguments, and draws the same picture.
+  - `shallow_water_explorer.mjs` (new): drag q_l, q_r in the h-hu plane and the time in the
+    x-t plane (Hugoniot loci and integral curves, middle state, waves, depth and momentum at t;
+    `exact_solvers.shallow_water` solution). It replaces the mpld3 shallow-water figure on the
+    web in Introduction and Shallow_water (that cell is tagged `remove-cell`; the file stays for
+    Jupyter). Test: `test_shallow_water_explorer_is_the_exact_solution`.
+  - In the browser, modules that import ipywidgets or IPython (notebook only) get empty
+    stand-ins, and a missing package (scipy for some chapters) is loaded when first needed.
   - `widgets/assets.py` prepares what the widgets load, in `_build/assets`: the wheel of the
-    book's code, Pyodide 0.28.3 with only the packages used (numpy, matplotlib, micropip and
-    their dependencies; checksums verified) and D3 7.9.0. They are hosted with the book (about
-    25 MB), so it does not depend on an outside service.
+    book's code, Pyodide 0.28.3 with only the packages used (numpy, matplotlib, scipy,
+    micropip and their dependencies; checksums verified) and D3 7.9.0. They are hosted with the
+    book (about 40 MB), so it does not depend on an outside service.
   - Pyodide is loaded from the jsDelivr CDN, which is much faster than GitHub Pages for large
     files, and from the book's own copy if the CDN fails. Package downloads cut short are
     retried. Python only starts when the reader gets near an interactive figure.
@@ -154,6 +188,8 @@ These make the code run on current Python, NumPy and IPython without changing an
   the widget files and builds the book with `--execute`; pushes to `main` are published on
   GitHub Pages.
 - `.agents/tools/`: the conversion script, a prose check and a browser check for horizontal scroll
-  bars. These are for the editors; they are not part of the book.
+  bars. These are for the editors; they are not part of the book. The browser check emulates phone widths below 500px
+  with a frame of that width (Firefox windows cannot be narrower than 500px, so "390px" used to
+  measure 488px). With `--live` it first makes every interactive figure live.
 - Not carried over: `make_html.py`, `make_pdf.py`, `make_html_bib.sh`, the Docker files, `html/`,
   `files_for_*`, `html_animations/`, `Index.ipynb`, `Index2.ipynb`, `Make_html_animations.ipynb`.

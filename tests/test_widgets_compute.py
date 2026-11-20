@@ -1,7 +1,5 @@
 """widgets.compute: what the web book's interactive figures ask Python for."""
 
-import base64
-import io
 import json
 
 import matplotlib
@@ -9,7 +7,7 @@ import matplotlib
 matplotlib.use('Agg')
 
 import numpy as np  # noqa: E402
-from PIL import Image  # noqa: E402
+import pytest  # noqa: E402
 
 from exact_solvers import acoustics, acoustics_demos  # noqa: E402
 from widgets import compute  # noqa: E402
@@ -45,15 +43,6 @@ def test_figure_frame_builds_one_figure_per_setup():
     assert compute.figure_frame(figure, dict(t=0.5, which_char=None), shock_tube) == a
 
 
-def test_render_figure_draws_any_plotting_function():
-    url = compute.render_figure('exact_solvers.acoustics_demos.decompose_q', dict(p=1., u=0.3, K=1., rho=1.))
-    assert url.startswith('data:image/png;base64,')
-    image = Image.open(io.BytesIO(base64.b64decode(url.split(',')[1])))
-    assert image.size[0] > 500                                    # an 8x4 inch figure at 100 dpi, cropped
-    assert compute.render_figure('exact_solvers.acoustics_demos.decompose_q',
-                                 dict(p=1., u=0.3, K=1., rho=1.)) is url    # remembered
-
-
 def test_acoustics_explorer_is_the_exact_solution():
     ql, qr, rho, bulk = [-2, 2], [0, -3], 1., 4.
     data = compute.acoustics_explorer(ql, qr, rho, bulk, t=1.)
@@ -82,3 +71,23 @@ def test_browser_and_assets_use_the_same_pyodide_version():
     in_browser = re.search(r"PYODIDE_VERSION = '([\d.]+)'", (root/'widgets'/'python.mjs').read_text()).group(1)
     in_assets = re.search(r"PYODIDE_VERSION = '([\d.]+)'", (root/'widgets'/'assets.py').read_text()).group(1)
     assert in_browser == in_assets
+
+
+def test_shallow_water_explorer_is_the_exact_solution():
+    from exact_solvers import shallow_water
+    ql, qr = [3., 5.], [3., -5.]
+    data = compute.shallow_water_explorer(ql, qr, t=2.)
+    json.dumps(data)
+    states, speeds, reval, wave_types = shallow_water.exact_riemann_solution(np.array(ql), np.array(qr), 1.)
+    np.testing.assert_allclose(data['states'], states.T)
+    assert data['wave_types'] == list(wave_types)
+    x = np.array(data['x'])
+    np.testing.assert_allclose(data['h'], reval(x/2.)[0])
+    np.testing.assert_allclose(data['hu'], reval(x/2.)[1])
+    # The physical curves through q_l (1-waves) and q_r (2-waves) meet at q_m
+    hm, hum = data['states'][1]
+    for family in (1, 2):
+        kind = wave_types[0 if family == 1 else 1]
+        curve = next(c for c in data['curves'] if c['family'] == family and c['physical']
+                     and c['kind'] == ('shock' if kind == 'shock' else 'rarefaction'))
+        assert np.interp(hm, curve['h'], curve['hu']) == pytest.approx(hum, abs=1e-3)

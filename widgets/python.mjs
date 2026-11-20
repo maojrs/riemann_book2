@@ -18,7 +18,7 @@ const SOURCES = [`https://cdn.jsdelivr.net/pyodide/v${PYODIDE_VERSION}/full/`,
                  new URL('pyodide/', import.meta.url).href];
 const WHEEL_NAME = 'riemann_book-0.1.0-py3-none-any.whl';
 const WHEEL = new URL(WHEEL_NAME, import.meta.url).href;
-const NEEDS_MATPLOTLIB = ['figure_controls', 'figure_frame', 'render_figure'];   // they import plotting code
+const NEEDS_MATPLOTLIB = ['figure_controls', 'figure_frame'];   // they import plotting code
 
 const WORKER_SOURCE = `
 let ready, matplotlib;
@@ -34,10 +34,35 @@ async function loadPackages(py, names) {
   }
 }
 
+// Run Python code with its own local variables (requests from several figures can overlap
+// while a package loads); a module missing in the browser (e.g. scipy for some chapters) is
+// loaded from Pyodide's packages and the code is run again
+async function run(py, code, locals) {
+  const loaded = new Set();
+  for (;;) {
+    try { return py.runPython(code, { locals }); }
+    catch (error) {
+      const missing = /No module named '([\\w]+)/.exec(error.message)?.[1];
+      if (!missing || loaded.has(missing)) throw error;
+      loaded.add(missing);
+      await loadPackages(py, [missing]);
+    }
+  }
+}
+
 async function startFrom(indexURL) {
   importScripts(indexURL + 'pyodide.js');
   const py = await loadPyodide({ indexURL });
   await loadPackages(py, ['numpy', 'micropip']);
+  // Some of the book's modules import ipywidgets and IPython for their notebook versions only;
+  // the browser does not need them, so they get empty stand-ins
+  py.runPython([
+    'import sys, types',
+    "for name in ['ipywidgets', 'IPython', 'IPython.display']:",
+    '    module = types.ModuleType(name)',
+    '    module.__getattr__ = lambda attr: (lambda *args, **kwargs: None)',
+    '    sys.modules[name] = module',
+  ].join('\\n'));
   // The book's code: checked with the server each time ('no-cache'), so a new version of
   // the book is never mixed with an old copy in the browser's cache
   const wheel = await fetch('${WHEEL}', { cache: 'no-cache' });
@@ -61,8 +86,10 @@ onmessage = async ({ data: { id, fn, kwargs } }) => {
   try {
     const py = await (ready ??= start());
     if (${JSON.stringify(NEEDS_MATPLOTLIB)}.includes(fn)) await (matplotlib ??= loadPackages(py, ['matplotlib']));
-    py.globals.set('kwargs_json', JSON.stringify(kwargs));
-    let result = py.runPython('compute.' + fn + '(**json.loads(kwargs_json))');
+    const locals = py.toPy({ kwargs_json: JSON.stringify(kwargs) });
+    let result;
+    try { result = await run(py, 'compute.' + fn + '(**json.loads(kwargs_json))', locals); }
+    finally { locals.destroy(); }
     if (result?.toJs) {
       const proxy = result;
       result = proxy.toJs({ dict_converter: Object.fromEntries });

@@ -65,8 +65,41 @@ def split_labels(src):
     return re.sub(r'\\begin\{(align|equation)\}(.*?)\\end\{\1\}', split, src, flags=re.S)
 
 
+def remove_top_level(body, token):
+    """body without `token` where it is not inside a nested environment."""
+    out, depth, i = [], 0, 0
+    while i < len(body):
+        if body.startswith('\\begin{', i):
+            depth += 1
+        elif body.startswith('\\end{', i):
+            depth -= 1
+        if depth == 0 and body.startswith(token, i) and not body.startswith('\\' + token, i - 1):
+            i += len(token)
+            continue
+        out.append(body[i])
+        i += 1
+    return ''.join(out)
+
+
+def unalign_single_rows(src):
+    """A one-row align with at most one top-level & becomes an equation (align* becomes plain
+    display math): it looks the same, but KaTeX can then break it after an = when it is
+    wider than the screen, instead of scrolling. The alignment & is the only thing removed."""
+    def single(m):
+        env, star, body = m.group(1), m.group(2), m.group(3)
+        if len(top_level_rows(body)) != 1 or body.rstrip().endswith('\\\\'):
+            return m.group(0)
+        top_amps = body.count('&') - remove_top_level(body, '&').count('&')
+        if top_amps > 1:
+            return m.group(0)
+        changes['one-row align -> equation'] += 1
+        inner = remove_top_level(body, '&')
+        return inner.strip() if star else f"\\begin{{equation}}{inner}\\end{{equation}}"
+    return re.sub(r'\\begin\{(align)(\*?)\}(.*?)\\end\{align\2\}', single, src, flags=re.S)
+
+
 def convert_markdown(src, cell_index):
-    src = split_labels(src)
+    src = unalign_single_rows(split_labels(src))
     # Equation references: (\ref{X}) and \eqref{X} render as "(n)", which {eq} also does.
     src, n = re.subn(r'\(\\ref\{([^}]+)\}\)', r'{eq}`\1`', src)
     changes['equation references'] += n
@@ -83,6 +116,8 @@ def convert_markdown(src, cell_index):
         changes['citations'] += 1
         return f'[@{key}]'
     src = re.sub(r'<cite data-cite="([^"]+)">.*?</cite>', cite, src, flags=re.S)
+    for link in re.findall(r'\]\(\w+\.ipynb#[^)]+\)', src):
+        warnings.append(f"cell {cell_index}: link to a heading {link}: give the heading a label (name)= and link to #name")
     for link in re.findall(r'\]\([^)]*riemann(?:_bib)?\.html#[^)]*\)', src):
         warnings.append(f"cell {cell_index}: bibliography link left unchanged: {link}")
 

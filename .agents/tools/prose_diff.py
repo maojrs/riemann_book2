@@ -15,6 +15,7 @@ def prose(path):
         s = re.sub(r'```\{math\}.*?```', ' ', s, flags=re.S)                  # math directives
         s = re.sub(r'```\{image\}.*?```', ' ', s, flags=re.S)
         s = re.sub(r'```\{anywidget\}.*?```', ' ', s, flags=re.S)             # interactive figures
+        s = re.sub(r'^\([\w:.-]+\)=$', ' ', s, flags=re.M)                       # heading labels
         s = re.sub(r'\\begin\{(\w+\*?)\}.*?\\end\{\1\}', ' ', s, flags=re.S)  # LaTeX environments
         s = re.sub(r'\$\$.*?\$\$', ' ', s, flags=re.S)
         s = re.sub(r'\$[^$]*\$', ' MATH ', s)                                # inline math

@@ -9,3 +9,9 @@
 .acoustics-explorer .ae-drag { cursor: grab; touch-action: none; }   /* drag, not scroll, on phones */
 .acoustics-explorer .ae-drag circle { fill: #2563eb; }
 .acoustics-explorer .ae-xlabel, .acoustics-explorer .ae-ylabel { fill: currentColor; font-size: 13px; }
+/* Shallow water explorer (shallow_water_explorer.mjs), same look */
+.acoustics-explorer .ae-title { fill: currentColor; font-size: 13px; }
+.acoustics-explorer .sw-shock { stroke: #dc2626; }
+.acoustics-explorer .sw-rarefaction { stroke: #2563eb; }
+.acoustics-explorer .sw-ray { stroke: currentColor; stroke-width: 1.2; }
+.acoustics-explorer .sw-handle { fill: #2563eb; cursor: grab; touch-action: none; }

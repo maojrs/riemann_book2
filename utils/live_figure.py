@@ -4,11 +4,16 @@ LiveFigure: a figure that is built once and then only redraws what the controls 
 (matplotlib "blitting"). In the web book, frame() gives the pixels the page paints; in a
 notebook, the same pixels are shown as a PNG image.
 
-InteractiveFigure: a LiveFigure class together with its controls (sliders, number boxes,
-dropdowns) and their layout. The same description gives the ipywidgets controls in a
-notebook and the controls of the web book.
+RedrawFigure: any of the book's plotting functions (pyplot), drawn again in full at every
+change. Slower than a LiveFigure, but no new plotting code is needed.
+
+InteractiveFigure: a figure (LiveFigure class or plotting function) together with its controls
+(sliders, number boxes, checkboxes, dropdowns) and their layout. The same description gives
+the ipywidgets controls in a notebook and the controls of the web book.
 """
 import io
+import functools
+import warnings
 from dataclasses import dataclass, field
 
 from matplotlib.backends.backend_agg import FigureCanvasAgg
@@ -82,6 +87,42 @@ class LiveFigure:
         return buffer.getvalue()
 
 
+class RedrawFigure:
+    """A figure drawn by one of the book's plotting functions (with pyplot), drawn again in
+    full at every change. Same interface as LiveFigure: update(**values), frame(), png()."""
+
+    def __init__(self, plot):
+        self.plot = plot
+        self.fig = None
+        self._pngs = {}          # figures already drawn, by control values
+        self._key = None
+
+    def update(self, **values):
+        import matplotlib.pyplot as plt
+        self._key = repr(sorted(values.items()))
+        if self._key in self._pngs:
+            return
+        if self.fig is not None:
+            plt.close(self.fig)
+        with warnings.catch_warnings():
+            warnings.filterwarnings('ignore', message='FigureCanvasAgg is non-interactive')
+            self.plot(**values)
+        self.fig = plt.gcf()
+
+    def png(self):
+        """The figure as Jupyter shows it: PNG cropped to its contents."""
+        if self._key not in self._pngs:
+            buffer = io.BytesIO()
+            self.fig.savefig(buffer, format='png', bbox_inches='tight')
+            self._pngs[self._key] = buffer.getvalue()
+        return self._pngs[self._key]
+
+    def frame(self):
+        from PIL import Image
+        image = Image.open(io.BytesIO(self.png())).convert('RGBA')
+        return {'width': image.width, 'height': image.height, 'rgba': image.tobytes()}
+
+
 # --- Controls ---------------------------------------------------------------------------
 def slider(name, min, max, value, label=None, step=0.1):
     return dict(name=name, kind='slider', min=min, max=max, value=value, step=step, label=label or name)
@@ -96,11 +137,17 @@ def dropdown(name, options, value, label=None):
     return dict(name=name, kind='dropdown', options=list(options), value=value, label=label or name)
 
 
+def checkbox(name, value, label):
+    return dict(name=name, kind='checkbox', value=value, label=label)
+
+
 @dataclass
 class InteractiveFigure:
-    """A LiveFigure class with its controls.
+    """A figure with its controls: a LiveFigure class (figure), or a plotting function drawn
+    again in full at every change (InteractiveFigure.redraw).
 
-    controls: list of slider(), number() and dropdown(), whose labels are LaTeX (without $);
+    controls: list of slider(), number(), checkbox() and dropdown); labels are written as
+    ipywidgets descriptions (math between $...$, e.g. r'$\\rho_l$');
     rows: names of the controls shown
     side by side, row by row; options: names of controls shown apart (under "Plot options"
     on the web, in a second tab in the notebook, titled tab_titles).
@@ -110,6 +157,24 @@ class InteractiveFigure:
     rows: list
     options: list = field(default_factory=list)
     tab_titles: tuple = ('Parameters', 'Plot options')
+    function: object = None          # for redraw figures
+    factory: bool = False
+    fixed: dict = field(default_factory=dict)
+
+    @classmethod
+    def redraw(cls, function, controls, rows, factory=False, fixed=None, **options):
+        """A figure drawn by `function(**setup, **fixed, **values)` or, with factory=True,
+        by `function(**setup)(**fixed, **values)`: one of the book's plotting functions as
+        the notebook cell calls it; `fixed` holds the cell's fixed() arguments."""
+        return cls(None, controls, rows, function=function, factory=factory, fixed=fixed or {}, **options)
+
+    def build(self, setup=None):
+        """The figure for this setup (LiveFigure or RedrawFigure), ready for update()."""
+        setup = setup or {}
+        if self.function is None:
+            return self.figure(**setup)
+        plot = self.function(**setup) if self.factory else functools.partial(self.function, **setup)
+        return RedrawFigure(functools.partial(plot, **self.fixed))
 
     def initial_values(self, **values):
         """The control values, with the given ones replacing the defaults."""
@@ -118,16 +183,16 @@ class InteractiveFigure:
     def show(self, setup=None, **values):
         """Draw the figure once, in a notebook."""
         from IPython.display import display
-        live = self.figure(**(setup or {}))
+        live = self.build(setup)
         live.update(**self.initial_values(**values))
         display(live.fig)
 
     def notebook_widgets(self, **values):
         """One ipywidgets control per entry of controls, by name."""
-        from ipywidgets import BoundedFloatText, Dropdown, FloatSlider, FloatText
+        from ipywidgets import BoundedFloatText, Checkbox, Dropdown, FloatSlider, FloatText
         widgets = {}
         for c, value in zip(self.controls, self.initial_values(**values).values()):
-            description = f"${c['label']}$" if c['kind'] != 'dropdown' else c['label']
+            description = c['label']
             if c['kind'] == 'slider':
                 widgets[c['name']] = FloatSlider(value=value, min=c['min'], max=c['max'], step=c['step'],
                                                  description=description)
@@ -136,6 +201,8 @@ class InteractiveFigure:
                                                       description=description)
             elif c['kind'] == 'number':
                 widgets[c['name']] = FloatText(value=value, description=description)
+            elif c['kind'] == 'checkbox':
+                widgets[c['name']] = Checkbox(value=value, description=description)
             else:
                 widgets[c['name']] = Dropdown(options=c['options'], value=value, description=description)
         return widgets
@@ -153,7 +220,7 @@ class InteractiveFigure:
         else:
             controls = rows
         # Built once; each change only redraws what changed, as on the web
-        live = self.figure(**(setup or {}))
+        live = self.build(setup)
 
         def draw(**values):
             live.update(**values)

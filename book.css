@@ -23,6 +23,9 @@
    KaTeX's aligned environments are otherwise 2px wider than their box, which shows a
    horizontal scroll bar under every numbered equation. */
 article .katex-display { display: block; width: fit-content; max-width: 100%; margin-left: auto !important; margin-right: auto !important; }
+/* An equation too long for the column breaks after one of its top-level relations (=, <, ...),
+   as KaTeX already does for inline math, instead of scrolling sideways. */
+article .katex-display > .katex > .katex-html { white-space: normal; }
 
 /* Code cells and text outputs: wrap long lines instead of scrolling sideways. */
 article pre, article pre code, article pre code span { white-space: pre-wrap !important; overflow-wrap: anywhere; }
@@ -49,3 +52,7 @@ article pre, article pre code, article pre code span { white-space: pre-wrap !im
 article .animation { max-width: 100%; }
 article .animation img { max-width: 100%; height: auto; }
 article input[type=range].anim-slider { width: 100%; max-width: 374px; }
+
+/* Headings: the theme's link icon after a heading (visible on hover) is shifted 10px to the
+   right; when the heading text reaches the edge of a phone screen it widens the page. */
+article :is(h1, h2, h3, h4, h5, h6) { overflow-x: clip; }

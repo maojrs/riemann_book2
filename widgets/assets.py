@@ -18,7 +18,7 @@ import subprocess
 import urllib.request
 
 PYODIDE_VERSION = '0.28.3'
-PACKAGES = ['numpy', 'matplotlib', 'micropip']      # and everything they depend on
+PACKAGES = ['numpy', 'matplotlib', 'scipy', 'micropip']      # and everything they depend on
 D3_VERSION = '7.9.0'
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent

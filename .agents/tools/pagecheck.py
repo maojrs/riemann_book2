@@ -12,10 +12,12 @@ Serve the built site, then run (PAGE is the URL path, "." for the root page):
     (cd _build/html && python3 -m http.server 8767 --bind 127.0.0.1) &
     /tmp/pagecheck-env/bin/python -W ignore .agents/tools/pagecheck.py http://127.0.0.1:8767 /tmp/shots 390,768,1280,1440,1920 acoustics
 Run it from a directory that has no file named like a standard module (e.g. /tmp).
+With --live, every interactive figure is made live first (Python runs in the page; slow).
 """
 import base64
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -23,7 +25,9 @@ import time
 
 from marionette_driver.marionette import Marionette
 
-base, outdir, widths, pages = sys.argv[1], sys.argv[2], [int(w) for w in sys.argv[3].split(',')], sys.argv[4:]
+live = '--live' in sys.argv          # first make every interactive figure live (Python in the page)
+args = [a for a in sys.argv[1:] if a != '--live']
+base, outdir, widths, pages = args[0], args[1], [int(w) for w in args[2].split(',')], args[3:]
 os.makedirs(outdir, exist_ok=True)
 profile = tempfile.mkdtemp(prefix='ffprof')
 port = 2829
@@ -106,7 +110,23 @@ def screenshot(frame):
     return client.screenshot(element=frame)
 
 
+LIVE_JS = r"""
+const done = arguments[0];
+const roots = [...document.querySelectorAll('*')].filter(e => e.shadowRoot).map(e => e.shadowRoot.querySelector('[class]')).filter(Boolean);
+(async () => {
+  for (const el of roots) {
+    el.scrollIntoView({block: 'center'});
+    const t0 = performance.now();
+    while (!el.dataset.state && performance.now() - t0 < 240000) await new Promise(r => setTimeout(r, 200));
+  }
+  window.scrollTo(0, 0);
+  done(roots.map(el => el.dataset.state || 'timeout'));
+})();
+"""
+
+
 report = {}
+client.timeout.script = 3600
 try:
     for page in pages:
         for w in widths:
@@ -116,6 +136,10 @@ try:
                 if client.execute_script(OVERFLOW_JS)['loading'] == 0:
                     break
             time.sleep(1.0)
+            if live:
+                states = client.execute_async_script(LIVE_JS)
+                if any(state != 'ready' for state in states):
+                    print(f'    interactive figures not live: {states}')
             res = client.execute_script(OVERFLOW_JS)
             report[f'{page}@{w}'] = res
             png = screenshot(frame)
@@ -132,3 +156,5 @@ finally:
     json.dump(report, open(os.path.join(outdir, 'report.json'), 'w'), indent=1)
     client.delete_session()
     proc.terminate()
+    proc.wait()
+    shutil.rmtree(profile, ignore_errors=True)       # each run uses a fresh profile

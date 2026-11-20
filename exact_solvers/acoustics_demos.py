@@ -67,7 +67,7 @@ class DecomposeQ(LiveFigure):
 DECOMPOSE_Q = InteractiveFigure(
     DecomposeQ,
     controls=[slider('p', -1, 1, 1.), slider('u', -1, 1, 0.3),
-              slider('rho', 0.1, 2, 1., label=r'\rho'), slider('K', 0.1, 2, 1.)],
+              slider('rho', 0.1, 2, 1., label=r'$\rho$'), slider('K', 0.1, 2, 1.)],
     rows=[['p', 'rho'], ['u', 'K']])
 
 
@@ -128,7 +128,7 @@ class CharSolution(LiveFigure):
 
 CHAR_SOLUTION = InteractiveFigure(
     CharSolution,
-    controls=[slider('t', 0., 1.2, 0.), slider('rho', 0.1, 2, 1., label=r'\rho'), slider('K', 0.1, 2, 1.)],
+    controls=[slider('t', 0., 1.2, 0.), slider('rho', 0.1, 2, 1., label=r'$\rho$'), slider('K', 0.1, 2, 1.)],
     rows=[['t'], ['rho', 'K']])
 
 
@@ -209,12 +209,12 @@ class PhasePlane(LiveFigure):
 
 PHASE_PLANE = InteractiveFigure(
     PhasePlane,
-    controls=[slider('pl', 0.01, 10., 10., label='p_l'), slider('ul', -10, 10., -5., label='u_l'),
-              slider('pr', 0.01, 10., 40., label='p_r'), slider('ur', -10, 10., 5., label='u_r'),
-              slider('rho', 0.01, 10., 2., label=r'\rho'), slider('bulk', 0.01, 10., 1., label='K'),
-              number('xmin', 0.0000001, label='p_{min}', min=0, max=100),
-              number('xmax', 10, label='p_{max}'),
-              number('ymin', -5, label='u_{min}'), number('ymax', 5, label='u_{max}')],
+    controls=[slider('pl', 0.01, 10., 10., label=r'$p_l$'), slider('ul', -10, 10., -5., label=r'$u_l$'),
+              slider('pr', 0.01, 10., 40., label=r'$p_r$'), slider('ur', -10, 10., 5., label=r'$u_r$'),
+              slider('rho', 0.01, 10., 2., label=r'$\rho$'), slider('bulk', 0.01, 10., 1., label=r'$K$'),
+              number('xmin', 0.0000001, label=r'$p_{min}$', min=0, max=100),
+              number('xmax', 10, label=r'$p_{max}$'),
+              number('ymin', -5, label=r'$u_{min}$'), number('ymax', 5, label=r'$u_{max}$')],
     rows=[['pl', 'ul', 'rho'], ['pr', 'ur', 'bulk']],
     options=['xmin', 'xmax', 'ymin', 'ymax'],
     tab_titles=('Left and right states', 'Plot options'))

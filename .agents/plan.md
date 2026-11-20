@@ -37,12 +37,13 @@
   - Part VI's two external nbviewer notebooks (multidimensional acoustics and elasticity) are left out of the table of contents for now. **Ask the user later** whether to include them.
 - Sidebar: tried a flat table of contents with part pages instead of dropdowns; the user preferred the original nested parts (reverted).
 - `book.css` widens the text column on screens of 1024px and wider. If the theme changes its grid, regenerate the override from the theme's `.article-grid` rules.
+- Step 3, Part I converted (2026-11-20, overnight): Introduction, Advection, Burgers, Traffic_flow, Nonconvex_scalar, Shallow_water, Shallow_tracer, Euler. Prose unchanged (0 differences each), all execute cleanly, no horizontal scroll bars at 390 (true phone width, see conversion.md), 768, 1280, 1440, 1920 px. Details of what each needed are in CHANGES.md; text to flag is below.
 - Step 2, pilot chapter Acoustics: done.
   - Converted with `.agents/tools/convert_notebook.py`; the prose is unchanged (0 word differences).
   - It executes cleanly, and has no horizontal scroll bars at 390–1920 px.
   - The procedure and conventions are in `.agents/conversion.md`.
 - Text to flag to the authors is collected in "Text to flag for the authors" below.
-- Next: convert the other chapters one at a time with the same procedure (CI is in place, phase 3 step 4).
+- Next: Parts II–V, one chapter at a time with the same procedure.
 
 ### Phase 3: in progress
 Trial (Acoustics, in a scratch copy) done and agreed. Measured on a 2017 laptop, cold cache:
@@ -80,6 +81,16 @@ Notes collected so far:
 - Interactive-figure trial findings: MyST renders anywidgets in a shadow DOM; thebe-lite's micropip fails to install a wheel from a URL (unzip it instead); the widgets' URLs must not assume the site root (GitHub Pages serves under `/riemann_book2/`); Pyodide's toJs turns None into undefined.
 - Keep the table of contents in `myst.yml` explicit, so that `AGENTS.md`, `CHANGES.md` and `.agents/` are not rendered as pages.
 
+### Phase 4: Part I done (2026-11-20, overnight)
+- All 56 interactive figures of Part I (besides Acoustics) are live on the web as redraw figures (0.2–1 s per change); checked in the browser (every figure live, every control redraws) and with `pagecheck.py --live` at 390–1920 px.
+- Shallow-water drag explorer done (`widgets/shallow_water_explorer.mjs`), in Introduction and Shallow_water.
+- Next: `LiveFigure` versions for the most used ones.
+
+### Phase 4 decisions (user, 2026-11-20)
+- Interactive cells that call `interact(...)` in the notebook: each gets an `InteractiveFigure` in its demo module (the cell's sliders written as data) and an `{anywidget}` markdown cell after the code cell; notebook code unchanged. Fluxes defined as lambdas in a notebook get a small named function in the demo module that builds the same flux.
+- Speed: whole-figure redraw first for every interactive cell (an `InteractiveFigure` can wrap a plain plotting function), `LiveFigure` versions later for the most used ones.
+- A shallow-water drag explorer (like the acoustics one) to replace the mpld3 figure: after the slider figures, if time allows.
+
 ## Text to flag for the authors
 Original text that refers to things that no longer exist or have changed. Not changed (rule 1); add to this list during conversion, by chapter.
 - index.md: the new front page is a draft; its wording needs approval.
@@ -90,6 +101,15 @@ Original text that refers to things that no longer exist or have changed. Not ch
   - "in the notebook version, or on [this webpage](http://www.clawpack.org/riemann_book/phase_plane/...)";
   - "produced using a numerical method from PyClaw … or on [this webpage]" (now miniclaw; old clawpack.org page);
   - "*In the live notebook, you can advance the above solutions in time…*" and similar "In the live notebook…" sentences (the web figures are now live too).
+- Every Part I chapter: the "on github" code links point to `blob/FA16`.
+- Introduction: "*(as an animation in the live notebook or html versions)*"; "Below (in the notebook version, or on [this webpage](http://www.clawpack.org/riemann_book/phase_plane/acoustics_small.html))"; "Below, in the notebook, or on [this webpage](…/shallow_water_small.html), we provide an interactive view…".
+- Advection: "*In the live notebook, you can adjust the advection speed a…*"; "*In the live notebook you can advance a time slider…*".
+- Burgers: "In the live notebook, the figure below shows possible locations for the shock…"; "…in the interactive solution below (in the notebook)"; "In the live notebook, the figure below is an interactive solution…"; "computed numerically using [PyClaw]" (now miniclaw); four animations "in the notebook, or on [this webpage](…/burgers_animation0–3.html)".
+- Traffic_flow: "In the live notebook, the interactive module below shows … with slider bars to adjust these."
+- Nonconvex_scalar: "In the live notebook you can see how the solution evolves with time."; "Here's another example that you can run in a live notebook."
+- Shallow_water: three "*In the interactive notebook you can …*" sentences (one with the typo "charactersitics"); "The live notebook, or [this webpage](…/shallow_water_small.html), provides an interactive view…".
+- Shallow_tracer: "*In the live notebook you can select which set of characteristics to plot."
+- Euler: "*In the live notebook, you can easily adjust the initial data and immediately see the resulting solution.*"
 
 ## Open decisions
 - None at the moment.

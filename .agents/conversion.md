@@ -21,12 +21,15 @@ Rule 1 in AGENTS.md applies: only markup changes, never the wording. Acoustics i
 - **Equations:**
   - Numbered environments (`align`, `equation`) stay exactly as written. A `\label{X}` inside them works in MyST.
   - Unnumbered displays (`align*`, `equation*`, `$$…$$`) become `{math}` blocks with `:enumerated: false`, with the LaTeX unchanged. MyST would otherwise number them, shifting all equation numbers.
+  - MyST gives a math block one label and one number: an `align` with several `\label`s becomes one `align` per labelled row (the converter does it; the LaTeX of each row is unchanged).
+  - A one-row `align` with at most one top-level `&` becomes an `equation` (a one-row `align*` plain display math), with that `&` removed. It looks the same, but KaTeX draws `align` as a table that cannot wrap, while an `equation` can break after an `=` when it is too long (`book.css`). Rows with two `&` (two equations side by side) stay `align`.
 - **Equation references:** `(\ref{X})` and `\eqref{X}` become `` {eq}`X` ``, which renders as "(n)". A bare `\ref{X}` is reported, to decide by hand.
 - **Citations:** cite2c `<cite data-cite="key">…</cite>` becomes `[@key]`. The key must exist in `references.bib`.
 - **Links between notebooks** (`[Euler](Euler.ipynb)`) stay as they are: MyST resolves them.
+- **Links to a heading** (`[the section above](Shallow_water.ipynb#Dam-break-problem:-all-shock-solution)`): give the heading a label line `(sw:dam-break-all-shock)=` and link to `#sw:dam-break-all-shock`. The converter warns about them.
 - **Paths** are relative to `chapters/`: `../figures/…`, `../exact_solvers/…`.
 - **`Image('figures/x.png', width=N)` code cells** become `{image}` blocks (`:width: Npx`, `:align: center`).
-- **Phase-plane `IFrame(src='phase_plane/X.html', …)`** becomes `HTML(open('../figures/phase_plane/X.html').read())`.
+- **Phase-plane `IFrame(src='phase_plane/X.html', …)`** becomes `HTML(open('../figures/phase_plane/X.html').read())`. The converter adds `HTML` to the cell's `IPython.display` import.
   - IFrames of local files are not copied into the site and give a 404.
   - The HTML files carry a small added script that scales the mpld3 figure to the page width.
 - **`%matplotlib` and `%config` magics** are removed. Import cells that only repeat names imported earlier are removed.
@@ -37,7 +40,9 @@ Rule 1 in AGENTS.md applies: only markup changes, never the wording. Acoustics i
   {"figure": "exact_solvers.acoustics_demos.PHASE_PLANE", "values": {"pl": 3, "ul": 2}, "setup": {...}}
   ```
   ````
-  - `figure` is an `InteractiveFigure` (`utils/live_figure.py`) in the chapter's demo module; write one for each interactive function, as in `acoustics_demos.py` (a `LiveFigure` class plus its controls), with tests against the original figure (`tests/test_acoustics_demos.py`).
+  - `figure` is an `InteractiveFigure` (`utils/live_figure.py`) in the chapter's demo module, with the cell's controls (labels exactly as the ipywidgets descriptions). Usually `InteractiveFigure.redraw(plotting_function, controls, rows, factory=..., fixed=...)`: the book's own function, drawn again in full at each change. For the most used figures, a `LiveFigure` class (fast), as in `acoustics_demos.py`.
+  - `tests/test_interactive_cells.py` checks every widget cell against its code cell (controls, values, fixed arguments, picture); it must pass.
+  - A cell that shows several interactive figures (e.g. `shallow_water.plot_riemann_SW`) gets one widget cell per figure, in order, with `"output": k` (the k-th image of the cell).
   - `values` repeats the values the code cell passes (for example `ql`, `qr`), `setup` the arguments of the figure class.
   - Figures drawn with JavaScript instead (drag explorers, `widgets/acoustics_explorer.mjs`) go in the same way, after the cell they replace on the web; tag that cell `remove-cell` if its output only works in Jupyter (mpld3).
   - These cells are markup: the prose check ignores them.
@@ -45,7 +50,7 @@ Rule 1 in AGENTS.md applies: only markup changes, never the wording. Acoustics i
 
 ## No horizontal scroll bars
 Nothing on a page may scroll sideways at any width. That covers the whole page, equations, code, outputs and figures.
-- Check with `.agents/tools/pagecheck.py` (instructions in its docstring). It must report `page_hscroll=False`, `scrollers=0` and no "WIDER THAN WINDOW" lines at every width.
+- Check with `.agents/tools/pagecheck.py` (instructions in its docstring). Widths below 500px are emulated with a frame of that width, since Firefox windows cannot be narrower; this is the real phone width (before, "390" measured 488px). It must report `page_hscroll=False`, `scrollers=0` and no "WIDER THAN WINDOW" lines at every width.
 - **Fix the cause:**
   - general layout problems go in `book.css`, for every page;
   - a warning printed by the code is fixed in the code;
@@ -55,6 +60,9 @@ Nothing on a page may scroll sideways at any width. That covers the whole page, 
   - long code lines wrap;
   - the title in the top bar shrinks on small screens;
   - ipywidgets placeholders are hidden.
+  - display equations wrap at top-level relations when too long, and are 0.9em on phones;
+  - animations shrink to the column;
+  - headings clip the theme's link icon (it widened the page on phones).
 
 ## Text to flag for the authors (do not change it yourself)
 References to things that no longer exist or have changed, for example:
