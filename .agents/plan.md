@@ -18,7 +18,7 @@
 2. **Content conversion.** Convert the notebooks following `.agents/conversion.md`. Configure `myst.yml` with the table of contents from `Index.ipynb` and a `references.bib` from `riemann.bib`. Set up CI that builds with `--execute` and deploys to Pages.
 3. **Interactive figures in Acoustics.** Bring the trial design into the repo (steps below), with tests.
 4. **Rollout.** Chapter by chapter, SIAM book chapters (Parts I–II) first and the extras later: the generic slider figure for every `interact` cell (whole-figure redraw first), then live versions or JS explorers where they are worth it.
-5. **Polish.** PDF export and an optional download of runnable notebooks (with the `{anywidget}` markdown cells removed, since Jupyter shows them as raw text; the code cells give the same figures with ipywidgets). Before release, send the authors the list in "Text to flag for the authors" and apply only the changes they approve.
+5. **Polish.** PDF export and a download of runnable notebooks: the README's "Download notebooks" button already points to `releases/latest/download/riemann_book_notebooks.zip`, to be made by the CI on each release (notebooks plus `exact_solvers`, `utils`, `miniclaw` and a minimal requirements file; with the `{anywidget}` markdown cells removed, since Jupyter shows them as raw text; the code cells give the same figures with ipywidgets). Before release, send the authors the list in "Text to flag for the authors" and apply only the changes they approve.
 
 ## Status
 

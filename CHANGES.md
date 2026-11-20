@@ -83,6 +83,8 @@ These make the code run on current Python, NumPy and IPython without changing an
 
 ## Project infrastructure
 
+- `README.md` (new): what this web edition is, how to run the notebooks and build the book, and
+  the repository structure.
 - `pyproject.toml` makes `exact_solvers`, `utils`, `miniclaw` and `widgets` installable (`uv sync` or
   `pip install -e .`).
 - `tests/`: scientific test suite (pytest) for `exact_solvers`, `utils.riemann_tools` and `miniclaw`.
