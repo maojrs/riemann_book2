@@ -167,7 +167,23 @@ These make the code run on current Python, NumPy and IPython without changing an
     named), `shallow_demos.py`, `euler_demos.py`; a few small functions there give the
     plotting function a cell builds (e.g. `euler_demos.riemann_solution_plot`). Notebook code
     is unchanged. Test: `test_interactive_cells.py` runs each chapter and checks that every web
-    figure has the cell's controls, values and fixed arguments, and draws the same picture.
+    figure has the cell's controls, values and fixed arguments, laid out as in the notebook
+    (one per line, or the function's own HBox/VBox layout), and draws the same picture.
+  - Fixes after review:
+    - Each figure draws on a figure of its own. Some plotting functions draw on pyplot's
+      current figure, which could be another figure of the page, so a figure could change its
+      number of panels when its slider moved.
+    - The controls follow the notebook's layout and widget kinds (radio buttons in
+      Shallow_water's comparison of integral curves and Hugoniot loci), styled like ipywidgets:
+      the same width for every control, checkboxes under the controls, labels not cut.
+    - Figures are shown at 3/4 of their pixel size, at most 60% of the window high.
+    - The "Computed in your browser" line only shows while Python loads (or if it fails), so it
+      no longer appears twice when a cell has two figures (`plot_riemann_SW`).
+  - `RedrawFigure` draws each frame once, straight to pixels, cropped as Jupyter crops it
+    (`savefig(bbox_inches='tight')`) but with a crop that only grows, so the figure no longer
+    jumps a few pixels when a tick label widens. The crop is measured again only when the axes
+    or titles change. Before, each frame was saved as a PNG (with a tight-bbox pass) and
+    decoded again. Test: `test_redraw_figure.py`.
   - `shallow_water_explorer.mjs` (new): drag q_l, q_r in the h-hu plane and the time in the
     x-t plane (Hugoniot loci and integral curves, middle state, waves, depth and momentum at t;
     `exact_solvers.shallow_water` solution). It replaces the mpld3 shallow-water figure on the

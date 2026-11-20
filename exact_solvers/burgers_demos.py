@@ -270,16 +270,16 @@ from utils.live_figure import InteractiveFigure, checkbox, slider  # noqa: E402
 
 SHOW_CHARACTERISTICS = checkbox('which_char', True, 'Show characteristics')
 MULTIVALUED_SOLUTION = InteractiveFigure.redraw(
-    multivalued_solution, [slider('t', 0., 9., 7.75)], [['t']], fixed=dict(fig=0))
+    multivalued_solution, [slider('t', 0., 9., 7.75)], fixed=dict(fig=0))
 SHOCK_LOCATION = InteractiveFigure.redraw(
-    shock_location, [slider('xshock', 6., 10., 7.75, step=0.25)], [['xshock']], fixed=dict(fig=0))
+    shock_location, [slider('xshock', 6., 10., 7.75, step=0.25)], fixed=dict(fig=0))
 SHOCK = InteractiveFigure.redraw(
-    shock, [slider('t', 0., 1., 0.5), SHOW_CHARACTERISTICS], [['t', 'which_char']], factory=True)
-RAREFACTION_FIGURE = InteractiveFigure.redraw(rarefaction_figure, [slider('t', 0., 9., 5.)], [['t']])
+    shock, [slider('t', 0., 1., 0.5), SHOW_CHARACTERISTICS], factory=True)
+RAREFACTION_FIGURE = InteractiveFigure.redraw(rarefaction_figure, [slider('t', 0., 9., 5.)])
 RAREFACTION = InteractiveFigure.redraw(
-    rarefaction, [slider('t', 0., 1., 0.5), SHOW_CHARACTERISTICS], [['t', 'which_char']], factory=True)
+    rarefaction, [slider('t', 0., 1., 0.5), SHOW_CHARACTERISTICS], factory=True)
 UNPHYSICAL = InteractiveFigure.redraw(
-    unphysical, [slider('t', 0., 1., 0.5), SHOW_CHARACTERISTICS], [['t', 'which_char']], factory=True)
+    unphysical, [slider('t', 0., 1., 0.5), SHOW_CHARACTERISTICS], factory=True)
 RIEMANN_SOLUTION = InteractiveFigure.redraw(       # burgers.riemann_solution_interact()
     burgers.plot_riemann,
     [slider('q_l', 0., 1., 0.5, label='$q_l$'), slider('q_r', 0., 1., 0., label='$q_r$'),

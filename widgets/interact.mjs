@@ -35,13 +35,32 @@ function labelElement(label) {
   return span;
 }
 
+// One control, laid out as ipywidgets does: the label, then the control (and a slider's
+// value); a checkbox sits under the controls, with its label after it
 function controlElement(c, onChange) {
-  const row = document.createElement('label');
+  const row = document.createElement(c.kind === 'radio' ? 'div' : 'label');
+  if (c.kind === 'checkbox') {
+    const input = Object.assign(document.createElement('input'), { type: 'checkbox', checked: c.value });
+    input.addEventListener('change', () => onChange(input.checked));
+    const box = document.createElement('span');
+    box.append(input, labelElement(c.label));
+    row.className = 'bi-check';
+    row.append(document.createElement('span'), box);
+    return row;
+  }
   row.appendChild(labelElement(c.label));
   let input, readout;
-  if (c.kind === 'checkbox') {
-    input = Object.assign(document.createElement('input'), { type: 'checkbox', checked: c.value });
-    input.addEventListener('change', () => onChange(input.checked));
+  if (c.kind === 'radio') {
+    input = document.createElement('span');
+    input.className = 'bi-options';
+    const group = `bi-${Math.random().toString(36).slice(2)}`;
+    for (const option of c.options) {
+      const choice = input.appendChild(document.createElement('label'));
+      const radio = Object.assign(document.createElement('input'),
+        { type: 'radio', name: group, checked: option === c.value });
+      radio.addEventListener('change', () => onChange(option));
+      choice.append(radio, String(option));
+    }
   } else if (c.kind === 'dropdown') {
     input = document.createElement('select');
     for (const option of c.options) {
@@ -61,7 +80,7 @@ function controlElement(c, onChange) {
       if (input.value !== '' && input.checkValidity()) onChange(+input.value);
     });
   }
-  row.className = readout ? 'bi-slider' : c.kind === 'checkbox' ? 'bi-check' : 'bi-wide';
+  row.className = readout ? 'bi-slider' : 'bi-wide';
   row.append(input);
   if (readout) row.append(readout);
   return row;
@@ -78,10 +97,17 @@ function buildTimeFigure(el, output) {
   return images[output ?? images.length - 1] ?? null;
 }
 
+// Figures are shown at 3/4 of their size in pixels, at most 60% of the window high, and
+// never wider than the column
+function setSize(element, width, height) {
+  element.style.width = `${0.75 * width}px`;
+  element.style.maxWidth = `min(100%, ${60 * width / height}vh)`;
+}
+
 function paint(canvas, { width, height, rgba }) {
   canvas.width = width;
   canvas.height = height;
-  canvas.style.maxWidth = width + 'px';
+  setSize(canvas, width, height);
   const pixels = new Uint8ClampedArray(rgba.buffer, rgba.byteOffset, rgba.byteLength);
   canvas.getContext('2d').putImageData(new ImageData(pixels, width, height), 0, 0);
 }
@@ -98,6 +124,7 @@ async function render({ model, el }) {
 
   const staticFigure = buildTimeFigure(el, model.get('output'));
   if (staticFigure) {
+    placeholder.addEventListener('load', () => setSize(placeholder, placeholder.naturalWidth, placeholder.naturalHeight));
     placeholder.src = staticFigure.src;
     placeholder.alt = staticFigure.alt;
     (staticFigure.closest('.not-prose') ?? staticFigure).style.display = 'none';
@@ -120,21 +147,24 @@ async function render({ model, el }) {
     });
 
     const byName = Object.fromEntries(controls.map(c => [c.name, { ...c, value: values[c.name] }]));
-    const addRow = (names, parent) => {
+    // Every row has as many columns as the widest one, so that controls have the same width,
+    // as in ipywidgets
+    const addRow = (names, parent, columns) => {
       const row = parent.appendChild(Object.assign(document.createElement('div'), { className: 'bi-row' }));
-      row.style.setProperty('--columns', names.length);
-      for (const name of names) {
-        row.appendChild(controlElement(byName[name], value => { values[name] = value; update(); }));
+      row.style.setProperty('--columns', columns);
+      for (const name of names) {          // None (undefined here): an empty column
+        row.appendChild(name == null ? document.createElement('span')
+          : controlElement(byName[name], value => { values[name] = value; update(); }));
       }
     };
     await update();
-    rows.forEach(names => addRow(names, form));
+    rows.forEach(names => addRow(names, form, Math.max(...rows.map(r => r.length))));
     if (options.length) {
       const details = form.appendChild(document.createElement('details'));
       details.appendChild(document.createElement('summary')).textContent = 'Plot options';
-      for (let i = 0; i < options.length; i += 2) addRow(options.slice(i, i + 2), details);
+      for (let i = 0; i < options.length; i += 2) addRow(options.slice(i, i + 2), details, 2);
     }
-    status.textContent = 'Computed in your browser with Python.';
+    status.hidden = true;
     el.dataset.state = 'ready';
   } catch (error) {
     status.textContent = 'Python could not start, so this figure is not interactive: ' + error.message;

@@ -2,20 +2,24 @@
 
 The chapter's code cells are run in order with ipywidgets' interact replaced by a recorder,
 which builds the same controls (ipywidgets.interactive) without showing them. Each web figure
-must then have the notebook's controls (names, ranges, values, labels), its fixed arguments,
-and draw the same picture.
+must then have the notebook's controls (names, ranges, values, labels) laid out as in the
+notebook, its fixed arguments, and draw the same picture.
 """
+import builtins
 import io
+import itertools
 import json
 import pathlib
 import re
 import sys
+import types
 import warnings
 
 import matplotlib
 
 matplotlib.use('Agg')
 
+import IPython.display  # noqa: E402
 import ipywidgets  # noqa: E402
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
@@ -40,15 +44,23 @@ def chapters_with_widgets():
 
 def run_chapter(name, monkeypatch):
     """Run the code cells; return {code cell index: [recorded interactive figures]} and the
-    web models {code cell index: [models of the widget cells after it]}."""
+    web models {code cell index: [models of the widget cells after it]}. An interact figure
+    is recorded as (ipywidgets.interactive, the layout its function displays or None)."""
     recorded, models, current = {}, {}, []
-    original = ipywidgets.interact
+    patched = {'interact': ipywidgets.interact, 'display': IPython.display.display}
 
     def interact(f, **kwargs):
         figure = ipywidgets.interactive(f, **kwargs)
-        current.append(('interact', figure))
-        return figure
+        current.append(['interact', (figure, None)])
+        return types.SimpleNamespace(widget=figure)        # as interact: f.widget
     interact.recorder = True
+
+    def display(*objects, **kwargs):          # a function's own layout of its interact controls
+        for obj in objects:
+            if isinstance(obj, ipywidgets.Box):
+                current[-1][1] = (current[-1][1][0], obj)
+    display.recorder = True
+    recorders = {'interact': interact, 'display': display}
 
     def interactive_figure(spec, setup=None, widgets=None, **values):
         if widgets:                                      # values given through the widgets
@@ -56,6 +68,8 @@ def run_chapter(name, monkeypatch):
         current.append(('InteractiveFigure', (spec, setup or {}, values)))
 
     monkeypatch.setattr(ipywidgets, 'interact', interact)
+    monkeypatch.setattr(IPython.display, 'display', display)
+    monkeypatch.setattr(builtins, 'display', display, raising=False)    # as in IPython
     monkeypatch.setattr(InteractiveFigure, 'interact', interactive_figure)
     monkeypatch.chdir(CHAPTERS)
     namespace = {}
@@ -72,14 +86,15 @@ def run_chapter(name, monkeypatch):
         if any(s in text for s in SLOW):
             continue
         for module in list(sys.modules.values()):      # modules imported before the patch,
-            bound = getattr(module, 'interact', None)    # or during an earlier test
-            if bound is original or getattr(bound, 'recorder', False):
-                monkeypatch.setattr(module, 'interact', interact)
+            for name, recorder in recorders.items():     # or during an earlier test
+                bound = getattr(module, name, None)
+                if bound is patched[name] or getattr(bound, 'recorder', False):
+                    monkeypatch.setattr(module, name, recorder)
         current.clear()
         with warnings.catch_warnings():
             warnings.simplefilter('ignore')
             exec(compile(text, f'{name}[{i}]', 'exec'), namespace)
-        recorded[i] = list(current)
+        recorded[i] = [tuple(r) for r in current]
         plt.close('all')
     return recorded, models
 
@@ -120,9 +135,23 @@ def check_controls(spec, values, figure):
         elif isinstance(w, ipywidgets.Checkbox):
             assert c['kind'] == 'checkbox'
         elif isinstance(w, (ipywidgets.Dropdown, ipywidgets.RadioButtons)):
-            assert c['kind'] == 'dropdown' and tuple(c['options']) == tuple(w.options), name
+            kind = 'radio' if isinstance(w, ipywidgets.RadioButtons) else 'dropdown'
+            assert c['kind'] == kind and tuple(c['options']) == tuple(w.options), name
         else:
             raise AssertionError(f'{name}: {type(w).__name__} is not handled by the web figures')
+
+
+def original_rows(figure, layout):
+    """The notebook's controls, by name, row by row: the function's own layout (rows of
+    HBoxes in a VBox, or an HBox of controls and VBox columns; None where a column has no
+    control), or else interact's, one per line."""
+    if layout is None:
+        return [[w._kwarg] for w in figure.kwargs_widgets if not isinstance(w, ipywidgets.fixed)]
+    lines = [[w._kwarg for w in box.children] if isinstance(box, ipywidgets.Box) else [box._kwarg]
+             for box in layout.children]
+    if isinstance(layout, ipywidgets.VBox):
+        return lines
+    return [list(row) for row in itertools.zip_longest(*lines)]
 
 
 def check_fixed(spec, setup, figure):
@@ -147,12 +176,15 @@ def test_web_figures_match_the_notebook(name, monkeypatch):
                 assert notebook_spec is spec and plain(notebook_setup) == plain(setup)
                 assert plain(spec.initial_values(**notebook_values)) == plain(values)
                 continue
-            check_controls(spec, values, record)
-            check_fixed(spec, setup, record)
+            figure, layout = record
+            check_controls(spec, values, figure)
+            assert (spec.rows, spec.options) == (original_rows(figure, layout), []), \
+                f'cell {cell} {model["figure"]}: controls laid out as in the notebook'
+            check_fixed(spec, setup, figure)
             web = spec.build(setup)
             web.update(**values)
             web_pixels = png_pixels(web.png())
-            notebook = notebook_picture(record)
+            notebook = notebook_picture(figure)
             assert web_pixels.shape == notebook.shape, f'cell {cell} {model["figure"]}'
             differing = (np.abs(web_pixels - notebook).max(axis=2) > 40).mean()
             assert differing < 0.002, f'cell {cell} {model["figure"]}: {100*differing:.2f}% of the pixels differ'

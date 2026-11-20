@@ -9,9 +9,9 @@ from . import advection
 # interact(f) makes this slider for the default a=1.
 SPEED = slider('a', -1., 3., 1.)
 
-CHARACTERISTICS = InteractiveFigure.redraw(advection.characteristics, [SPEED], [['a']])
-SOLUTION = InteractiveFigure.redraw(advection.solution, [SPEED], [['a']])
-RIEMANN_DEMO = InteractiveFigure.redraw(advection.riemann_demo, [SPEED], [['a']])
+CHARACTERISTICS = InteractiveFigure.redraw(advection.characteristics, [SPEED])
+SOLUTION = InteractiveFigure.redraw(advection.solution, [SPEED])
+RIEMANN_DEMO = InteractiveFigure.redraw(advection.riemann_demo, [SPEED])
 
 
 def riemann_solution_plot(q_l, q_r, a=1.):
@@ -22,6 +22,6 @@ def riemann_solution_plot(q_l, q_r, a=1.):
 
 
 RIEMANN_SOLUTION = InteractiveFigure.redraw(
-    riemann_solution_plot, [slider('t', 0., 1., 0.)], [['t']], factory=True,
+    riemann_solution_plot, [slider('t', 0., 1., 0.)], factory=True,
     fixed=dict(which_char=True))
 

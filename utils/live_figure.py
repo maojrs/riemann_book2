@@ -78,49 +78,87 @@ class LiveFigure:
         return {'width': width, 'height': height, 'rgba': bytes(self.canvas.buffer_rgba())}
 
     def png(self):
-        """frame() as PNG data, quickly compressed: for showing the figure in a notebook."""
-        from PIL import Image
-        frame = self.frame()
-        image = Image.frombuffer('RGBA', (frame['width'], frame['height']), frame['rgba'], 'raw', 'RGBA', 0, 1)
-        buffer = io.BytesIO()
-        image.save(buffer, format='png', compress_level=1)
-        return buffer.getvalue()
+        """frame() as PNG data: for showing the figure in a notebook."""
+        return png(self.frame())
 
 
 class RedrawFigure:
     """A figure drawn by one of the book's plotting functions (with pyplot), drawn again in
-    full at every change. Same interface as LiveFigure: update(**values), frame(), png()."""
+    full at every change. Same interface as LiveFigure: update(**values), frame(), png().
 
-    def __init__(self, plot):
+    The picture is cropped as Jupyter crops it (savefig with bbox_inches='tight'), but the
+    crop only grows from one frame to the next, so the figure does not jump when a tick
+    label gets wider. It is drawn once per frame, straight to pixels (no PNG).
+    """
+    CACHE = 100              # frames kept, so that going back to earlier values is instant
+
+    def __init__(self, plot, pad=0.1):
         self.plot = plot
+        self.pad = pad
         self.fig = None
-        self._pngs = {}          # figures already drawn, by control values
+        self._frames = {}    # frames, by control values
         self._key = None
+        self._box = None     # the crop, in inches
+        self._measured = set()   # layouts (see _layout) whose crop is already in _box
 
     def update(self, **values):
         import matplotlib.pyplot as plt
         self._key = repr(sorted(values.items()))
-        if self._key in self._pngs:
+        if self._key in self._frames:
             return
         if self.fig is not None:
             plt.close(self.fig)
+        # A figure of its own: some plotting functions draw on pyplot's current figure,
+        # which may belong to another figure of the page
+        blank = plt.figure()
         with warnings.catch_warnings():
             warnings.filterwarnings('ignore', message='FigureCanvasAgg is non-interactive')
             self.plot(**values)
         self.fig = plt.gcf()
+        if self.fig is not blank:
+            plt.close(blank)
 
-    def png(self):
-        """The figure as Jupyter shows it: PNG cropped to its contents."""
-        if self._key not in self._pngs:
-            buffer = io.BytesIO()
-            self.fig.savefig(buffer, format='png', bbox_inches='tight')
-            self._pngs[self._key] = buffer.getvalue()
-        return self._pngs[self._key]
+    def _layout(self):
+        """What the crop depends on: the axes (their places, limits and so tick labels) and
+        the length of the titles. Frames that differ only inside the axes, or in a number in
+        a title ("t = 0.5"), share it."""
+        return tuple((tuple(ax.get_position().bounds), ax.get_xlim(), ax.get_ylim(), len(ax.get_title()))
+                     for ax in self.fig.axes) + tuple(len(t.get_text()) for t in self.fig.texts)
 
     def frame(self):
-        from PIL import Image
-        image = Image.open(io.BytesIO(self.png())).convert('RGBA')
-        return {'width': image.width, 'height': image.height, 'rgba': image.tobytes()}
+        """The figure as RGBA pixels: {'width', 'height', 'rgba'}."""
+        from matplotlib.transforms import Bbox
+        if self._key not in self._frames:
+            layout = self._layout()
+            if layout not in self._measured:           # measuring the crop takes a while
+                self._measured.add(layout)
+                box = self.fig.get_tightbbox().padded(self.pad)
+                inside = self._box is not None and (self._box.contains(box.x0, box.y0)
+                                                    and self._box.contains(box.x1, box.y1))
+                if not inside:
+                    self._box = box if self._box is None else Bbox.union([self._box, box])
+                    self._frames.clear()               # drawn with a smaller crop
+            if len(self._frames) >= self.CACHE:
+                self._frames.pop(next(iter(self._frames)))
+            buffer = io.BytesIO()
+            self.fig.savefig(buffer, format='rgba', bbox_inches=self._box)
+            renderer = self.fig.canvas.renderer           # the one savefig drew with
+            self._frames[self._key] = {'width': renderer.width, 'height': renderer.height,
+                                       'rgba': buffer.getvalue()}
+        return self._frames[self._key]
+
+    def png(self):
+        """frame() as PNG data: for showing the figure in a notebook."""
+        return png(self.frame())
+
+
+def png(frame):
+    """A frame (RGBA pixels) as PNG data, quickly compressed."""
+    from PIL import Image
+    image = Image.frombuffer('RGBA', (frame['width'], frame['height']), frame['rgba'], 'raw', 'RGBA', 0, 1)
+    buffer = io.BytesIO()
+    image.save(buffer, format='png', compress_level=1)
+    return buffer.getvalue()
 
 
 # --- Controls ---------------------------------------------------------------------------
@@ -137,6 +175,11 @@ def dropdown(name, options, value, label=None):
     return dict(name=name, kind='dropdown', options=list(options), value=value, label=label or name)
 
 
+def radio(name, options, value, label=None):
+    """Radio buttons, one per option."""
+    return dict(name=name, kind='radio', options=list(options), value=value, label=label or name)
+
+
 def checkbox(name, value, label):
     return dict(name=name, kind='checkbox', value=value, label=label)
 
@@ -146,10 +189,10 @@ class InteractiveFigure:
     """A figure with its controls: a LiveFigure class (figure), or a plotting function drawn
     again in full at every change (InteractiveFigure.redraw).
 
-    controls: list of slider(), number(), checkbox() and dropdown); labels are written as
+    controls: list of slider(), number(), checkbox(), dropdown() and radio(); labels are written as
     ipywidgets descriptions (math between $...$, e.g. r'$\\rho_l$');
     rows: names of the controls shown
-    side by side, row by row; options: names of controls shown apart (under "Plot options"
+    side by side, row by row (None leaves a column empty); options: names of controls shown apart (under "Plot options"
     on the web, in a second tab in the notebook, titled tab_titles).
     """
     figure: type
@@ -162,10 +205,12 @@ class InteractiveFigure:
     fixed: dict = field(default_factory=dict)
 
     @classmethod
-    def redraw(cls, function, controls, rows, factory=False, fixed=None, **options):
+    def redraw(cls, function, controls, rows=None, factory=False, fixed=None, **options):
         """A figure drawn by `function(**setup, **fixed, **values)` or, with factory=True,
         by `function(**setup)(**fixed, **values)`: one of the book's plotting functions as
-        the notebook cell calls it; `fixed` holds the cell's fixed() arguments."""
+        the notebook cell calls it; `fixed` holds the cell's fixed() arguments. Without rows,
+        the controls are shown one per line, in order, as interact() shows them."""
+        rows = rows or [[c['name']] for c in controls]
         return cls(None, controls, rows, function=function, factory=factory, fixed=fixed or {}, **options)
 
     def build(self, setup=None):
@@ -189,7 +234,7 @@ class InteractiveFigure:
 
     def notebook_widgets(self, **values):
         """One ipywidgets control per entry of controls, by name."""
-        from ipywidgets import BoundedFloatText, Checkbox, Dropdown, FloatSlider, FloatText
+        from ipywidgets import BoundedFloatText, Checkbox, Dropdown, FloatSlider, FloatText, RadioButtons
         widgets = {}
         for c, value in zip(self.controls, self.initial_values(**values).values()):
             description = c['label']
@@ -203,6 +248,8 @@ class InteractiveFigure:
                 widgets[c['name']] = FloatText(value=value, description=description)
             elif c['kind'] == 'checkbox':
                 widgets[c['name']] = Checkbox(value=value, description=description)
+            elif c['kind'] == 'radio':
+                widgets[c['name']] = RadioButtons(options=c['options'], value=value, description=description)
             else:
                 widgets[c['name']] = Dropdown(options=c['options'], value=value, description=description)
         return widgets
@@ -212,7 +259,7 @@ class InteractiveFigure:
         from IPython.display import Image, display
         from ipywidgets import HBox, Tab, VBox, interactive_output
         widgets = widgets or self.notebook_widgets(**values)
-        rows = VBox([HBox([widgets[name] for name in row]) for row in self.rows])
+        rows = VBox([HBox([widgets[name] for name in row if name]) for row in self.rows])
         if self.options:
             options = VBox([HBox([widgets[name] for name in self.options[i:i+2]])
                             for i in range(0, len(self.options), 2)])

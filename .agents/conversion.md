@@ -40,7 +40,7 @@ Rule 1 in AGENTS.md applies: only markup changes, never the wording. Acoustics i
   {"figure": "exact_solvers.acoustics_demos.PHASE_PLANE", "values": {"pl": 3, "ul": 2}, "setup": {...}}
   ```
   ````
-  - `figure` is an `InteractiveFigure` (`utils/live_figure.py`) in the chapter's demo module, with the cell's controls (labels exactly as the ipywidgets descriptions). Usually `InteractiveFigure.redraw(plotting_function, controls, rows, factory=..., fixed=...)`: the book's own function, drawn again in full at each change. For the most used figures, a `LiveFigure` class (fast), as in `acoustics_demos.py`.
+  - `figure` is an `InteractiveFigure` (`utils/live_figure.py`) in the chapter's demo module, with the cell's controls (labels exactly as the ipywidgets descriptions). Usually `InteractiveFigure.redraw(plotting_function, controls, factory=..., fixed=...)`: the book's own function, drawn again in full at each change. List the controls in the order interact shows them (the function's arguments); give `rows` only when the original lays its widgets out itself (HBox/VBox; `None` for an empty column). Use the original's widget kinds (`radio` for RadioButtons). For the most used figures, a `LiveFigure` class (fast), as in `acoustics_demos.py`.
   - `tests/test_interactive_cells.py` checks every widget cell against its code cell (controls, values, fixed arguments, picture); it must pass.
   - A cell that shows several interactive figures (e.g. `shallow_water.plot_riemann_SW`) gets one widget cell per figure, in order, with `"output": k` (the k-th image of the cell).
   - `values` repeats the values the code cell passes (for example `ql`, `qr`), `setup` the arguments of the figure class.

@@ -84,7 +84,8 @@ Notes collected so far:
 ### Phase 4: Part I done (2026-11-20, overnight)
 - All 56 interactive figures of Part I (besides Acoustics) are live on the web as redraw figures (0.2–1 s per change); checked in the browser (every figure live, every control redraws) and with `pagecheck.py --live` at 390–1920 px.
 - Shallow-water drag explorer done (`widgets/shallow_water_explorer.mjs`), in Introduction and Shallow_water.
-- Next: `LiveFigure` versions for the most used ones.
+- Review fixes (user's review, 2026-11-20, steps 1–2 agreed): each redraw figure on its own pyplot figure (they drew on each other); controls laid out and styled as in the notebook (tested against the original widgets' order and HBox/VBox layout); figures at 3/4 size, at most 60vh; status line only while loading; `RedrawFigure` draws once straight to pixels with a crop that only grows.
+- Next (step 3, proposed, not agreed yet): a `LiveFigure` version of `riemann_tools.make_plot_function` with a time slider (x-t plane fixed, only the time line and solution redrawn), which covers most of the slow figures.
 
 ### Phase 4 decisions (user, 2026-11-20)
 - Interactive cells that call `interact(...)` in the notebook: each gets an `InteractiveFigure` in its demo module (the cell's sliders written as data) and an `{anywidget}` markdown cell after the code cell; notebook code unchanged. Fluxes defined as lambdas in a notebook get a small named function in the demo module that builds the same flux.

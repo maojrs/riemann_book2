@@ -131,9 +131,9 @@ from . import euler  # noqa: E402
 CURVE_CONTROLS = [checkbox('plot_1', True, 'plot_1'), checkbox('plot_3', False, 'plot_3'),
                   slider('gamma', 1.1, 3., 1.4), slider('rho_0', 0.1, 3., 1., label=r'$\rho_0$')]
 INTEGRAL_CURVES = InteractiveFigure.redraw(
-    euler.plot_integral_curves, CURVE_CONTROLS, [['gamma', 'rho_0'], ['plot_1', 'plot_3']])
+    euler.plot_integral_curves, CURVE_CONTROLS)
 HUGONIOT_LOCI = InteractiveFigure.redraw(
-    euler.plot_hugoniot_loci, CURVE_CONTROLS, [['gamma', 'rho_0'], ['plot_1', 'plot_3']])
+    euler.plot_hugoniot_loci, CURVE_CONTROLS)
 
 
 def riemann_solution_plot(left_state, right_state, gamma=1.4):
@@ -151,11 +151,12 @@ def riemann_solution_plot(left_state, right_state, gamma=1.4):
 
 RIEMANN_SOLUTION = InteractiveFigure.redraw(
     riemann_solution_plot,
-    [slider('t', 0., 0.9, 0.5), dropdown('which_char', [None, 1, 2, 3], None, label='Show characteristics:')],
-    [['t', 'which_char']], factory=True)
+    [slider('t', 0., 0.9, 0.5),
+     dropdown('which_char', [None, 1, 2, 3], None, label='Show characteristics:')],
+    factory=True)
 
 # plot_with_stripes with only a time slider (the cell's plot_with_stripes_t_slider)
-STRIPES = InteractiveFigure.redraw(plot_with_stripes, [slider('t', 0., 1., 0.5)], [['t']])
+STRIPES = InteractiveFigure.redraw(plot_with_stripes, [slider('t', 0., 1., 0.5)])
 
 # euler_demo1(...)
 DEMO1 = InteractiveFigure.redraw(
