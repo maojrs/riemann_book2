@@ -148,6 +148,8 @@ These make the code run on current Python, NumPy and IPython without changing an
   - Pyodide is loaded from the jsDelivr CDN, which is much faster than GitHub Pages for large
     files, and from the book's own copy if the CDN fails. Package downloads cut short are
     retried. Python only starts when the reader gets near an interactive figure.
+  - `python.mjs` and the wheel have fixed names, so the widgets load them in a way that never
+    uses an old cached copy (otherwise a new widget could meet an old `python.mjs`).
 - CI (`.github/workflows/book.yml`): on every push and pull request, runs the tests, prepares
   the widget files and builds the book with `--execute`; pushes to `main` are published on
   GitHub Pages.
