@@ -20,7 +20,8 @@ COMPARE_CURVES = InteractiveFigure.redraw(
 CONNECT_STATES = InteractiveFigure.redraw(
     connect_states,
     [slider('h_l', 0.001, 2., 1.), slider('u_l', -5., 5., -1.),
-     slider('h_r', 0.001, 2., 1.), slider('u_r', -5., 5., 1.)])
+     slider('h_r', 0.001, 2., 1.), slider('u_r', -5., 5., 1.)],
+    [['h_l', 'h_r'], ['u_l', 'u_r']])                 # left state | right state
 
 # The Introduction: shallow_water.make_demo_plot_function(h_l, h_r, u_l, u_r) with a time slider
 DEMO = InteractiveFigure.redraw(
@@ -47,7 +48,8 @@ EXACT_RIEMANN_SOLUTION = InteractiveFigure.redraw(
     exact_riemann_solution_plot,
     [slider('h_l', 0., 5., 3., label='$h_l$'), slider('u_l', -2.5, 2.5, 0., label='$u_l$'),
      slider('h_r', 0., 5., 1., label='$h_r$'), slider('u_r', -2.5, 2.5, 0., label='$u_r$'),
-     slider('t', 0., 0.6, 0.)], fixed=dict(fig=0))
+     slider('t', 0., 0.6, 0.)],
+    [['h_l', 'h_r'], ['u_l', 'u_r'], ['t']], fixed=dict(fig=0))     # left state | right state
 
 
 # shallow_water.plot_riemann_SW(...) shows two figures: the solution with a time slider, and

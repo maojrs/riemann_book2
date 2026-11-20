@@ -767,8 +767,10 @@ def make_plot_functions(h_l, h_r, u_l, u_r,
         exact_riemann_solution(q_l,q_r,g, force_waves=force_waves, 
                                include_contact=include_contact)
         
+    # the examples with a dry state are shallow: a smaller depth range shows them better
+    hlim = (0,2.5) if np.min(states[0]) == 0 else (0,4.5)
     plot_function_stripes = make_demo_plot_function(h_l,h_r,u_l,u_r,
-                                            figsize=(7,2),hlim=(0,4.5),ulim=(-2.3,2.3),
+                                            figsize=(7,2),hlim=hlim,ulim=(-2.3,2.3),
                                             force_waves=force_waves,stripes=stripes)
     def plot_function_xt_phase(plot_1_chars=False,plot_2_chars=False,plot_tracer_chars=False):
         plt.figure(figsize=(7,2))

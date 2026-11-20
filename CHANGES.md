@@ -129,6 +129,13 @@ These make the code run on current Python, NumPy and IPython without changing an
     `connect_states`), so the axes do not jump with the sliders; `plot_riemann_SW` shows the
     velocity on −2.3 to 2.3 instead of −2 to 2, so velocities of ±1.9 and the dry-bed front
     (u = 2) are not on the edge.
+    In its two examples with a dry state (`np.min(states[0]) == 0`) the depth is shown on 0 to
+    2.5 instead of 0 to 4.5, since they are shallow.
+  - Shallow_water on the web: the sliders of `connect_states` and of the last cell
+    (`plot_exact_riemann_solution`) are in two columns, left state and right state (time on its
+    own line), instead of one per line packed into three columns. `test_interactive_cells.py`
+    lets a web figure pair interact's one-per-line controls in rows (every control once); a
+    cell's own HBox/VBox layout must still be the same on the web.
   - Acoustics: the x-t plane figure of "The Riemann problem" is 250 px wide instead of 350 px,
     so its letters are about the size of the text.
   - Comparisons of Riemann solutions (`riemann_tools.make_plot_function` with names, e.g.

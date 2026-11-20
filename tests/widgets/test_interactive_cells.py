@@ -187,8 +187,13 @@ def test_web_figures_match_the_notebook(name, monkeypatch):
                 continue
             figure, layout = record
             check_controls(spec, values, figure)
-            assert (spec.rows, spec.options) == (original_rows(figure, layout), []), \
-                f'cell {cell} {model["figure"]}: controls laid out as in the notebook'
+            assert spec.options == []
+            if layout is None:      # interact's one per line: the web may pair them in rows
+                assert sorted(n for row in spec.rows for n in row) == sorted(n for [n] in original_rows(figure, None)), \
+                    f'cell {cell} {model["figure"]}: every control of the notebook, once'
+            else:                   # the cell's own layout: the same on the web
+                assert spec.rows == original_rows(figure, layout), \
+                    f'cell {cell} {model["figure"]}: controls laid out as in the notebook'
             check_fixed(spec, setup, figure)
             web = spec.build(setup)
             web.update(**values)
