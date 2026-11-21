@@ -38,9 +38,8 @@ def test_no_other_edit_link_and_no_downloads():
         assert re.search(r'^---\n(.*\n)*?downloads: \[\]\n(.*\n)*?---', (ROOT / page).read_text()), page
 
 
-def test_binder_installs_the_books_code():
-    """repo2docker installs .binder/requirements.txt: the project in place (pyproject.toml)."""
-    lines = [line for line in (ROOT / '.binder' / 'requirements.txt').read_text().splitlines()
-             if line and not line.startswith('#')]
-    assert lines == ['-e .']
-    assert (ROOT / '.binder' / 'runtime.txt').read_text().strip() == 'python-3.12'
+def test_binder_installs_the_books_code_from_pyproject():
+    """Binder (repo2docker) has no configuration of its own here: it installs pyproject.toml in
+    place (`pip install -e .`), on its default Python, 3.10, which the project must allow."""
+    assert not (ROOT / '.binder').exists() and not (ROOT / 'binder').exists()
+    assert re.search(r'^requires-python = ">=3\.10"$', (ROOT / 'pyproject.toml').read_text(), re.M)

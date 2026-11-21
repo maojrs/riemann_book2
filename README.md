@@ -29,7 +29,8 @@ chapters follow one by one.
 
 The **launch** icon (a rocket) at the top right of each chapter opens that chapter on
 [Binder](https://mybinder.org): JupyterLab in your browser, with the book's code installed
-(`.binder/`), where you can run and change the code. The first start can take a few minutes.
+(from `pyproject.toml`), where you can run and change the code. The first start can take a few
+minutes.
 Or use the repository:
 
 ```bash
@@ -75,7 +76,7 @@ riemann_book2/
 ├── references.bib    bibliography
 ├── pyproject.toml    makes the code installable
 ├── CHANGES.md        every change with respect to the original book
-└── .binder/, .github/, .agents/   Binder environment, CI, and notes for the editors and agents
+└── .github/, .agents/   CI, and notes for the editors and agents
 ```
 
 ## License

@@ -19,7 +19,7 @@ Every change compared with the original
 - Front page: the subtitle and author lines under the title were removed (the page header
   already shows them); the SIAM citation's title links to the book (the DOI link rendered as an
   automatic "Ketcheson et al. (2020)" citation); "Run the notebooks yourself" lists Binder and
-  a download of the project (placeholder link, to be set at the release).
+  a download of the project (for now the .zip of this working repository; to be set at the release).
 
 ## Bug fixes in the solvers
 
@@ -186,8 +186,12 @@ These make the code run on current Python, NumPy and IPython without changing an
   which have no code, only `downloads: []`), `myst.yml` sets `edit_url: null`, and `book.css`
   draws the icon. The theme's own launch button was not used: it also adds run-cell
   controls to every notebook page. The tooltip still reads "Edit This Page" (set by the theme).
-  `.binder/requirements.txt` installs the book's code in place (`-e .`), Python 3.12.
-  Test: `test_book_pages.py`.
+  Binder needs no configuration of its own: it installs `pyproject.toml` in place, on its
+  default Python 3.10, so `requires-python` is now `>=3.10` (the test suite passes on 3.10 with
+  the numpy, scipy and matplotlib releases that support it; the dev group no longer pins
+  `ipykernel>=7.4.0`, which needs 3.11). Test: `test_book_pages.py`.
+- `RedrawFigure` gives its picture's size as whole numbers (matplotlib 3.10's renderer gives
+  floats, which broke the interactive figures on Python 3.10).
 - `tests/`: scientific test suite (pytest) for `exact_solvers`, `utils.riemann_tools` and `miniclaw`.
   It is not part of the deployed book.
 - `tests/reference/`: results of the book's PyClaw runs with real Clawpack 5.14, made by

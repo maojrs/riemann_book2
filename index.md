@@ -37,10 +37,10 @@ and the interactive figures were partly rewritten and optimized for display in a
   - **Remotely:** the rocket icon at the top right of a chapter opens it on
     [Binder](https://mybinder.org), where you can run and change its code in JupyterLab. It
     takes longer to load (a few minutes the first time).
-  - **Locally:** [download the whole project](#) and run the notebooks in Jupyter on your
-    computer.
-    <!-- TODO (before release): replace the placeholder link "#" with the download of the
-    official repository (e.g. its .zip on GitHub). -->
+  - **Locally:** [download the whole project](https://github.com/maojrs/riemann_book2/archive/refs/heads/main.zip)
+    and run the notebooks in Jupyter on your computer.
+    <!-- TODO (before release): placeholder link, the .zip of this working repository; replace it
+    with the download of the official repository. -->
 
 The original notebooks are available at
 [github.com/clawpack/riemann_book](https://github.com/clawpack/riemann_book), and the changes

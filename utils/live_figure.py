@@ -234,7 +234,7 @@ class RedrawFigure:
             buffer = io.BytesIO()
             self.fig.savefig(buffer, format='rgba', bbox_inches=self._box)
             renderer = self.fig.canvas.renderer           # the one savefig drew with
-            self._frames[self._key] = {'width': renderer.width, 'height': renderer.height,
+            self._frames[self._key] = {'width': int(renderer.width), 'height': int(renderer.height),
                                        'rgba': buffer.getvalue()}
         return self._frames[self._key]
 
