@@ -43,3 +43,50 @@ def test_binder_installs_the_books_code_from_pyproject():
     place (`pip install -e .`), on its default Python, 3.10, which the project must allow."""
     assert not (ROOT / '.binder').exists() and not (ROOT / 'binder').exists()
     assert re.search(r'^requires-python = ">=3\.10"$', (ROOT / 'pyproject.toml').read_text(), re.M)
+
+
+def bibliography():
+    """references.bib: {key: entry text}."""
+    text = (ROOT / 'references.bib').read_text()
+    return dict(re.findall(r'@\w+\s*\{\s*([^,\s]+),(.*?)(?=\n@|\Z)', text, re.S))
+
+
+def cited_keys():
+    """The keys cited in the chapters ([@key], [@a; @b] or {cite:p}`key`)."""
+    keys = set()
+    for path in ROOT.glob('chapters/*'):
+        if path.suffix == '.ipynb':
+            cells = json.loads(path.read_text())['cells']
+            text = ''.join(c['source'] if isinstance(c['source'], str) else ''.join(c['source']) for c in cells)
+        else:
+            text = path.read_text()
+        for group in re.findall(r'\[(@[^\]]+)\]', text):
+            keys |= set(re.findall(r'@([^\s;\]]+)', group))
+        keys |= set(re.findall(r'\{cite:p\}`([^`]+)`', text))
+    return keys
+
+
+def link(entry):
+    """The References page's link to a bibliography entry: its DOI through the Handle resolver
+    (doi.org links become citations in MyST), else its URL; < and > escaped."""
+    doi = re.search(r'^\s*doi\s*=\s*\{(\S+)\}', entry, re.M | re.I)
+    address = 'https://hdl.handle.net/' + doi.group(1) if doi else \
+        re.search(r'^\s*url\s*=\s*\{(\S+)\}', entry, re.M | re.I).group(1)
+    return address.replace('<', '%3C').replace('>', '%3E')
+
+
+def test_every_reference_links_to_the_work():
+    """Every entry has a DOI or, for works without one, a URL; every cited key exists."""
+    entries = bibliography()
+    for key, entry in entries.items():
+        assert re.search(r'^\s*(doi|url)\s*=\s*\{\S+\}', entry, re.M | re.I), key
+    assert cited_keys() <= set(entries)
+
+
+def test_references_page_lists_every_work():
+    """references.md (made by .agents/tools/references_page.py): one item per entry of
+    references.bib (every cited work and related reading), its title linked to the work."""
+    page = (ROOT / 'references.md').read_text()
+    items = re.findall(r'^1\. .*\]\(<(\S+)>\)', page, re.M)
+    assert sorted(items) == sorted(link(entry) for entry in bibliography().values())
+    assert 'file: references.md' in (ROOT / 'myst.yml').read_text()

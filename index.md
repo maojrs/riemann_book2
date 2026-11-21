@@ -19,9 +19,12 @@ additional hyperbolic systems.
 
 ## About this web edition
 
-This is a new release of the book as a web edition. The text, the science and the book's
-scientific code (its exact Riemann solvers and numerical methods) remain the same; the plotting
-and the interactive figures were partly rewritten and optimized for display in a web browser.
+This new release makes the book available as a web edition. Its text, 
+scientific content, and underlying scientific code—including the exact 
+Riemann solvers and numerical methods—remain unchanged from the original 
+edition. The plotting routines and interactive figures, however, have 
+been partially rewritten and optimized to run smoothly and efficiently 
+in a web browser.
 
 - **Interactive figures in your browser.** The book's own Python code runs in your web browser,
   with no installation, server or account. The plotting was rewritten so that the figures

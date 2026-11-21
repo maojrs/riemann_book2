@@ -4,14 +4,9 @@ downloads: []
 
 # Preface
 
-## Note on this Web Edition
+The original edition of this book was published in print and as a collection of Jupyter notebooks, which rely on Jupyter to run their interactive figures. We wanted to make the book available in a web-based format where all interactive elements work seamlessly in the reader’s browser, with no installation or additional software required. This edition was developed with that goal in mind.
 
-The original edition of this book was published in print and as Jupyter notebooks, whose
-interactive figures need Jupyter to run. We wanted a web version of the book in which all of
-that interactivity runs directly and smoothly in the reader's browser, with nothing to install, 
-and this edition was built for that purpose. The text, the science and the book's scientific code
-are the same as in the original edition; what changed is how the book is displayed and how its
-figures are drawn.
+The book’s text, scientific content, and underlying scientific code remain unchanged from the original edition. What has changed is the presentation: the way the book is displayed and, in particular, how its figures are rendered and made interactive within the web interface.
 
 Below is the preface to the original edition.
 
@@ -23,14 +18,14 @@ The book covers the fundamental ideas related to classical Riemann solutions, in
 
 It is assumed that the reader has some knowledge of hyperbolic problems in advance.  This book is intended to supplement rather than replace standard textbooks on the theory and numerical solution of hyperbolic PDEs.  It should also be useful as a tool for students or researchers seeking to better understand the nature of Riemann solutions to a particular hyperbolic system.
 
-The notation generally follows that of <cite data-cite="fvmhp"><a href="riemann.html#fvmhp">(LeVeque 2002)</a></cite>, which covers most of the topics included here and many others. We have kept citations to a minimum in these notebooks, but there are a wealth of other books and papers available in the literature.  In particular, some other books that have substantial discussion of Riemann problems and related topics include 
-<cite data-cite="lax:cbms"><a href="riemann.html#lax:cbms">(Lax 1972)</a></cite>, 
-<cite data-cite="rjl:eth"><a href="riemann.html#rjl:eth">(LeVeque 1990)</a></cite>, 
-<cite data-cite="god-rav"><a href="riemann.html#kgod-rav">(Godlewski and Raviart 1996)</a></cite>, 
-<cite data-cite="kroener1997"><a href="riemann.html#kroener1997">(Kr&ouml;ner 1997)</a></cite>, 
-<cite data-cite="trangenstein2009"><a href="riemann.html#trangenstein2009">(Trangenstein 2009)</a></cite>, 
-<cite data-cite="toro2013riemann"><a href="riemann.html#toro2013riemann">(Toro 2013)</a></cite>, and 
-<cite data-cite="hesthaven2018"><a href="riemann.html#hesthaven2018">(Hesthaven 2018)</a></cite>.  
+The notation generally follows that of {cite:p}`fvmhp`, which covers most of the topics included here and many others. We have kept citations to a minimum in these notebooks, but there are a wealth of other books and papers available in the literature.  In particular, some other books that have substantial discussion of Riemann problems and related topics include 
+{cite:p}`lax:cbms`, 
+{cite:p}`rjl:eth`, 
+{cite:p}`god-rav`, 
+{cite:p}`kroener`, 
+{cite:p}`trangenstein2009`, 
+{cite:p}`toro2013riemann`, and 
+{cite:p}`hesthaven2018`.  
 
 ## Book formats
 

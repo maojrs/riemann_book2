@@ -88,3 +88,10 @@ article .math-fit .katex-display > .katex { font-size: min(1.21em, calc(100cqi /
 }
 .myst-fm-edit-link:hover { opacity: 1; }
 .myst-fm-edit-link svg { display: none; }
+
+/* Reference lists: each reference is a link to the work (its DOI or URL, which the theme
+   prints after it): the whole reference is clickable and in the link colour, and the
+   printed address is hidden. */
+.myst-bibliography-item:has(> a[href]) { position: relative; color: var(--book-accent); }
+.myst-bibliography-item:has(> a[href]):hover { text-decoration: underline; }
+.myst-bibliography-item > a[href] { position: absolute; inset: 0; font-size: 0; }

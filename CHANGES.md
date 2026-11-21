@@ -16,6 +16,25 @@ Every change compared with the original
 - Preface: a new first section, "Note on this Web Edition" (why this edition exists; the
   science and the scientific code are the original), followed by the original preface,
   unchanged. **Draft, pending the authors' approval.**
+- References (user's request): every work in `references.bib` links to itself: a DOI for 30
+  works (found on Crossref and checked against title, authors and year), and for the others a
+  stable page (Godunov 1959: MathNet; Riemann 1860: EuDML; Kröner: Wiley; Garavello & Piccoli,
+  Trangenstein: WorldCat by ISBN; LeVeque 2002, *Finite Volume Methods*: the author's page, as
+  in the original). In the text a citation links to the work, and in the reference lists the whole
+  reference is the link (`book.css`; the printed address is hidden).
+  - Preface: its citations were raw HTML from the original notebook, linking to a missing
+    `riemann.html`; they are MyST citations now (same works, markup only).
+  - The duplicate entry `godunov` (the same 1959 paper as `godunov1959difference`) was
+    removed; Approximate_solvers cites `godunov1959difference` (same rendered citation).
+  - `M. J. Del Razo` is written `Del Razo, M. J.` so the name is not shown as "Razo, M. J. D.".
+  - New page `references.md` after Further topics: every work of `references.bib` (all the
+    works cited in the book, and Zobeyer et al. 2013, which the original bibliography has but
+    no chapter cites), as a plain list (alphabetical, all visible), each title a link. Generated from
+    `references.bib` by `.agents/tools/references_page.py` (run it after changing the
+    bibliography or the citations). Its DOIs link through the Handle resolver
+    (`hdl.handle.net`, which resolves DOIs like doi.org) because MyST turns doi.org links into
+    citations. **Draft.**
+  Tests: `test_every_reference_links_to_the_work`, `test_references_page_lists_every_cited_work`.
 - Front page: the subtitle and author lines under the title were removed (the page header
   already shows them); the SIAM citation's title links to the book (the DOI link rendered as an
   automatic "Ketcheson et al. (2020)" citation); "Run the notebooks yourself" lists Binder and
