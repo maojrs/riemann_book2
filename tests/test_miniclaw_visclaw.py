@@ -38,7 +38,7 @@ def test_ianimate_shows_every_frame():
     for i, frame in enumerate(claw.frames):
         anim._func(i)
         assert np.array_equal(line.get_xdata(), xc) and np.array_equal(line.get_ydata(), frame.q[0])
-        assert fig._suptitle.get_text() == 'Time t = ' + str(frame.t)
+        assert fig._suptitle.get_text() == 'Time t = %.2f' % frame.t      # e.g. 'Time t = 0.30'
     # the depth stays between 1 and 2: the y range is 10% wider on each side
     assert fig.axes[0].get_ylim() == (0.9, 2.1)
     assert fig.axes[0].get_xlim() == (xc[0], xc[-1])

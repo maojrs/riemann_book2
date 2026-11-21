@@ -227,6 +227,8 @@ These make the code run on current Python, NumPy and IPython without changing an
       `connect_states` is 8 x 4 inches instead of 14 x 6, the size of Shallow_water's (its
       labels were made for seaborn-talk's larger fonts).
     - Code (user's request), figure format only:
+      - Nonconvex_scalar, "Yet another example": the q sliders are labelled $q_l$ and $q_r$
+        (`description=...`) instead of the argument names `q_left` and `q_right`.
       - Traffic_variable_speed's first cell no longer sets 8-point text, and its default figure
         size is 6 x 3 inches instead of 8 x 4 (the `figsize` variable, used by the two-panel
         figure, stays 8 x 4). Its single plots of f(rho) had tiny labels on a large figure;
@@ -240,7 +242,9 @@ These make the code run on current Python, NumPy and IPython without changing an
         became `plt.figure(...)` in the first); the three animations are 6.4 x 4.8 inches, as
         in Burgers, and play smoothly: 100 output times instead of 50 (same run time) shown
         every 60 ms instead of matplotlib's 200 (`ianimate(claw, figsize=(6.4,4.8),
-        interval=60)`, `claw.num_output_times = 100`).
+        interval=60)`, `claw.num_output_times = 100`). `ianimate` writes the time in the
+        title with two decimals ("Time t = 0.30" instead of "0.30000000000000004"), so the
+        title keeps its length.
     - Nonlinear_elasticity and Pressureless_flow asked for a Python 2 kernel; their metadata now
       names `python3`.
     - Warnings that the original hid or that current libraries add are hidden with

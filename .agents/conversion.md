@@ -14,6 +14,7 @@ Rule 1 in AGENTS.md applies: only markup changes, never the wording. Acoustics i
    - Use a scratch copy of the project whose `myst.yml` lists only this chapter, with `PATH=.venv/bin:$PATH jupyter-book build --html --execute`.
    - Prepare the widget files first (`uv run python widgets/assets.py`: the wheel of the book's code, Pyodide and D3, published by `myst.yml`), and again after changing Python code that the web figures use.
    - The Jupyter server needs the venv on `PATH`.
+   - The build reuses a notebook's outputs while its code cells are unchanged (`_build/execute`), even when the Python code they call has changed. After changing `exact_solvers/`, `utils/`, `miniclaw/` or `widgets/figures/`, run `jupyter-book clean --execute -y` first, or the build-time pictures (and the placeholders of the interactive figures) stay old.
 7. Check for horizontal scroll bars (see below) at 390, 768, 1280, 1440 and 1920 px, and look at the screenshots.
 8. Register the changes in `CHANGES.md`. Add any text that refers to things that no longer exist to "Text to flag for the authors" in `.agents/plan.md`.
 

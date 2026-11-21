@@ -48,7 +48,9 @@ uv run python widgets/assets.py           # files for the browser figures (Pyodi
 PATH=.venv/bin:$PATH uv run jupyter-book start --execute    # preview at http://localhost:3000
 ```
 
-`jupyter-book build --html --execute` writes the static site to `_build/html`. On every push
+`jupyter-book build --html --execute` writes the static site to `_build/html`. It reuses a
+notebook's outputs while its code cells are unchanged, so after changing the Python modules run
+`jupyter-book clean --execute -y` first. On every push
 to `main`, GitHub Actions runs the tests, builds the book and publishes it
 ([.github/workflows/book.yml](.github/workflows/book.yml)).
 

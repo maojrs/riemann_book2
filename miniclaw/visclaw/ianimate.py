@@ -8,7 +8,8 @@ from miniclaw.controller import Controller
 
 def ianimate(frame_list, ivar=0, varname=None, figsize=(10, 6), xlim=None, ylim=None, interval=200):
     """Animation of component ivar of q over the frames (a Controller or a list of
-    Solutions), on a fixed y range 10% wider than the values, one frame every interval ms.
+    Solutions), on a fixed y range 10% wider than the values, one frame every interval ms; the
+    title shows the time with two decimals (always as long, so it does not jump).
     Returns the matplotlib animation (for anim.to_jshtml())."""
     if isinstance(frame_list, Controller):
         frame_list = frame_list.frames
@@ -31,9 +32,9 @@ def ianimate(frame_list, ivar=0, varname=None, figsize=(10, 6), xlim=None, ylim=
     def fplot(frame_number):
         frame = frame_list[frame_number]
         if varname is not None:
-            fig.suptitle(varname + ' at time t = ' + str(frame.t))
+            fig.suptitle(varname + ' at time t = %.2f' % frame.t)
         else:
-            fig.suptitle('Time t = ' + str(frame.t))
+            fig.suptitle('Time t = %.2f' % frame.t)
         line.set_data(xc, frame.q[ivar, :])
         return line,
 

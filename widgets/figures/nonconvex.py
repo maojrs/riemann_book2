@@ -35,5 +35,6 @@ RIEMANN = InteractiveFigure.redraw(
     riemann_plot, [slider('t', 0., 0.9, 0.8)], factory=True, fixed=dict(fig=0))
 RIEMANN_QSLIDERS = InteractiveFigure.redraw(
     riemann_plot_qsliders,
-    [slider('t', 0., 0.9, 0.8), slider('q_left', -4., 4., -3.5), slider('q_right', -4., 4., 3.5)],
+    [slider('t', 0., 0.9, 0.8), slider('q_left', -4., 4., -3.5, label='$q_l$'),
+     slider('q_right', -4., 4., 3.5, label='$q_r$')],
     factory=True, fixed=dict(fig=0))
