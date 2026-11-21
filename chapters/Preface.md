@@ -4,6 +4,17 @@ downloads: []
 
 # Preface
 
+## Note on this Web Edition
+
+The original edition of this book was published in print and as Jupyter notebooks, whose
+interactive figures need Jupyter to run. We wanted a web version of the book in which all of
+that interactivity runs directly and smoothly in the reader's browser, with nothing to install, 
+and this edition was built for that purpose. The text, the science and the book's scientific code
+are the same as in the original edition; what changed is how the book is displayed and how its
+figures are drawn.
+
+Below is the preface to the original edition.
+
 ## Aims and scope
 
 This book addresses an important class of mathematical problems (the *Riemann problem*) for first-order hyperbolic partial differential equations (PDEs).  Such PDEs arise when modeling wave propagation in applications such as fluid dynamics, traffic flow, elasticity, and electromagnetics.  The solution of the Riemann problem captures essential information about such models, and is the key ingredient in modern numerical methods for their solution.

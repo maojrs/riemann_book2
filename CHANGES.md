@@ -13,6 +13,13 @@ Every change compared with the original
   **Draft, pending the authors' approval.**
 - Approximate_solvers: the title "Part II.  Approximate Riemann Solvers" is "Approximate Riemann
   Solvers" (user's request): the part is already named in the table of contents.
+- Preface: a new first section, "Note on this Web Edition" (why this edition exists; the
+  science and the scientific code are the original), followed by the original preface,
+  unchanged. **Draft, pending the authors' approval.**
+- Front page: the subtitle and author lines under the title were removed (the page header
+  already shows them); the SIAM citation's title links to the book (the DOI link rendered as an
+  automatic "Ketcheson et al. (2020)" citation); "Run the notebooks yourself" lists Binder and
+  a download of the project (placeholder link, to be set at the release).
 
 ## Bug fixes in the solvers
 

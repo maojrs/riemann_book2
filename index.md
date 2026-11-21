@@ -3,8 +3,6 @@ title: Riemann Problems and Jupyter Solutions
 downloads: []
 ---
 
-<!-- DRAFT: new text for the web edition, to be reviewed and approved by the authors. -->
-
 This book illustrates the solution of Riemann problems for hyperbolic partial differential
 equations, and the approximate Riemann solvers used in finite volume methods, through
 interactive Jupyter notebooks.
@@ -21,9 +19,9 @@ additional hyperbolic systems.
 
 ## About this web edition
 
-This is a re-release of the book as a web edition. The text, the science and the book's
+This is a new release of the book as a web edition. The text, the science and the book's
 scientific code (its exact Riemann solvers and numerical methods) remain the same; the plotting
-and the interactive figures were rewritten and optimized for display in a web browser:
+and the interactive figures were partly rewritten and optimized for display in a web browser.
 
 - **Interactive figures in your browser.** The book's own Python code runs in your web browser,
   with no installation, server or account. The plotting was rewritten so that the figures
