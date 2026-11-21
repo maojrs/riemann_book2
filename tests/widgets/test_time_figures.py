@@ -169,3 +169,48 @@ def test_euler_stripes_at_time_zero_are_the_initial_states():
     pressure = figure.fig.axes[2].lines[0]
     x, p = pressure.get_xdata(), pressure.get_ydata()
     assert np.allclose(p[x <= 0], 2.5) and np.allclose(p[x > 0], 5.)
+
+
+def test_pressureless_characteristic_speeds_are_the_chapters():
+    """widgets.figures.pressureless.c1, c2 (many points at once) give the chapter's c1, c2
+    (one point at a time, 0 where dry)."""
+    from widgets.figures import pressureless
+    def chapter_c(q, sign, g):
+        h = q[0]
+        return q[1]/h + sign*np.sqrt(g*h) if h > 0 else 0
+    q = np.array([[2., 1., 0., 0.5, 3.], [1., -2., 0., 0.1, 6.]])
+    for g in (1., 1e-5, 10.):
+        for c, sign in ((pressureless.c1, -1), (pressureless.c2, 1)):
+            np.testing.assert_allclose(c(q, None, g), [chapter_c(q[:, j], sign, g) for j in range(q.shape[1])],
+                                       rtol=1e-15, atol=0)
+
+
+def test_pressureless_figure_keeps_its_axes_and_draws_the_chapters_pictures(monkeypatch):
+    """The web figure of Pressureless_flow's plot_function draws each new g on the same axes
+    (TimeFigure(axes=...)), reusing the crop of a layout seen before; every picture is the
+    chapter's, drawn on a new figure, through changes of g, t and the characteristics."""
+    import json
+    import pathlib
+    from widgets.figures import pressureless
+    chapter = pathlib.Path(__file__).resolve().parents[2] / 'chapters' / 'Pressureless_flow.ipynb'
+    cells = [c['source'] if isinstance(c['source'], str) else ''.join(c['source'])
+             for c in json.loads(chapter.read_text())['cells'] if c['cell_type'] == 'code']
+    namespace = {}
+    monkeypatch.setattr(plt, 'show', lambda *args, **kwargs: None)
+    for cell in cells[:1] + [c for c in cells if 'def c1(' in c or 'def make_plot_function' in c]:
+        with warnings.catch_warnings():               # the chapter's '$\log_{10}(g)$'
+            warnings.simplefilter('ignore', SyntaxWarning)
+            exec(cell, namespace)
+    q_l, q_r = [3., -1.], [1., 2.]
+    plot_function = namespace['make_plot_function'](np.array(q_l), np.array(q_r))
+    web = pressureless.riemann_plot(q_l, q_r).live_figure()
+    axes = None
+    for values in [dict(t=0.1, logg=0), dict(t=0.1, logg=-3), dict(t=0.5, logg=-3),
+                   dict(t=0.5, logg=1, plot_1_chars=True), dict(t=0.2, logg=-10, plot_2_chars=True),
+                   dict(t=0.2, logg=0), dict(t=0.7, logg=-3, plot_1_chars=True)]:
+        values = {'plot_1_chars': False, 'plot_2_chars': False, **values}
+        web.update(**values)
+        assert differing(pixels(web.png()), before_picture(lambda t: plot_function(**values), None)) < TOLERANCE
+        axes = axes or list(web.fig.axes)
+        assert list(web.fig.axes) == axes
+    assert len(web._fits) == 3          # four values of g, two sharing a layout: three crops measured

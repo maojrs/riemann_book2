@@ -12,6 +12,7 @@ import matplotlib.gridspec as gridspec
 import numpy as np
 from utils import riemann_tools
 from utils.live_figure import LiveFigure, InteractiveFigure, slider, number, dropdown
+from utils.riemann_figure import drawn_by
 from . import acoustics
 colors = ['g','orange']
 
@@ -301,12 +302,10 @@ class FullRiemannFixed(LiveFigure):
             for line in lines:
                 line.set_visible(False)
         if which_char and which_char not in self.characteristics:
-            before = len(self.ax[0].lines)
             plot_chars = [acoustics.lambda1, acoustics.lambda2]
-            riemann_tools.plot_characteristics(self.riemann_eval, plot_chars[which_char-1],
-                                               aux=(np.array(self.aux), np.array(self.aux)),
-                                               axes=self.ax[0], speeds=self.speeds)
-            self.characteristics[which_char] = self.ax[0].lines[before:]
+            self.characteristics[which_char] = drawn_by(self.ax[:1], lambda: riemann_tools.plot_characteristics(
+                self.riemann_eval, plot_chars[which_char-1], aux=(np.array(self.aux), np.array(self.aux)),
+                axes=self.ax[0], speeds=self.speeds))
         for line in self.characteristics.get(which_char, []):
             line.set_visible(True)
         self.static_changed()

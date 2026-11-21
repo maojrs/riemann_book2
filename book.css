@@ -47,9 +47,9 @@ article pre, article pre code, article pre code span { white-space: pre-wrap !im
   article .katex-display > .katex { font-size: 0.9em; }
 }
 
-/* Animations (matplotlib's to_jshtml): the frames and the time slider fit the column
-   (matplotlib fixes the slider at 374px). */
-article .animation { max-width: 100%; }
+/* Animations (matplotlib's to_jshtml): centred in the column, like the interactive figures;
+   the frames and the time slider fit it (matplotlib fixes the slider at 374px). */
+article .animation { display: block; width: fit-content; max-width: 100%; margin: 0 auto; }
 article .animation img { max-width: 100%; height: auto; }
 article input[type=range].anim-slider { width: 100%; max-width: 374px; }
 

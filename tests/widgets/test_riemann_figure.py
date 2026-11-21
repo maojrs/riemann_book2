@@ -119,5 +119,5 @@ def test_only_the_time_dependent_parts_are_drawn_again():
     figure.update(t=0.6, which_char=3)
     assert figure.fig is built                                 # other characteristics: added on top
     figure.update(t=0.6, which_char=None)
-    assert figure.fig is built and not any(line.get_visible() for line in figure.fig.axes[0].lines
-                                           if line.get_linewidth() < 0.5)       # hidden again
+    characteristics = figure.fig.axes[0].collections
+    assert figure.fig is built and characteristics and not any(c.get_visible() for c in characteristics)

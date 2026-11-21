@@ -102,6 +102,11 @@ def lines_of(ax):
     return [(line.get_xdata(), line.get_ydata()) for line in ax.get_lines()]
 
 
+def characteristics_of(ax):
+    """The characteristics plot_characteristics drew on ax (one collection of lines): (x, t) each."""
+    return [(segment[:, 0], segment[:, 1]) for collection in ax.collections for segment in collection.get_segments()]
+
+
 def test_plot_waves_draws_each_wave_with_its_speed():
     states, speeds, reval, wave_types = burgers.exact_riemann_solution(2.0, 1.0)   # shock, s = 1.5
     fig, ax = plt.subplots()
@@ -145,7 +150,7 @@ def test_make_plot_function():
     plot_chars = riemann_tools.make_plot_function(states, speeds, reval, wave_types,
                                                   plot_chars=[burgers.speed]).live_figure()
     plot_chars.update(t=0.3, which_char=1)        # with the characteristics of family 1
-    assert len(plot_chars.fig.axes[0].lines) > len(plot.fig.axes[0].lines)
+    assert characteristics_of(plot_chars.fig.axes[0]) and not characteristics_of(plot.fig.axes[0])
 
 
 def test_plot_riemann_trajectories():
@@ -162,7 +167,8 @@ def test_characteristics_in_a_constant_state_are_straight_lines():
     fig, ax = plt.subplots()
     ax.axis((-1, 1, 0, 1))
     riemann_tools.plot_characteristics(reval, burgers.speed, axes=ax)
-    for x, t in lines_of(ax):
+    assert len(characteristics_of(ax)) == 60
+    for x, t in characteristics_of(ax):
         np.testing.assert_allclose(x - x[0], 0.5 * (t - t[0]), atol=1e-12)
 
 
@@ -173,7 +179,7 @@ def test_characteristics_with_array_valued_speed():
     fig, ax = plt.subplots()
     ax.axis((-1, 1, 0, 1))
     riemann_tools.plot_characteristics(reval, traffic_LWR.c, axes=ax)
-    assert len(ax.get_lines()) == 60
+    assert len(characteristics_of(ax)) == 60
 
 
 # --- Vectorized characteristics ---------------------------------------------------------
@@ -251,26 +257,41 @@ def test_vectorized_characteristics_match_the_point_by_point_loop(name, reval, c
     t = np.linspace(0, 1, 500)
     contact_speed = 0 if contact_index is None else speeds[contact_index]
     expected = characteristics_point_by_point(reval, char_speed, aux, x, t, contact_speed)
-    plotted = np.array([line.get_xdata() for line in ax.get_lines()])
+    plotted = np.array([x for x, t in characteristics_of(ax)])
     np.testing.assert_allclose(plotted, expected, rtol=0, atol=1e-12)
 
 
-def test_extra_lines_match_the_point_by_point_loop():
-    """Characteristics started along a line (Traffic_variable_speed: the interface x = 0)."""
+@pytest.mark.parametrize('rho_l, rho_r, v_l, v_r, drawn', [
+    (0.4, 0.6, 1., 0.7, 8),     # the flow crosses x = 0 to the left: started left of it only
+    (0.6, 0.6, 1., 0.8, 9),     # shock and contact
+    (0.9, 0.2, 1., 1.2, 9),     # sonic fan just left of x = 0: its rays are not drawn again
+    (0.7, 0.2, 1., 1., 0),      # one speed limit: a transonic fan, no interface
+])
+def test_extra_lines_match_the_point_by_point_loop(rho_l, rho_r, v_l, v_r, drawn):
+    """Characteristics started along a line (Traffic_variable_speed: the interface x = 0):
+    each is the point-by-point Euler integration from just left or just right of x = 0, and
+    it is drawn exactly when it leaves x = 0 on its own side and is not a ray x = xi t of a
+    fan (speed x/t where it starts)."""
     from exact_solvers import traffic_variable_speed
-    reval = traffic_variable_speed.exact_riemann_solution(0.4, 0.6, 1., 0.7)[2]
+    reval = traffic_variable_speed.exact_riemann_solution(rho_l, rho_r, v_l, v_r)[2]
     c = lambda rho, xi, v: v*(1.-2*rho)
     fig, ax = plt.subplots()
     ax.axis((-1, 1, 0, 1))
-    riemann_tools.plot_characteristics(reval, c, (1., 0.7), axes=ax, extra_lines=[[[0, 0], [0, 1]]])
-    lines = ax.get_lines()[60:]
-    assert len(lines) == 20
-    starts = [(x + eps, tt) for eps in (-1e-3, 1e-3) for x, tt in zip(np.zeros(10), np.linspace(0, 1, 10))]
-    for line, (x0, t0) in zip(lines, starts):
-        t = np.linspace(t0, 1, 200)
-        expected = characteristics_point_by_point(reval, c, (1., 0.7), np.array([x0]), t)[0]
-        np.testing.assert_allclose(line.get_xdata(), expected, rtol=0, atol=1e-12)
-        np.testing.assert_array_equal(line.get_ydata(), t)
+    riemann_tools.plot_characteristics(reval, c, (v_l, v_r), axes=ax, extra_lines=[[[0, 0], [0, 1]]])
+    lines = characteristics_of(ax)[60:]
+    expected = []
+    for eps in (-1e-3, 1e-3):
+        for t0 in np.linspace(0, 1, 10):
+            t = np.linspace(t0, 1, 200)
+            x = characteristics_point_by_point(reval, c, (v_l, v_r), np.array([eps]), t)[0]
+            dt = t[1] - t[0]
+            ray = abs((x[1] - x[0]) - dt*eps/max(t0, dt)) < 0.01*dt*2      # window 2 wide, 1 high
+            if np.sign(x[1] - x[0]) == np.sign(eps) and not ray:
+                expected.append((x, t))
+    assert len(lines) == len(expected) == drawn
+    for (x, t_line), (x_expected, t) in zip(lines, expected):
+        np.testing.assert_allclose(x, x_expected, rtol=0, atol=1e-12)
+        np.testing.assert_array_equal(t_line, t)
 
 
 def test_characteristic_speeds_in_one_call_or_point_by_point():

@@ -5,7 +5,8 @@ LiveFigure: a figure that is built once and then only redraws what the controls 
 notebook, the same pixels are shown as a PNG image.
 
 RedrawFigure: any of the book's plotting functions (pyplot), drawn again in full at every
-change. Slower than a LiveFigure, but no new plotting code is needed.
+change. Slower than a LiveFigure, but no new plotting code is needed. KeptAxesFigure: the
+same, but the figure and its axes are made only once.
 
 InteractiveFigure: a figure (LiveFigure class or plotting function) together with its controls
 (sliders, number boxes, checkboxes, dropdowns) and their layout. The same description gives
@@ -24,8 +25,9 @@ class LiveFigure:
     """Subclasses build the figure in __init__, register the artists that change with
     live(), and implement update(**values)."""
 
-    def __init__(self, **figure_options):
-        self.fig = Figure(**figure_options)
+    def __init__(self, fig=None, **figure_options):
+        """A new figure (figure_options), or fig drawn again from scratch."""
+        self.fig = fig if fig is not None else Figure(**figure_options)
         self.canvas = FigureCanvasAgg(self.fig)
         self._live = []
         self._background = None
@@ -48,8 +50,9 @@ class LiveFigure:
 
     def _fit_to_contents(self, pad=0.1):
         """Resize the figure to its tight bounding box plus pad inches, keeping every axes
-        where it is: the figure as Jupyter shows it (bbox_inches='tight')."""
-        self.canvas.draw()
+        where it is: the figure as Jupyter shows it (bbox_inches='tight'). The text is laid
+        out to measure it, but nothing is painted."""
+        self.fig.draw_without_rendering()
         box = self.fig.get_tightbbox(self.canvas.get_renderer()).padded(pad)
         width, height = self.fig.get_size_inches()
         for ax in self.fig.axes:
@@ -97,13 +100,21 @@ class TimeFigure(LiveFigure):
     again; by default only the time. If at_time moves an axis, the rest of the figure is
     drawn again too. background: names of values also given to at_time, which changes (e.g.
     shows or hides) parts of the figure that are not returned as live; a new value draws
-    the figure again but does not build it again."""
+    the figure again but does not build it again.
 
-    def __init__(self, draw, figsize, live=('t',), background=()):
+    axes: with axes(fig), which makes the axes and returns them, the figure and its axes are
+    made once (KeptAxes) and draw(ax, ...) draws on them, emptied, at each build; the fit
+    to the contents is measured once for each layout (layout_of): quicker."""
+
+    def __init__(self, draw, figsize, live=('t',), background=(), axes=None):
         self.draw = draw
         self.figsize = figsize
         self.live_names = live
         self.background_names = background
+        self.axes = axes
+        self._kept = None
+        self._fits = {}          # kept axes: the fit of each layout (layout_of), measured once
+        self._live = []
         self._values = None
 
     def update(self, fig=None, **values):
@@ -111,10 +122,19 @@ class TimeFigure(LiveFigure):
         shown = {name: values.pop(name) for name in self.background_names if name in values}
         live.update(shown)
         if values != self._values:
-            super().__init__(figsize=self.figsize)
+            if self.axes is None:
+                super().__init__(figsize=self.figsize)
+                target = self.fig
+            else:
+                if self._kept is None:
+                    self._kept = KeptAxes(self.axes, self.figsize)
+                for artist in self._live:         # part of the next picture as a whole
+                    artist.set_animated(False)
+                target = self._kept.empty()
+                super().__init__(self._kept.fig)
             self._values = values
             self._shown = shown
-            self._at_time = self.draw(self.fig, **live, **values)
+            self._at_time = self.draw(target, **live, **values)
             self._live = self._time_artists(live)
             for ax in self.fig.axes:
                 ax.set_xlim(ax.get_xlim())
@@ -134,6 +154,20 @@ class TimeFigure(LiveFigure):
             for artist in artists:
                 artist.set_animated(True)
         self._live = artists
+
+    def _fit_to_contents(self, pad=0.1):
+        if self._kept is None:
+            return super()._fit_to_contents(pad)
+        layout = layout_of(self.fig)
+        if layout not in self._fits:
+            super()._fit_to_contents(pad)
+            self._fits[layout] = (self.fig.get_size_inches(), [ax.get_position() for ax in self.fig.axes])
+            return
+        size, places = self._fits[layout]
+        self.fig.set_size_inches(size)
+        for ax, place in zip(self.fig.axes, places):
+            ax.set_position(place)
+        self._fitted = True
 
     def _time_artists(self, live):
         """at_time(**live), each artist once (two curves may share a title)."""
@@ -163,7 +197,7 @@ class RedrawFigure:
         self._frames = {}    # frames, by control values
         self._key = None
         self._box = None     # the crop, in inches
-        self._measured = set()   # layouts (see _layout) whose crop is already in _box
+        self._measured = set()   # layouts (layout_of) whose crop is already in _box
 
     def update(self, **values):
         import matplotlib.pyplot as plt
@@ -182,18 +216,11 @@ class RedrawFigure:
         if self.fig is not blank:
             plt.close(blank)
 
-    def _layout(self):
-        """What the crop depends on: the axes (their places, limits and so tick labels) and
-        the length of the titles. Frames that differ only inside the axes, or in a number in
-        a title ("t = 0.5"), share it."""
-        return tuple((tuple(ax.get_position().bounds), ax.get_xlim(), ax.get_ylim(), len(ax.get_title()))
-                     for ax in self.fig.axes) + tuple(len(t.get_text()) for t in self.fig.texts)
-
     def frame(self):
         """The figure as RGBA pixels: {'width', 'height', 'rgba'}."""
         from matplotlib.transforms import Bbox
         if self._key not in self._frames:
-            layout = self._layout()
+            layout = layout_of(self.fig)
             if layout not in self._measured:           # measuring the crop takes a while
                 self._measured.add(layout)
                 box = self.fig.get_tightbbox().padded(self.pad)
@@ -216,6 +243,75 @@ class RedrawFigure:
         return png(self.frame())
 
 
+class KeptAxes:
+    """A figure whose axes are made once, by axes(fig), which returns them, and emptied for
+    each new plot (KeptAxesFigure, TimeFigure(axes=...)). Quicker than a new figure: making
+    the axes and their ticks is much of the time of a plot."""
+
+    def __init__(self, axes, figsize):
+        self.figsize = figsize
+        self.fig = Figure(figsize=figsize)
+        self.ax = axes(self.fig)
+        params = self.fig.subplotpars
+        self._layout = {name: getattr(params, name)
+                        for name in ('left', 'right', 'bottom', 'top', 'wspace', 'hspace')}
+
+    def empty(self):
+        """The axes, emptied, with the figure's size and the axes' places as axes() made them,
+        so that a draw that lays them out again (tight_layout) starts from the same place
+        each time. Returns the axes."""
+        self.fig.set_size_inches(self.figsize)
+        self.fig.subplots_adjust(**self._layout)
+        for ax in self.ax:
+            clear_contents(ax)
+        return self.ax
+
+
+class KeptAxesFigure(RedrawFigure):
+    """A RedrawFigure whose figure and axes are made once (KeptAxes): at every change only
+    their contents are drawn again, by draw(ax, **values), with the same plotting functions
+    as the notebook (given ax)."""
+
+    def __init__(self, axes, draw, figsize, pad=0.1):
+        super().__init__(None, pad)
+        self.kept = KeptAxes(axes, figsize)
+        self.fig = self.kept.fig
+        FigureCanvasAgg(self.fig)
+        self.draw = draw
+
+    def update(self, **values):
+        self._key = repr(sorted(values.items()))
+        if self._key in self._frames:
+            return
+        self.draw(self.kept.empty(), **values)
+
+
+def clear_contents(ax):
+    """Remove what is plotted on ax (lines, collections, texts, patches, legend), so that it
+    is as a new axes for the next plot (autoscaled, colours from the first one); its ticks
+    are kept."""
+    for artist in [*ax.lines, *ax.collections, *ax.texts, *ax.patches, *ax.images]:
+        artist.remove()
+    if ax.get_legend():
+        ax.get_legend().remove()
+    ax.relim()
+    ax.autoscale()
+    ax.set_prop_cycle(None)
+
+
+def layout_of(fig):
+    """What the crop of a figure depends on: the places of the axes, the lengths of their
+    tick labels and of the titles. Figures that differ only inside the axes, or in numbers
+    that keep their length (ticks "0.5" and "1.5", "t = 0.5"), share it."""
+    def label_lengths(axis):
+        low, high = sorted(axis.get_view_interval())
+        ticks = [t for t in axis.get_major_locator()() if low <= t <= high]
+        return tuple(len(label) for label in axis.get_major_formatter().format_ticks(ticks))
+    return tuple((tuple(ax.get_position().bounds), label_lengths(ax.xaxis), label_lengths(ax.yaxis),
+                  len(ax.get_title()), len(ax.get_xlabel()), len(ax.get_ylabel()))
+                 for ax in fig.axes) + tuple(len(t.get_text()) for t in fig.texts)
+
+
 def png(frame):
     """A frame (RGBA pixels) as PNG data, quickly compressed."""
     from PIL import Image
@@ -223,17 +319,6 @@ def png(frame):
     buffer = io.BytesIO()
     image.save(buffer, format='png', compress_level=1)
     return buffer.getvalue()
-
-
-def in_style(style, function):
-    """function, called with the matplotlib style in effect."""
-    import matplotlib.style
-
-    @functools.wraps(function)
-    def styled(*args, **kwargs):
-        with matplotlib.style.context(style):
-            return function(*args, **kwargs)
-    return styled
 
 
 # --- Controls ---------------------------------------------------------------------------
@@ -272,9 +357,7 @@ class InteractiveFigure:
     ipywidgets descriptions (math between $...$, e.g. r'$\\rho_l$');
     rows: names of the controls shown
     side by side, row by row (None leaves a column empty); options: names of controls shown apart (under "Plot options"
-    on the web, in a second tab in the notebook, titled tab_titles); style: a matplotlib style
-    (name or dict of rcParams) that the chapter sets for all its figures, for the web book,
-    where the chapter's code does not run.
+    on the web, in a second tab in the notebook, titled tab_titles).
     """
     figure: type
     controls: list
@@ -284,7 +367,6 @@ class InteractiveFigure:
     function: object = None          # for redraw figures
     factory: bool = False
     fixed: dict = field(default_factory=dict)
-    style: object = None
 
     @classmethod
     def redraw(cls, function, controls, rows=None, factory=False, fixed=None, **options):
@@ -307,12 +389,8 @@ class InteractiveFigure:
             arguments = {**(plot.keywords if plot is not function else {}), **self.fixed}
             if arguments:                         # setup and fixed() arguments, at every update
                 figure.update = functools.partial(figure.update, **arguments)
-        else:
-            figure = RedrawFigure(functools.partial(plot, **self.fixed))
-        if self.style:                            # made in update, drawn in frame and png
-            for name in ('update', 'frame', 'png'):
-                setattr(figure, name, in_style(self.style, getattr(figure, name)))
-        return figure
+            return figure
+        return RedrawFigure(functools.partial(plot, **self.fixed))
 
     def initial_values(self, **values):
         """The control values, with the given ones replacing the defaults."""

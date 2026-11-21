@@ -8,20 +8,6 @@ import numpy as np
 from exact_solvers import acoustics_heterogeneous, acoustics_heterogeneous_demos
 from utils.live_figure import InteractiveFigure, checkbox, dropdown, number, slider
 
-# The chapter's style, seaborn's set_style('white') (its rcParams; the web book has no seaborn)
-SEABORN_WHITE = {
-    'figure.facecolor': 'white', 'axes.labelcolor': '.15', 'xtick.direction': 'out',
-    'ytick.direction': 'out', 'xtick.color': '.15', 'ytick.color': '.15', 'axes.axisbelow': True,
-    'grid.linestyle': '-', 'text.color': '.15', 'font.family': ['sans-serif'],
-    'font.sans-serif': ['Arial', 'DejaVu Sans', 'Liberation Sans', 'Bitstream Vera Sans', 'sans-serif'],
-    'lines.solid_capstyle': 'round', 'patch.edgecolor': 'w', 'patch.force_edgecolor': True,
-    'xtick.top': False, 'ytick.right': False, 'axes.grid': False, 'axes.facecolor': 'white',
-    'axes.edgecolor': '.15', 'grid.color': '.8', 'axes.spines.left': True, 'axes.spines.bottom': True,
-    'axes.spines.right': True, 'axes.spines.top': True, 'xtick.bottom': False, 'ytick.left': False,
-}
-
-
-
 def riemann_plot(q_l, q_r, auxl, auxr):
     """acoustics_heterogeneous.riemann_plot_func, with the states as arrays (as the cells give them)."""
     return acoustics_heterogeneous.riemann_plot_func(np.array(q_l), np.array(q_r), auxl, auxr)
@@ -30,7 +16,7 @@ def riemann_plot(q_l, q_r, auxl, auxr):
 RIEMANN = InteractiveFigure.redraw(
     riemann_plot,
     [slider('t', 0., 1., 0.), dropdown('which_char', [None, 1, 2], None, label='Show characteristics')],
-    factory=True, style=SEABORN_WHITE)
+    factory=True)
 
 # The tabs "Left and right states" and "Material parameters" above the figure, "Plot options"
 # apart. The notebook's boxes for the slider ranges (rho_max, K_max) are left out.
@@ -47,5 +33,4 @@ PHASE_PLANE = InteractiveFigure.redraw(
      checkbox('show_unphys', True, 'Unphysical solution')],
     [['pl', 'ul'], ['pr', 'ur'], ['rhol', 'rhor'], ['bulkl', 'bulkr']],
     factory=True,
-    options=['show_phys', 'show_unphys', 'xmin', 'xmax', 'ymin', 'ymax'],
-    style=SEABORN_WHITE)
+    options=['show_phys', 'show_unphys', 'xmin', 'xmax', 'ymin', 'ymax'])

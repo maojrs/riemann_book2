@@ -241,7 +241,7 @@ def sample_riemann(s, riemann_eval, t, xmax, derived_variables=None):
 def plot_riemann(states, s, riemann_eval, wave_types=None, t=0.1, ax=None,
                  color='multi', layout='horizontal', variable_names=None,
                  t_pointer=False, extra_axes=False, fill=(),
-                 derived_variables=None, xmax=None, fig=None):
+                 derived_variables=None, xmax=None, fig=None, emptied=False):
     """
     Take an array of states and speeds s and plot the solution at time t.
     For rarefaction waves, the corresponding entry in s should be a tuple of two values,
@@ -260,6 +260,8 @@ def plot_riemann(states, s, riemann_eval, wave_types=None, t=0.1, ax=None,
         layout: 'horizontal' or 'vertical'
         fig: without ax, the axes are made on this matplotlib figure (default: a new
              pyplot figure)
+        emptied: with ax, True if the axes were emptied for a new plot (their y ranges are
+             then set as for new axes; by default they grow to fit what is already there)
         variable_names: used to label the plots of q
         extra_axes: if True, add an extra axis for plotting one more thing
         fill: a list of integers; if i is in fill, then q[i] uses a
@@ -314,7 +316,7 @@ def plot_riemann(states, s, riemann_eval, wave_types=None, t=0.1, ax=None,
             ax[0].set_title('t = %6.3f' % t)
     else:
         assert len(ax) == num_vars + 1 + extra_axes
-        existing_plots = True
+        existing_plots = not emptied
         ylims = []
         for i in range(1,len(ax)):
             ylims.append(ax[i].get_ylim())
@@ -596,13 +598,16 @@ def plot_characteristics(reval, char_speed, aux=None, axes=None,
     axes: matplotlib axes on which to plot
     extra_lines: tuple of pairs of pairs; each entry specifies the endpoints of a line
                     along which to start more characteristics.  This can be useful
-                    for variable-coefficient systems.
+                    for variable-coefficient systems.  They are started just left and
+                    just right of the line, and kept where they leave it on that side
+                    (and are not rays of a fan, which plot_waves draws).
     contact_index:   contact discontinuity index.  If aux is provided, then aux[0]
                      is used for x<0 and aux[1] is used for x>0.  However,
                      in some systems, the aux values change across some
                      non-stationary contact wave.  In that case, contact_index
                      should be the index of that wave.
     """
+    from matplotlib.collections import LineCollection
     if axes:
         xmin, xmax, tmin, tmax = axes.axis()
     else:
@@ -613,8 +618,7 @@ def plot_characteristics(reval, char_speed, aux=None, axes=None,
     t = np.linspace(tmin,tmax,500)
     contact_speed = 0 if contact_index is None else speeds[contact_index]
     chars = integrate_characteristics(reval, char_speed, x, t, aux, contact_speed)
-    for j in range(len(x)):
-        axes.plot(chars[j,:],t,'-k',linewidth=0.2,zorder=0)
+    lines = [np.column_stack([char, t]) for char in chars]
 
     if extra_lines:
         for endpoints in extra_lines:
@@ -622,11 +626,23 @@ def plot_characteristics(reval, char_speed, aux=None, axes=None,
             x = np.linspace(begin[0], end[0], 10)
             tstart = np.linspace(begin[1], end[1], 10)
             t = np.array([np.linspace(tt, tmax, 200) for tt in tstart])
-            for epsilon in (-1.e-3, 1.e-3):
-                chars = integrate_characteristics(reval, char_speed, x+epsilon, t, aux, contact_speed=0)
-                for char, tt in zip(chars, t):
-                    axes.plot(char,tt,'-k',linewidth=0.2,zorder=0)
+            t = np.vstack([t, t])               # just left and just right of the line, together
+            side = np.repeat([-1., 1.], len(x))
+            x0 = np.concatenate([x-1.e-3, x+1.e-3])
+            chars = integrate_characteristics(reval, char_speed, x0, t, aux, contact_speed=0)
+            # Kept only if it leaves the line on its own side, and is not a ray x = xi t of
+            # a fan (speed xi = x/t where it starts): one that crosses the line is drawn
+            # already, started on the other side, and rays of a fan that touches the line
+            # (sonic point) stay along it, drawn over it as a thick stripe; plot_waves
+            # draws the fan.
+            dt = t[:, 1] - t[:, 0]
+            step = chars[:, 1] - chars[:, 0]            # speed times dt
+            ray = np.abs(step - dt*x0/np.maximum(t[:, 0], dt)) < 0.01*dt*dx/(tmax - tmin)
+            leaves = (np.sign(step) == side) & ~ray
+            lines += [np.column_stack([char, tt]) for char, tt in zip(chars[leaves], t[leaves])]
 
+    # one collection of thin black lines: much quicker to draw than a line per characteristic
+    axes.add_collection(LineCollection(lines, colors='k', linewidths=0.2, zorder=0), autolim=False)
     axes.axis((xmin, xmax, tmin, tmax))
 
 

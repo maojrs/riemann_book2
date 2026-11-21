@@ -1,4 +1,5 @@
-"""utils.live_figure.RedrawFigure: a plotting function drawn again in full at each change."""
+"""utils.live_figure.RedrawFigure: a plotting function drawn again in full at each change;
+KeptAxesFigure: the same, on axes that are kept."""
 import io
 
 import matplotlib
@@ -9,7 +10,7 @@ import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 from PIL import Image  # noqa: E402
 
-from utils.live_figure import RedrawFigure  # noqa: E402
+from utils.live_figure import KeptAxesFigure, RedrawFigure  # noqa: E402
 
 
 def line_on_current_figure(a):
@@ -71,14 +72,27 @@ def test_frames_are_kept():
     plt.close('all')
 
 
-def test_style_is_the_chapters():
-    """InteractiveFigure(style=...): the figure is made and drawn in that style (the chapter's
-    plt.style.use), and pyplot's own style is left as it was."""
-    from utils.live_figure import InteractiveFigure, slider
-    spec = InteractiveFigure.redraw(line_on_current_figure, [slider('a', 0., 1000., 500.)],
-                                    style={'lines.linewidth': 7.})
-    figure = spec.build()
-    figure.update(a=500.)
-    figure.frame()
-    assert figure.fig.axes[0].lines[0].get_linewidth() == 7.
-    assert plt.rcParams['lines.linewidth'] != 7.
+
+def curve_and_label(ax, a, b):
+    """Draws a curve (autoscaled), a legend and a text on two axes, and lays them out."""
+    ax[0].plot(np.linspace(0, a, 20), np.sin(np.linspace(0, a, 20)), label='sin')
+    ax[0].legend()
+    ax[1].plot([0, b], [b, 0])
+    ax[1].text(0, 0, 'a = %g' % a)
+    ax[1].set_title('b')
+    ax[0].figure.tight_layout()
+
+
+def test_kept_axes_draw_as_new_axes():
+    """Each picture of a KeptAxesFigure is the same as that of a new figure with the same
+    contents (limits, ticks, legend), and its axes are kept."""
+    def new_figure(a, b):
+        curve_and_label(plt.figure(figsize=(6, 3)).subplots(1, 2), a, b)
+    kept = KeptAxesFigure(lambda fig: fig.subplots(1, 2), curve_and_label, (6, 3))
+    new = RedrawFigure(new_figure)        # the same crop, which only grows
+    axes = list(kept.kept.ax)
+    for a, b in [(3., 1.), (10., 50.), (0.5, 0.2)]:
+        kept.update(a=a, b=b)
+        new.update(a=a, b=b)
+        assert np.array_equal(pixels(kept.frame()), pixels(new.frame()))
+        assert list(kept.kept.ax) == axes and len(axes[1].texts) == 1

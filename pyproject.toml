@@ -13,7 +13,6 @@ dependencies = [
     "matplotlib",
     "ipywidgets",
     "ipython",
-    "seaborn>=0.13.2",
 ]
 
 [dependency-groups]

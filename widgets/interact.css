@@ -18,11 +18,11 @@
 @media (max-width: 600px) { .book-interact .bi-row { grid-template-columns: minmax(0, 1fr); } }
 
 /* A control: label, control, value */
-.book-interact :is(.bi-slider, .bi-wide) { display: grid; grid-template-columns: minmax(1.6em, max-content) minmax(0, 1fr) 2.8em; align-items: center; gap: 0.6rem; min-width: 0; }
+.book-interact :is(.bi-slider, .bi-wide) { display: grid; grid-template-columns: minmax(1.6em, max-content) minmax(0, 1fr) var(--readout, 2.8em); align-items: center; gap: 0.6rem; min-width: 0; }
 .book-interact .bi-name { text-align: right; }
 .book-interact .bi-math { font-family: KaTeX_Math, 'Times New Roman', serif; font-style: italic; font-size: 1.1em; white-space: nowrap; }
 .book-interact .bi-math sub { font-size: 0.7em; }
-.book-interact output { text-align: right; opacity: 0.85; }
+.book-interact output { text-align: right; opacity: 0.85; white-space: nowrap; }
 .book-interact .bi-wide > :is(input, select, .bi-options) { grid-column: 2 / 4; }
 
 /* Sliders: a thin track, filled up to the value in the accent colour */

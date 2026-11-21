@@ -6,10 +6,10 @@ from matplotlib import animation
 from miniclaw.controller import Controller
 
 
-def ianimate(frame_list, ivar=0, varname=None, figsize=(10, 6), xlim=None, ylim=None):
+def ianimate(frame_list, ivar=0, varname=None, figsize=(10, 6), xlim=None, ylim=None, interval=200):
     """Animation of component ivar of q over the frames (a Controller or a list of
-    Solutions), on a fixed y range 10% wider than the values. Returns the matplotlib
-    animation (for anim.to_jshtml())."""
+    Solutions), on a fixed y range 10% wider than the values, one frame every interval ms.
+    Returns the matplotlib animation (for anim.to_jshtml())."""
     if isinstance(frame_list, Controller):
         frame_list = frame_list.frames
     xc = frame_list[0].state.grid.p_centers[0]
@@ -38,4 +38,4 @@ def ianimate(frame_list, ivar=0, varname=None, figsize=(10, 6), xlim=None, ylim=
         return line,
 
     plt.close(fig)
-    return animation.FuncAnimation(fig, fplot, frames=len(frame_list))
+    return animation.FuncAnimation(fig, fplot, frames=len(frame_list), interval=interval)

@@ -1,8 +1,6 @@
 """Riemann solution figures with a time slider, drawn on a utils.live_figure.TimeFigure:
 the x-t plane, waves and characteristics are drawn once, and a new time only moves the
 time line and the solution curves q(x, t) (and the titles and legend that show t)."""
-import numpy as np
-
 from utils.live_figure import TimeFigure
 from utils.riemann_tools import plot_characteristics, plot_riemann, sample_riemann
 
@@ -11,8 +9,7 @@ def plot_riemann_at_time(states, s, riemann_eval, wave_types, t, ax=None, derive
                          **options):
     """riemann_tools.plot_riemann(states, s, riemann_eval, wave_types, t, ax, ...); returns
     its axes and at_time(t), which moves the time line and the solution curves (and the
-    'q at t = ...' titles of the horizontal layout, and the areas under the curves of `fill`)
-    to time t and returns them."""
+    'q at t = ...' titles of the horizontal layout) to time t and returns them."""
     ax = plot_riemann(states, s, riemann_eval, wave_types, t, ax, derived_variables=derived_variables,
                       **options)
     num_vars = len(derived_variables(states[:, 0])) if derived_variables else states.shape[0]
@@ -21,7 +18,6 @@ def plot_riemann_at_time(states, s, riemann_eval, wave_types, t, ax=None, derive
     xmax = ax[0].get_xlim()[1]                     # the x range plot_riemann sampled
     horizontal = options.get('layout', 'horizontal') == 'horizontal'
     titles = [a.title for a in ax[1:1 + num_vars]] if horizontal else []
-    fills = {i: ax[1 + i].collections[-1] for i in options.get('fill', ())}   # fill_between
 
     def at_time(t):
         x, q = sample_riemann(s, riemann_eval, t, xmax, derived_variables)
@@ -31,12 +27,17 @@ def plot_riemann_at_time(states, s, riemann_eval, wave_types, t, ax=None, derive
         for title in titles:                       # "q at t =  0.500"
             text = title.get_text()
             title.set_text(text[:text.rindex(' at t = ')] + ' at t = %6.3f' % t)
-        for i, area in fills.items():              # the region between q(x, t) and 0
-            area.set_verts([np.column_stack([np.concatenate([x, x[::-1]]),
-                                             np.concatenate([q[i], np.zeros(len(x))])])])
-        spines = [spine for i in fills for spine in ax[1 + i].spines.values()]   # on top of the areas
-        return [time_line, *curves, *titles, *fills.values(), *spines]
+        return [time_line, *curves, *titles]
     return ax, at_time
+
+
+def riemann_axes(fig, num_axes):
+    """The axes riemann_tools.plot_riemann makes on fig in its horizontal layout, side by
+    side, for drawing on again (utils.live_figure.KeptAxesFigure)."""
+    ax = fig.subplots(1, num_axes)
+    fig.subplots_adjust(wspace=0.5)
+    fig.tight_layout()
+    return ax
 
 
 def drawn_by(axes, draw):

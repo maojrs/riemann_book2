@@ -70,12 +70,14 @@ function controlElement(c, onChange) {
     input = Object.assign(document.createElement('input'),
       { type: 'range', min: c.min, max: c.max, step: c.step, value: c.value });
     readout = document.createElement('output');
-    const show = () => {               // the value, and how far the track is filled
-      readout.textContent = (+input.value).toFixed(c.integer ? 0 : 2);
-      input.style.setProperty('--fill', (input.value - c.min) / (c.max - c.min));
+    const show = value => {            // the value, and how far the track is filled
+      readout.textContent = value.toFixed(c.integer ? 0 : 2);
+      input.style.setProperty('--fill', (value - c.min) / (c.max - c.min));
     };
-    show();
-    input.addEventListener('input', () => { show(); onChange(+input.value); });
+    // The start value as given: the browser puts the thumb on the nearest step from min
+    // (600 becomes 600.01 when min is 0.01), as ipywidgets does only once it is moved
+    show(c.value);
+    input.addEventListener('input', () => { show(+input.value); onChange(+input.value); });
   } else {
     input = Object.assign(document.createElement('input'), { type: 'number', step: 'any', value: c.value });
     if (c.min != null) Object.assign(input, { min: c.min, max: c.max });
@@ -185,6 +187,11 @@ async function render({ model, el }) {
       status.hidden = false;
     });
     await update();
+    // The sliders' values in one column as wide as the longest one any slider can show
+    // ("-25.00"), so that the rows keep their size as the values change
+    const longest = Math.max(0, ...controls.filter(c => c.kind === 'slider')
+      .flatMap(c => [c.min, c.max].map(v => v.toFixed(c.integer ? 0 : 2).length)));
+    el.style.setProperty('--readout', `${longest + 0.5}ch`);
     const blocks = controlBlocks(rows, byName);
     const columns = Math.max(1, ...blocks.filter(b => b.kind === 'row').map(b => b.names.length));
     blocks.forEach(block => addBlock(block, form, columns));

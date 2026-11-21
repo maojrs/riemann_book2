@@ -83,6 +83,14 @@ These make the code run on current Python, NumPy and IPython without changing an
   accept one point (e.g. `shallow_water.lambda_1`) are still called point by point. The
   integration is now `integrate_characteristics` and `characteristic_speeds`. Same
   characteristics: `test_vectorized_characteristics_match_the_point_by_point_loop`, `test_extra_lines_match_the_point_by_point_loop`.
+- `riemann_tools.plot_characteristics`, `extra_lines` (Traffic_variable_speed, the speed-limit
+  jump at x = 0): of the characteristics started just left and just right of the line, only
+  those that leave the line on their own side, and are not rays x = xi t of a fan (speed x/t
+  where they start), are drawn. One that crosses the line was drawn twice, a hair apart from
+  the one started on the other side (dark, smudged bands), and the rays of a fan that touches
+  the line (sonic point) stayed along x = 0 as a thick black stripe (`plot_waves` draws the
+  fan). The lines drawn are unchanged characteristics. Test:
+  `test_extra_lines_match_the_point_by_point_loop`.
 - `riemann_tools.sample_riemann` (new) holds the sampling of the solution at time t, split out
   of `plot_riemann` unchanged, so interactive figures can reuse it. Test: `test_sample_riemann_puts_a_point_between_each_pair_of_waves`.
 - `utils/live_figure.py` (new): `LiveFigure`, a matplotlib figure built once that redraws only
@@ -207,13 +215,32 @@ These make the code run on current Python, NumPy and IPython without changing an
   - **Further topics:** Acoustics_heterogeneous, Traffic_variable_speed, Nonlinear_elasticity,
     Euler_Tammann, Traffic_with_ramps, Pressureless_flow, Kitchen_sink_problem. Besides the
     conventions below:
-    - Code, to be approved: Traffic_variable_speed, Nonlinear_elasticity, Traffic_with_ramps and
+    - Code (approved): Traffic_variable_speed, Nonlinear_elasticity, Traffic_with_ramps and
       Kitchen_sink_problem import `pyclaw`/`riemann` from `miniclaw` instead of `clawpack`, and
       Kitchen_sink_problem `ianimate` from `miniclaw.visclaw.ianimate` (new: Clawpack's 1D
       animation of a run, returning the animation as the chapter expects;
-      `test_miniclaw_visclaw.py`); Pressureless_flow and Kitchen_sink_problem use the style
-      `seaborn-v0_8-talk`, the current name of `seaborn-talk` (removed in Matplotlib 3.6).
-    - `seaborn` is a dependency again (Acoustics_heterogeneous imports it for its style).
+      `test_miniclaw_visclaw.py`).
+    - Code (user's request): no seaborn styling, so that the plots look like those of Parts I
+      and II and seaborn is not needed: Acoustics_heterogeneous no longer imports seaborn and
+      calls `sns.set_style('white')`; Pressureless_flow and Kitchen_sink_problem no longer call
+      `plt.style.use('seaborn-talk')` (a style Matplotlib 3.6 removed). Pressureless_flow's
+      `connect_states` is 8 x 4 inches instead of 14 x 6, the size of Shallow_water's (its
+      labels were made for seaborn-talk's larger fonts).
+    - Code (user's request), figure format only:
+      - Traffic_variable_speed's first cell no longer sets 8-point text, and its default figure
+        size is 6 x 3 inches instead of 8 x 4 (the `figsize` variable, used by the two-panel
+        figure, stays 8 x 4). Its single plots of f(rho) had tiny labels on a large figure;
+        they keep their 2:1 shape and their text now matches the panels of its interactive
+        figures, which the web book draws with matplotlib's defaults.
+      - Pressureless_flow's `make_plot_function` no longer fills the area under the depth in
+        blue (`fill=[0]`): the depth is a black line, as in the rest of the book.
+      - Kitchen_sink_problem: the F = ∞ profile is 4 x 4 inches (one panel of the figures
+        below it); the depth profiles (the steady solution with a jump and the four jump
+        locations) are 5 x 3 inches with axis labels (r, h; in cm for the experiments; `plt.clf()`
+        became `plt.figure(...)` in the first); the three animations are 6.4 x 4.8 inches, as
+        in Burgers, and play smoothly: 100 output times instead of 50 (same run time) shown
+        every 60 ms instead of matplotlib's 200 (`ianimate(claw, figsize=(6.4,4.8),
+        interval=60)`, `claw.num_output_times = 100`).
     - Nonlinear_elasticity and Pressureless_flow asked for a Python 2 kernel; their metadata now
       names `python3`.
     - Warnings that the original hid or that current libraries add are hidden with
@@ -308,18 +335,44 @@ These make the code run on current Python, NumPy and IPython without changing an
     `nonlinear_elasticity.py`, `euler_tammann.py`, `traffic_ramps.py`, `pressureless.py`).
     The chapters' own plot functions with a time slider are drawn on live figures with the
     same calls (`plot_riemann_at_time`): 1–11 ms per time step natively; the "all in one"
-    figures and the phase planes are drawn again in full (50–440 ms natively). The two tabbed
+    figures and the phase planes are drawn again in full (50–380 ms natively). The two tabbed
     phase planes show their state and parameter tabs as rows and their "Plot options" tab
-    under "Plot options"; the boxes that only set slider ranges are left out. Chapters that
-    set a global style (seaborn's `white`, `seaborn-v0_8-talk`) give it to their web figures
-    (`InteractiveFigure(style=...)`, test in `test_redraw_figure.py`). Same test, which now
-    also reads tabbed layouts and number boxes, and takes each notebook picture right after
-    its cell (a later cell may change the globals a plot function reads).
+    under "Plot options"; the boxes that only set slider ranges are left out.
+    Pressureless_flow's characteristic speeds are computed for all points at once in the web
+    copy (same values, `test_time_figures.py`). Same test, which now also reads tabbed
+    layouts and number boxes, and takes each notebook picture right after its cell (a later
+    cell may change the globals a plot function reads).
   - Riemann solution figures (`riemann_tools.make_plot_function`, every chapter): choosing
     which characteristics to show no longer builds the figure again. Each family is drawn
     when first chosen and then shown or hidden, under the waves as before
-    (`TimeFigure(background=...)`); `plot_riemann_at_time` also moves the filled areas of
-    `fill`. Tests: `test_riemann_figure.py`.
+    (`TimeFigure(background=...)`). Tests: `test_riemann_figure.py`.
+  - `riemann_tools.plot_characteristics` draws the characteristics as one collection of lines
+    (`LineCollection`, same lines, width and colour) instead of one line each: quicker to
+    draw. Tests: `test_riemann_tools.py`.
+  - Redrawn figures (`RedrawFigure`) measure their crop again only when a tick label, title or
+    axis label changes length, not at every new axis range (one drawing less per change).
+  - The "all in one" figures of Traffic_variable_speed and Traffic_with_ramps and
+    Pressureless_flow's `connect_states` keep their figure and axes (`KeptAxesFigure`): each
+    change empties the axes and draws them again with the same calls as the chapter, given
+    the axes (`plot_riemann(..., ax=ax, emptied=True)`: y ranges as for new axes). Pictures
+    byte-identical to the chapters' over sequences of slider values; about 25% faster.
+    Tests: `test_kept_axes_draw_as_new_axes`, the interactive-cells test.
+  - Live figures measure their crop without painting the picture
+    (`draw_without_rendering`), one painting less each time a figure is built again (e.g.
+    Pressureless_flow's g slider). All 118 interactive figures pixel-identical.
+  - Pressureless_flow's Riemann figure keeps its figure and axes too (`TimeFigure(axes=...)`,
+    `KeptAxes`, shared with `KeptAxesFigure`): a new g empties the axes and draws the new
+    solution on them, and the crop is measured once for each layout (`layout_of`: places of
+    the axes, lengths of tick labels and titles), so a g seen before is not measured again.
+    A new g takes about 250 ms natively instead of 410 ms, and one seen before about 125 ms.
+    Test: `test_pressureless_figure_keeps_its_axes_and_draws_the_chapters_pictures`.
+  - `plot_characteristics`: the characteristics started just left and just right of an
+    `extra_lines` line are integrated together (identical lines).
+  - Slider values sit in a column as wide as the longest value any slider of the figure can
+    show (e.g. "-25.00"), so negative values no longer wrap and push the controls down
+    (Acoustics_heterogeneous' and Euler_Tammann's phase planes). A slider shows its start
+    value as given (600, not the browser's nearest step from min, 600.01).
+  - Animations (`to_jshtml`) are centred in the column (`book.css`).
   - Fixes after review:
     - Each figure draws on a figure of its own. Some plotting functions draw on pyplot's
       current figure, which could be another figure of the page, so a figure could change its

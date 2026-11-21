@@ -43,3 +43,11 @@ def test_ianimate_shows_every_frame():
     assert fig.axes[0].get_ylim() == (0.9, 2.1)
     assert fig.axes[0].get_xlim() == (xc[0], xc[-1])
     assert '<img' in anim.to_jshtml() or 'animation' in anim.to_jshtml()
+
+
+def test_ianimate_size_and_frame_interval():
+    """figsize and interval (ms per frame) reach the animation; by default 10 x 6 and 200 ms."""
+    claw = dam_break()
+    default, chosen = ianimate(claw), ianimate(claw, figsize=(6.4, 4.8), interval=60)
+    assert tuple(default._fig.get_size_inches()) == (10, 6) and default._interval == 200
+    assert tuple(chosen._fig.get_size_inches()) == (6.4, 4.8) and chosen._interval == 60
