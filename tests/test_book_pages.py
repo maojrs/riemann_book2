@@ -5,7 +5,7 @@ import re
 from urllib.parse import quote
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-BINDER = 'https://mybinder.org/v2/gh/maojrs/riemann_book2/main?labpath='
+BINDER = 'https://mybinder.org/v2/gh/maojrs/riemann_book2/notebooks?labpath='   # the cleaned notebooks (release.yml)
 
 
 def chapters():
@@ -36,13 +36,6 @@ def test_no_other_edit_link_and_no_downloads():
         assert re.search(r'^downloads: \[\]$', frontmatter(path), re.M), path
     for page in ('index.md', 'chapters/Preface.md'):
         assert re.search(r'^---\n(.*\n)*?downloads: \[\]\n(.*\n)*?---', (ROOT / page).read_text()), page
-
-
-def test_binder_installs_the_books_code_from_pyproject():
-    """Binder (repo2docker) has no configuration of its own here: it installs pyproject.toml in
-    place (`pip install -e .`), on its default Python, 3.10, which the project must allow."""
-    assert not (ROOT / '.binder').exists() and not (ROOT / 'binder').exists()
-    assert re.search(r'^requires-python = ">=3\.10"$', (ROOT / 'pyproject.toml').read_text(), re.M)
 
 
 def bibliography():
@@ -90,3 +83,10 @@ def test_references_page_lists_every_work():
     items = re.findall(r'^1\. .*\]\(<(\S+)>\)', page, re.M)
     assert sorted(items) == sorted(link(entry) for entry in bibliography().values())
     assert 'file: references.md' in (ROOT / 'myst.yml').read_text()
+
+
+def test_how_to_use_page_follows_the_home_page():
+    toc = re.findall(r'- file: (\S+)', (ROOT / 'myst.yml').read_text())
+    assert toc[:2] == ['index.md', 'how_to_use.md']
+    assert re.search(r'^downloads: \[\]$', (ROOT / 'how_to_use.md').read_text(), re.M)
+    assert '](how_to_use.md)' in (ROOT / 'index.md').read_text()

@@ -16,6 +16,7 @@ Rule 1 in AGENTS.md applies: only markup changes, never the wording. Acoustics i
    - The Jupyter server needs the venv on `PATH`.
    - The build reuses a notebook's outputs while its code cells are unchanged (`_build/execute`), even when the Python code they call has changed. After changing `exact_solvers/`, `utils/`, `miniclaw/` or `widgets/figures/`, run `jupyter-book clean --execute -y` first, or the build-time pictures (and the placeholders of the interactive figures) stay old.
    - Citations: `[@key]` (or `{cite:p}` for keys with a colon); every entry of `references.bib` needs a `doi` (or a `url`). After changing citations or the bibliography, run `python3 .agents/tools/references_page.py` to update `references.md` (it lists every entry of `references.bib`).
+   - New MyST markup in a chapter must also be handled by `.agents/tools/clean_notebooks.py` (the release notebooks): it stops on markup it does not know, and `tests/test_clean_notebooks.py` runs it.
 7. Check for horizontal scroll bars (see below) at 390, 768, 1280, 1440 and 1920 px, and look at the screenshots.
 8. Register the changes in `CHANGES.md`. Add any text that refers to things that no longer exist to "Text to flag for the authors" in `.agents/plan.md`.
 

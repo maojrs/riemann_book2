@@ -28,6 +28,7 @@ project:
   # become pages; AGENTS.md, CHANGES.md and .agents/ are not part of the book.
   toc:
     - file: index.md
+    - file: how_to_use.md
     - file: chapters/Preface.md
     - title: "Part I: The Riemann problem and its solution"
       children:

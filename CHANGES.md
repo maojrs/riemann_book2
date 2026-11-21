@@ -16,6 +16,10 @@ Every change compared with the original
 - Preface: a new first section, "Note on this Web Edition" (why this edition exists; the
   science and the scientific code are the original), followed by the original preface,
   unchanged. **Draft, pending the authors' approval.**
+- New page "How to use this book" (`how_to_use.md`, after the home page): the interactive
+  figures (Python in the reader's browser, start-up time, controls), and running the notebooks
+  on Binder (rocket icon) or locally (download). The home page has a tip linking to it, and its
+  "Run the notebooks yourself" bullet moved there. **Draft, pending the authors' approval.**
 - References (user's request): every work in `references.bib` links to itself: a DOI for 30
   works (found on Crossref and checked against title, authors and year), and for the others a
   stable page (Godunov 1959: MathNet; Riemann 1860: EuDML; Kröner: Wiley; Garavello & Piccoli,
@@ -37,8 +41,8 @@ Every change compared with the original
   Tests: `test_every_reference_links_to_the_work`, `test_references_page_lists_every_cited_work`.
 - Front page: the subtitle and author lines under the title were removed (the page header
   already shows them); the SIAM citation's title links to the book (the DOI link rendered as an
-  automatic "Ketcheson et al. (2020)" citation); "Run the notebooks yourself" lists Binder and
-  a download of the project (for now the .zip of this working repository; to be set at the release).
+  automatic "Ketcheson et al. (2020)" citation); the instructions to run the notebooks are on the
+  "How to use this book" page.
 
 ## Bug fixes in the solvers
 
@@ -199,16 +203,29 @@ These make the code run on current Python, NumPy and IPython without changing an
   Same text, word for word; the links to it in Burgers and Approximate_solvers point to the new
   file.
 - "Open in Binder": the top right of each chapter has a launch icon (a rocket) that opens the
-  chapter's notebook on mybinder.org (JupyterLab, this repository's `main`), in place of the
+  chapter's notebook on mybinder.org (JupyterLab, the `notebooks` branch, below), in place of the
   edit link and the download menu. Each chapter sets `edit_url` to its Binder URL and
   `downloads: []` (frontmatter of its first cell; markup only; the home page and the Preface,
   which have no code, only `downloads: []`), `myst.yml` sets `edit_url: null`, and `book.css`
   draws the icon. The theme's own launch button was not used: it also adds run-cell
   controls to every notebook page. The tooltip still reads "Edit This Page" (set by the theme).
-  Binder needs no configuration of its own: it installs `pyproject.toml` in place, on its
-  default Python 3.10, so `requires-python` is now `>=3.10` (the test suite passes on 3.10 with
+  Binder needs no configuration of its own: it installs the branch's `pyproject.toml` in place,
+  on its default Python 3.10, so `requires-python` is now `>=3.10` (the test suite passes on 3.10 with
   the numpy, scipy and matplotlib releases that support it; the dev group no longer pins
   `ipykernel>=7.4.0`, which needs 3.11). Test: `test_book_pages.py`.
+- Notebooks for download and Binder (user's request): on each published release,
+  `.github/workflows/release.yml` writes the chapters as plain Jupyter notebooks with only what
+  is needed to run them (`.agents/tools/clean_notebooks.py`: `chapters/`, the figures they use,
+  `exact_solvers/`, `utils/`, `miniclaw/`, a `pyproject.toml`, a README and the licenses; no
+  `widgets/`, `book.css` or other web files), commits them as the single commit of the branch
+  `notebooks` (which the rocket icons open on Binder) and attaches that commit to the release as
+  `riemann_book_notebooks.zip` (README badge, "How to use this book"). The cleaning only changes
+  markdown: the `{anywidget}` cells and frontmatter go; MyST markup becomes plain Jupyter markdown
+  (`$$` blocks; numbered equations get the web book's numbers as `\tag{n}` and references show
+  `(n)`; citations `(Author, year)` linked to the work; heading labels become links to the
+  heading; `{image}` becomes `<img>`); code cells are copied as they are. Equation numbers checked
+  against the built site (102 labels). The bibliography code is shared with `references_page.py`
+  (`.agents/tools/bibliography.py`). Tests: `test_clean_notebooks.py`.
 - `RedrawFigure` gives its picture's size as whole numbers (matplotlib 3.10's renderer gives
   floats, which broke the interactive figures on Python 3.10).
 - `tests/`: scientific test suite (pytest) for `exact_solvers`, `utils.riemann_tools` and `miniclaw`.

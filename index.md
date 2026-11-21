@@ -3,6 +3,11 @@ title: Riemann Problems and Jupyter Solutions
 downloads: []
 ---
 
+```{tip}
+New to this web edition? See [How to use this book](how_to_use.md): the interactive figures,
+and how to run the notebooks yourself.
+```
+
 This book illustrates the solution of Riemann problems for hyperbolic partial differential
 equations, and the approximate Riemann solvers used in finite volume methods, through
 interactive Jupyter notebooks.
@@ -35,15 +40,6 @@ in a web browser.
   substitute for Clawpack, which does much more.
 - **Tested.** A test suite checks the science: exact solutions, jump and entropy conditions,
   conservation, convergence, and agreement with the original book's results.
-- **Run the notebooks yourself.** Each chapter is a Jupyter notebook and can be run locally or
-  remotely:
-  - **Remotely:** the rocket icon at the top right of a chapter opens it on
-    [Binder](https://mybinder.org), where you can run and change its code in JupyterLab. It
-    takes longer to load (a few minutes the first time).
-  - **Locally:** [download the whole project](https://github.com/maojrs/riemann_book2/archive/refs/heads/main.zip)
-    and run the notebooks in Jupyter on your computer.
-    <!-- TODO (before release): placeholder link, the .zip of this working repository; replace it
-    with the download of the official repository. -->
 
 The original notebooks are available at
 [github.com/clawpack/riemann_book](https://github.com/clawpack/riemann_book), and the changes

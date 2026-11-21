@@ -28,10 +28,11 @@ chapters follow one by one.
 ## Run the notebooks yourself
 
 The **launch** icon (a rocket) at the top right of each chapter opens that chapter on
-[Binder](https://mybinder.org): JupyterLab in your browser, with the book's code installed
-(from `pyproject.toml`), where you can run and change the code. The first start can take a few
-minutes.
-Or use the repository:
+[Binder](https://mybinder.org): JupyterLab in your browser, where you can run and change the
+code. The first start can take a few minutes. The **Download the notebooks** badge above gives
+the same notebooks as a .zip. Both are made on each release (`.github/workflows/release.yml`):
+plain Jupyter notebooks with only what they need to run (the `notebooks` branch), without the
+web edition's files. Or use the repository:
 
 ```bash
 git clone https://github.com/maojrs/riemann_book2.git

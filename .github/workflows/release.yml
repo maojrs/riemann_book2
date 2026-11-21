@@ -1,0 +1,46 @@
+# On each published release: write the notebooks as plain Jupyter notebooks, with only what
+# is needed to run them (.agents/tools/clean_notebooks.py), as the single commit of the branch
+# `notebooks` (which the chapters' rocket icons open on Binder), and attach that commit as
+# riemann_book_notebooks.zip to the release (the README's "Download the notebooks" badge).
+name: Release notebooks
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  notebooks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Write the notebooks
+        run: python .agents/tools/clean_notebooks.py "$RUNNER_TEMP/notebooks"
+
+      - name: Update the notebooks branch
+        run: |
+          cd "$RUNNER_TEMP/notebooks"
+          git init -q -b notebooks
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Notebooks of release $TAG"
+          git push --force "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" notebooks
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Attach the notebooks to the release
+        run: |
+          cd "$RUNNER_TEMP/notebooks"
+          git archive --format=zip --prefix=riemann_book_notebooks/ -o "$RUNNER_TEMP/riemann_book_notebooks.zip" notebooks
+          gh release upload "$TAG" "$RUNNER_TEMP/riemann_book_notebooks.zip" --clobber --repo "${{ github.repository }}"
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
