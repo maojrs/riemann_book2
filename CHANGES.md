@@ -169,11 +169,15 @@ These make the code run on current Python, NumPy and IPython without changing an
   the repository structure.
 - `pyproject.toml` makes `exact_solvers`, `utils`, `miniclaw` and `widgets` installable (`uv sync` or
   `pip install -e .`).
+- The Preface is a markdown page (`chapters/Preface.md`) instead of a notebook: it has no code.
+  Same text, word for word; the links to it in Burgers and Approximate_solvers point to the new
+  file.
 - "Open in Binder": the top right of each chapter has a launch icon (a rocket) that opens the
   chapter's notebook on mybinder.org (JupyterLab, this repository's `main`), in place of the
   edit link and the download menu. Each chapter sets `edit_url` to its Binder URL and
-  `downloads: []` (frontmatter of its first cell; markup only; the home page too), `myst.yml`
-  sets `edit_url: null`, and `book.css` draws the icon. The theme's own launch button was not used: it also adds run-cell
+  `downloads: []` (frontmatter of its first cell; markup only; the home page and the Preface,
+  which have no code, only `downloads: []`), `myst.yml` sets `edit_url: null`, and `book.css`
+  draws the icon. The theme's own launch button was not used: it also adds run-cell
   controls to every notebook page. The tooltip still reads "Edit This Page" (set by the theme).
   `.binder/requirements.txt` installs the book's code in place (`-e .`), Python 3.12.
   Test: `test_book_pages.py`.

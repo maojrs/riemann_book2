@@ -9,7 +9,7 @@ BINDER = 'https://mybinder.org/v2/gh/maojrs/riemann_book2/main?labpath='
 
 
 def chapters():
-    """The notebooks of the table of contents (myst.yml), in order."""
+    """The notebooks of the table of contents (myst.yml), in order (the Preface is markdown)."""
     return re.findall(r'file: (chapters/\S+\.ipynb)', (ROOT / 'myst.yml').read_text())
 
 
@@ -22,7 +22,7 @@ def frontmatter(path):
 
 
 def test_every_chapter_opens_its_own_notebook_on_binder():
-    assert len(chapters()) == 22
+    assert len(chapters()) == 21
     for path in chapters():
         assert re.search(r'^edit_url: (\S+)$', frontmatter(path), re.M).group(1) == \
             BINDER + quote(path, safe=''), path
@@ -34,7 +34,8 @@ def test_no_other_edit_link_and_no_downloads():
     assert re.search(r'^  edit_url: null$', (ROOT / 'myst.yml').read_text(), re.M)
     for path in chapters():
         assert re.search(r'^downloads: \[\]$', frontmatter(path), re.M), path
-    assert re.search(r'^---\n(.*\n)*?downloads: \[\]\n(.*\n)*?---', (ROOT / 'index.md').read_text())
+    for page in ('index.md', 'chapters/Preface.md'):
+        assert re.search(r'^---\n(.*\n)*?downloads: \[\]\n(.*\n)*?---', (ROOT / page).read_text()), page
 
 
 def test_binder_installs_the_books_code():

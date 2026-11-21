@@ -34,9 +34,15 @@ and the interactive figures were rewritten and optimized for display in a web br
   substitute for Clawpack, which does much more.
 - **Tested.** A test suite checks the science: exact solutions, jump and entropy conditions,
   conservation, convergence, and agreement with the original book's results.
-- **Run the notebooks yourself.** Each chapter is a Jupyter notebook. The rocket icon at the top
-  right of a chapter opens it on [Binder](https://mybinder.org), where you can run and change its
-  code in JupyterLab. It takes longer to load (a few minutes the first time).
+- **Run the notebooks yourself.** Each chapter is a Jupyter notebook and can be run locally or
+  remotely:
+  - **Remotely:** the rocket icon at the top right of a chapter opens it on
+    [Binder](https://mybinder.org), where you can run and change its code in JupyterLab. It
+    takes longer to load (a few minutes the first time).
+  - **Locally:** [download the whole project](#) and run the notebooks in Jupyter on your
+    computer.
+    <!-- TODO (before release): replace the placeholder link "#" with the download of the
+    official repository (e.g. its .zip on GitHub). -->
 
 The original notebooks are available at
 [github.com/clawpack/riemann_book](https://github.com/clawpack/riemann_book), and the changes
