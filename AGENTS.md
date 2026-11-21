@@ -33,7 +33,7 @@ riemann_book2/
 ├── widgets/          # interactive figures of the web book (anywidget .mjs) + compute.py for Python in the browser;
 │                     #   widgets/figures/: each web figure (the notebook cell's plot function and controls)
 ├── tests/            # pytest: the science; tests/widgets/: the interactive figures (notebook and web)
-└── .github/, .agents/   # CI and agent notes (hidden)
+└── .binder/, .github/, .agents/   # Binder environment, CI and agent notes (hidden)
 ```
 
 - Keep the original import names (`from exact_solvers import burgers`, `from utils import riemann_tools`) so notebook code cells stay as in the print book.

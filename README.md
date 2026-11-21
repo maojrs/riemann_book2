@@ -27,8 +27,10 @@ chapters follow one by one.
 
 ## Run the notebooks yourself
 
-The **Download notebooks** button above gives the notebooks with only what they need to run in
-Jupyter (*coming soon*). Until then, use the repository:
+The **launch** icon (a rocket) at the top right of each chapter opens that chapter on
+[Binder](https://mybinder.org): JupyterLab in your browser, with the book's code installed
+(`.binder/`), where you can run and change the code. The first start can take a few minutes.
+Or use the repository:
 
 ```bash
 git clone https://github.com/maojrs/riemann_book2.git
@@ -73,7 +75,7 @@ riemann_book2/
 ├── references.bib    bibliography
 ├── pyproject.toml    makes the code installable
 ├── CHANGES.md        every change with respect to the original book
-└── .github/, .agents/   CI, and notes for the editors and agents
+└── .binder/, .github/, .agents/   Binder environment, CI, and notes for the editors and agents
 ```
 
 ## License

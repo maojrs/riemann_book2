@@ -11,6 +11,10 @@ project:
     content: CC-BY-NC-ND-4.0
     code: BSD-3-Clause
   github: https://github.com/clawpack/riemann_book
+  # The header's edit icon opens the chapter on Binder instead: each chapter sets its edit_url
+  # (frontmatter of its first cell, with downloads: [] for no download menu) and book.css draws
+  # a launch icon. No edit link elsewhere.
+  edit_url: null
   bibliography:
     - references.bib
   # Published next to the interactive figures (widgets/*.mjs): the Python worker, the book's

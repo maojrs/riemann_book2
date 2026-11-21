@@ -10,7 +10,7 @@
   - **JavaScript figures** only where dragging matters (phase-plane explorers): Python computes the data, JS (D3) draws it.
   - Until Python is ready, the build-time figure is shown; without JavaScript it simply stays.
   - Making the widgets also run in plain Jupyter is optional and later.
-- **No Binder** and no live "run cell" layer. JupyterLite (`jupyter: lite: true`) was tried on Acoustics: it works but is slow (11 s to start, 30–90 s to run a chapter, 0.3–0.9 s per slider step) and its widgets overflow on phones.
+- **No Binder inside the pages** and no live "run cell" layer (each chapter's header only links to its notebook on Binder, opened in a new tab: `edit_url` per chapter, launch icon in `book.css`, `.binder/`; decided 2026-11-21. The GitHub icon still points to clawpack/riemann_book: switch it to this repository at the official release). JupyterLite (`jupyter: lite: true`) was tried on Acoustics: it works but is slow (11 s to start, 30–90 s to run a chapter, 0.3–0.9 s per slider step) and its widgets overflow on phones.
 - **Static fallback:** the CI executes the notebooks at build time, so every figure is visible without JavaScript and is available for PDF export.
 
 ## Phases
