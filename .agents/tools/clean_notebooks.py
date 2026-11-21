@@ -36,12 +36,17 @@ def chapters():
     return re.findall(r'file: (chapters/\S+\.(?:ipynb|md))', (ROOT / 'myst.yml').read_text())
 
 
+def text(cell):
+    """A cell's source as one string (git's nbstripout filter stores it as a list of lines)."""
+    return cell['source'] if isinstance(cell['source'], str) else ''.join(cell['source'])
+
+
 def markdown_cells(path):
     """The notebook (dict) and its markdown sources; a .md file is one markdown cell."""
     if path.endswith('.md'):
         return None, [(ROOT / path).read_text()]
     nb = json.loads((ROOT / path).read_text())
-    return nb, [c['source'] for c in nb['cells'] if c['cell_type'] == 'markdown']
+    return nb, [text(c) for c in nb['cells'] if c['cell_type'] == 'markdown']
 
 
 def anchor(heading):
@@ -204,8 +209,8 @@ def write(out):
         nb, sources = markdown_cells(path)
         cleaned = iter(clean_markdown(sources, pathlib.Path(path).name, labels, bib))
         if nb is None:
-            text = next(cleaned)
-            target.write_text(text)
+            content = next(cleaned)
+            target.write_text(content)
         else:
             cells = []
             for cell in nb['cells']:
@@ -215,9 +220,9 @@ def write(out):
                         continue
                 cells.append(cell)
             nb = {**nb, 'cells': cells}
-            text = json.dumps(nb, indent=1, ensure_ascii=False)
-            target.write_text(text + '\n')
-        used |= set(re.findall(r'\.\./(figures/[\w./-]*\w)', text))
+            content = json.dumps(nb, indent=1, ensure_ascii=False)
+            target.write_text(content + '\n')
+        used |= set(re.findall(r'\.\./(figures/[\w./-]*\w)', content))
     for figure in sorted(used):
         (out / figure).parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(ROOT / figure, out / figure)

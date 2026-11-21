@@ -24,10 +24,15 @@ def cells(path):
     return json.loads(path.read_text())['cells']
 
 
+def text(cell):
+    """A cell's source as one string (git's nbstripout filter stores it as a list of lines)."""
+    return cell['source'] if isinstance(cell['source'], str) else ''.join(cell['source'])
+
+
 def markdown(path):
     if path.suffix == '.md':
         return path.read_text()
-    return '\n'.join(c['source'] for c in cells(path) if c['cell_type'] == 'markdown')
+    return '\n'.join(text(c) for c in cells(path) if c['cell_type'] == 'markdown')
 
 
 def test_only_what_is_needed_to_run_the_notebooks(clean):

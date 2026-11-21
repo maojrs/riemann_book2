@@ -226,6 +226,11 @@ These make the code run on current Python, NumPy and IPython without changing an
   heading; `{image}` becomes `<img>`); code cells are copied as they are. Equation numbers checked
   against the built site (102 labels). The bibliography code is shared with `references_page.py`
   (`.agents/tools/bibliography.py`). Tests: `test_clean_notebooks.py`.
+- The GitHub Actions use their Node 24 releases (checkout v7, setup-uv v10, setup-python v7,
+  setup-node v7, cache v6, upload-pages-artifact v5, deploy-pages v5): GitHub deprecated Node 20.
+- `clean_notebooks.py` reads cell sources as strings or lists of lines: the repository's
+  `nbstripout` filter commits notebooks with list sources, which made the first release run
+  fail.
 - `RedrawFigure` gives its picture's size as whole numbers (matplotlib 3.10's renderer gives
   floats, which broke the interactive figures on Python 3.10).
 - `tests/`: scientific test suite (pytest) for `exact_solvers`, `utils.riemann_tools` and `miniclaw`.
