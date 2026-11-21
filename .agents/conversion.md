@@ -11,9 +11,9 @@ Rule 1 in AGENTS.md applies: only markup changes, never the wording. Acoustics i
 4. Fix the warnings by hand (markup only).
 5. `python .agents/tools/prose_diff.py ORIGINAL.ipynb chapters/NAME.ipynb` must report **0 differences** in the prose.
 6. Build the chapter with execution and fix any errors or warnings in its output.
-   - Use a scratch copy of the project whose `myst.yml` lists only this chapter, with `PATH=.venv/bin:$PATH jupyter-book build --html --execute`.
+   - Use a scratch copy of the project whose `myst.yml` lists only this chapter, with `uv run --project <repository> jupyter-book build --html --execute`.
    - Prepare the widget files first (`uv run python widgets/assets.py`: the wheel of the book's code, Pyodide and D3, published by `myst.yml`), and again after changing Python code that the web figures use.
-   - The Jupyter server needs the venv on `PATH`.
+   - The Jupyter server needs the venv on `PATH`: `uv run` provides it.
    - The build reuses a notebook's outputs while its code cells are unchanged (`_build/execute`), even when the Python code they call has changed. After changing `exact_solvers/`, `utils/`, `miniclaw/` or `widgets/figures/`, run `jupyter-book clean --execute -y` first, or the build-time pictures (and the placeholders of the interactive figures) stay old.
    - Citations: `[@key]` (or `{cite:p}` for keys with a colon); every entry of `references.bib` needs a `doi` (or a `url`). After changing citations or the bibliography, run `python3 .agents/tools/references_page.py` to update `references.md` (it lists every entry of `references.bib`).
    - New MyST markup in a chapter must also be handled by `.agents/tools/clean_notebooks.py` (the release notebooks): it stops on markup it does not know, and `tests/test_clean_notebooks.py` runs it.
