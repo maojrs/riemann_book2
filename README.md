@@ -70,7 +70,8 @@ again.
 
 ```
 riemann_book2/
-├── chapters/         the book's notebooks (the source of the book)
+├── chapters/         the book's notebooks (the source of the book), and the references
+│                     page with its bibliography (references.md, references.bib)
 ├── figures/          static images and the original phase-plane figures
 ├── exact_solvers/    the book's exact Riemann solvers and demo figures
 ├── utils/            riemann_tools (compute and plot Riemann solutions) and live_figure
@@ -84,10 +85,9 @@ riemann_book2/
 │                     draws the same picture) and its controls (sliders, boxes, menus)
 ├── tests/            the test suite and reference results from the original book
 │   └── widgets/      tests of the interactive figures (notebook and web book)
-├── index.md, how_to_use.md, references.md   the other pages of the book
+├── index.md          the home page
 ├── myst.yml          book configuration and table of contents
 ├── book.css          small style adjustments for the web
-├── references.bib    bibliography
 ├── pyproject.toml    makes the code installable
 ├── CHANGES.md        every change with respect to the original book
 └── .github/, .agents/   CI, and notes for the editors and agents

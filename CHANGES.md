@@ -16,10 +16,13 @@ Every change compared with the original
 - Preface: a new first section, "Note on this Web Edition" (why this edition exists; the
   science and the scientific code are the original), followed by the original preface,
   unchanged. **Draft, pending the authors' approval.**
-- New page "How to use this book" (`how_to_use.md`, after the home page): the interactive
-  figures (Python in the reader's browser, start-up time, controls), and running the notebooks
-  on Binder (rocket icon) or locally (download). The home page has a tip linking to it, and its
-  "Run the notebooks yourself" bullet moved there. **Draft, pending the authors' approval.**
+- Home page, new subsection "How to use this book" (under "About this web edition"): the
+  interactive figures (Python in the reader's browser, start-up time, controls), and running
+  the notebooks on Binder (rocket icon) or locally (download). It was a separate page
+  (`how_to_use.md`) at first; the bullets above it no longer repeat what it says.
+  The Preface has a tip linking to it, before "Below is the preface to the original edition";
+  in the notebooks download that link goes to the web book.
+  **Draft, pending the authors' approval.** Test: `test_how_to_use_is_on_the_home_page`.
 - References (user's request): every work in `references.bib` links to itself: a DOI for 30
   works (found on Crossref and checked against title, authors and year), and for the others a
   stable page (Godunov 1959: MathNet; Riemann 1860: EuDML; Kröner: Wiley; Garavello & Piccoli,
@@ -31,7 +34,7 @@ Every change compared with the original
   - The duplicate entry `godunov` (the same 1959 paper as `godunov1959difference`) was
     removed; Approximate_solvers cites `godunov1959difference` (same rendered citation).
   - `M. J. Del Razo` is written `Del Razo, M. J.` so the name is not shown as "Razo, M. J. D.".
-  - New page `references.md` after Further topics: every work of `references.bib` (all the
+  - New page `chapters/references.md` after Further topics: every work of `references.bib` (all the
     works cited in the book, and Zobeyer et al. 2013, which the original bibliography has but
     no chapter cites), as a plain list (alphabetical, all visible), each title a link. Generated from
     `references.bib` by `.agents/tools/references_page.py` (run it after changing the
@@ -41,8 +44,8 @@ Every change compared with the original
   Tests: `test_every_reference_links_to_the_work`, `test_references_page_lists_every_cited_work`.
 - Front page: the subtitle and author lines under the title were removed (the page header
   already shows them); the SIAM citation's title links to the book (the DOI link rendered as an
-  automatic "Ketcheson et al. (2020)" citation); the instructions to run the notebooks are on the
-  "How to use this book" page.
+  automatic "Ketcheson et al. (2020)" citation); the instructions to run the notebooks are in its
+  "How to use this book" subsection.
 
 ## Bug fixes in the solvers
 
@@ -219,7 +222,7 @@ These make the code run on current Python, NumPy and IPython without changing an
   `exact_solvers/`, `utils/`, `miniclaw/`, a `pyproject.toml`, a README and the licenses; no
   `widgets/`, `book.css` or other web files), commits them as the single commit of the branch
   `notebooks` (which the rocket icons open on Binder) and attaches that commit to the release as
-  `riemann_book_notebooks.zip` (README badge, "How to use this book"). The cleaning only changes
+  `riemann_book_notebooks.zip` (README badge, home page). The cleaning only changes
   markdown: the `{anywidget}` cells and frontmatter go; MyST markup becomes plain Jupyter markdown
   (`$$` blocks; numbered equations get the web book's numbers as `\tag{n}` and references show
   `(n)`; citations `(Author, year)` linked to the work; heading labels become links to the
@@ -252,7 +255,7 @@ These make the code run on current Python, NumPy and IPython without changing an
   topics*, in the same order; `index.md` says so.
   The notebooks are in `chapters/`, copied from master with their outputs removed (the build
   regenerates them). Figures and phase-plane HTML are in `figures/`, `riemann.bib` is now
-  `references.bib`, and `LICENSE-CODE` and `LICENSE-TEXT.md` are copied unchanged.
+  `chapters/references.bib`, and `LICENSE-CODE` and `LICENSE-TEXT.md` are copied unchanged.
 - `book.css`: a wider text column on large screens (each of the theme's six body columns up to
   14ch instead of 10ch, i.e. about 84 instead of 60 characters). The same columns are applied to
   the sidebar's own grid, so the sidebar and text never overlap (checked with screenshots at

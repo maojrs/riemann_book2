@@ -15,7 +15,7 @@ Rule 1 in AGENTS.md applies: only markup changes, never the wording. Acoustics i
    - Prepare the widget files first (`uv run python widgets/assets.py`: the wheel of the book's code, Pyodide and D3, published by `myst.yml`), and again after changing Python code that the web figures use.
    - The Jupyter server needs the venv on `PATH`: `uv run` provides it.
    - The build reuses a notebook's outputs while its code cells are unchanged (`_build/execute`), even when the Python code they call has changed. After changing `exact_solvers/`, `utils/`, `miniclaw/` or `widgets/figures/`, run `jupyter-book clean --execute -y` first, or the build-time pictures (and the placeholders of the interactive figures) stay old.
-   - Citations: `[@key]` (or `{cite:p}` for keys with a colon); every entry of `references.bib` needs a `doi` (or a `url`). After changing citations or the bibliography, run `python3 .agents/tools/references_page.py` to update `references.md` (it lists every entry of `references.bib`).
+   - Citations: `[@key]` (or `{cite:p}` for keys with a colon); every entry of `chapters/references.bib` needs a `doi` (or a `url`). After changing citations or the bibliography, run `python3 .agents/tools/references_page.py` to update `chapters/references.md` (it lists every entry of `references.bib`).
    - New MyST markup in a chapter must also be handled by `.agents/tools/clean_notebooks.py` (the release notebooks): it stops on markup it does not know, and `tests/test_clean_notebooks.py` runs it.
 7. Check for horizontal scroll bars (see below) at 390, 768, 1280, 1440 and 1920 px, and look at the screenshots.
 8. Register the changes in `CHANGES.md`. Add any text that refers to things that no longer exist to "Text to flag for the authors" in `.agents/plan.md`.
@@ -27,7 +27,7 @@ Rule 1 in AGENTS.md applies: only markup changes, never the wording. Acoustics i
   - MyST gives a math block one label and one number: an `align` with several `\label`s becomes one `align` per labelled row (the converter does it; the LaTeX of each row is unchanged).
   - A one-row `align` with at most one top-level `&` becomes an `equation` (a one-row `align*` an unnumbered `{math}` block), with that `&` removed. It looks the same, but KaTeX draws `align` as a table that cannot wrap, while an `equation` can break after an `=` when it is too long (`book.css`). Rows with two `&` (two equations side by side) stay `align`.
 - **Equation references:** `(\ref{X})` and `\eqref{X}` become `` {eq}`X` ``, which renders as "(n)". A bare `\ref{X}` is reported, to decide by hand.
-- **Citations:** cite2c `<cite data-cite="key">…</cite>` becomes `[@key]`. The key must exist in `references.bib`.
+- **Citations:** cite2c `<cite data-cite="key">…</cite>` becomes `[@key]`. The key must exist in `chapters/references.bib`.
 - **Equation labels are global** in the web book: a label defined in two chapters (copied text) is renamed in the later one, with its references.
 - **Warnings printed by chapter code** that the original hid (e.g. through the old global warning filter) are hidden on the web with the cell tag `remove-stderr`; the code is not changed.
 - **Links between notebooks** (`[Euler](Euler.ipynb)`) stay as they are: MyST resolves them.

@@ -8,6 +8,11 @@ The original edition of this book was published in print and as a collection of 
 
 The book’s text, scientific content, and underlying scientific code remain unchanged from the original edition. What has changed is the presentation: the way the book is displayed and, in particular, how its figures are rendered and made interactive within the web interface.
 
+:::{tip}
+New to this web edition? See [How to use this book](#how-to-use): the interactive
+figures, and how to run the notebooks yourself.
+:::
+
 Below is the preface to the original edition.
 
 ## Aims and scope

@@ -10,7 +10,8 @@ licenses. The cleaning only changes markup (code cells are copied as they are):
 - MyST markup becomes plain Jupyter markdown: {math} blocks -> $$...$$; numbered equations get
   their number as \\tag{n} (as the web book numbers them: the n-th unstarred equation or align
   of the chapter), and {eq}`label` -> (n); citations -> (Author, year) linked to the work;
-  heading labels -> links to the heading; {image} -> <img>; {div} wrappers removed.
+  heading labels -> links to the heading (to the web book for the home page's); {image} -> <img>;
+  {div} wrappers removed; {tip} -> a quoted "Tip:".
 Any other MyST markup stops the script, so that none is shipped raw.
 """
 import json
@@ -125,6 +126,8 @@ def clean_markdown(sources, name, labels, bib):
         source = re.sub(r'```\{math\}\n(.*?)```', math_block, source, flags=re.S)
         source = re.sub(r'```\{image\}\s+(\S+)\n(.*?)```', image_block, source, flags=re.S)
         source = re.sub(r':::\{div\}\n(?::\w+:[^\n]*\n)*(.*?)\n:::', r'\1', source, flags=re.S)
+        source = re.sub(r':::\{tip\}\n(.*?)\n:::',
+                        lambda m: '> **Tip:** ' + m.group(1).replace('\n', '\n> '), source, flags=re.S)
         out.append(source)
     out, numbers = number_equations(out)
     result = []
@@ -134,6 +137,8 @@ def clean_markdown(sources, name, labels, bib):
 
         def heading_link(m):
             file, heading = labels[m.group(2)]
+            if file == 'index.md':                   # the home page: only in the web book
+                return f'[{m.group(1)}]({WEB_BOOK}#{m.group(2)})'
             target = '' if file == name else file
             return f'[{m.group(1)}]({target}#{quote(anchor(heading), safe="-:")})'
         source = re.sub(r'\[([^\]]*)\]\(#([\w:.-]+)\)', heading_link, source)
@@ -200,8 +205,8 @@ def write(out):
     if out.exists():
         shutil.rmtree(out)
     paths = chapters()
-    labels = heading_labels(paths)
-    bib = parse_bib((ROOT / 'references.bib').read_text())
+    labels = heading_labels(paths + ['index.md'])
+    bib = parse_bib((ROOT / 'chapters/references.bib').read_text())
     used = set()
     for path in paths:
         target = out / path

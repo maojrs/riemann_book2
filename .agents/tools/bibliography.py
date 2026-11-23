@@ -1,4 +1,4 @@
-"""Reading references.bib: entries, author names and links, for the pages and notebooks made
+"""Reading chapters/references.bib: entries, author names and links, for the pages and notebooks made
 from it (references_page.py, clean_notebooks.py)."""
 import re
 

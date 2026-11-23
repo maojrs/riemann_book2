@@ -1,4 +1,4 @@
-"""Write references.md: every work of references.bib, as a plain list
+"""Write chapters/references.md: every work of references.bib, as a plain list
 (alphabetical by first author, then year) whose titles link to the works (DOI or URL).
 
 Run from the repository root after changing references.bib or the citations:
@@ -53,9 +53,9 @@ def reference(fields):
 
 
 def page():
-    works = sorted(parse_bib((ROOT / 'references.bib').read_text()).values(), key=sort_key)
+    works = sorted(parse_bib((ROOT / 'chapters/references.bib').read_text()).values(), key=sort_key)
     return HEADER + ''.join(f'1. {reference(fields)}\n' for fields in works)
 
 
 if __name__ == '__main__':
-    (ROOT / 'references.md').write_text(page())
+    (ROOT / 'chapters' / 'references.md').write_text(page())

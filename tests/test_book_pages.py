@@ -40,7 +40,7 @@ def test_no_other_edit_link_and_no_downloads():
 
 def bibliography():
     """references.bib: {key: entry text}."""
-    text = (ROOT / 'references.bib').read_text()
+    text = (ROOT / 'chapters/references.bib').read_text()
     return dict(re.findall(r'@\w+\s*\{\s*([^,\s]+),(.*?)(?=\n@|\Z)', text, re.S))
 
 
@@ -77,16 +77,23 @@ def test_every_reference_links_to_the_work():
 
 
 def test_references_page_lists_every_work():
-    """references.md (made by .agents/tools/references_page.py): one item per entry of
+    """chapters/references.md (made by .agents/tools/references_page.py): one item per entry of
     references.bib (every cited work and related reading), its title linked to the work."""
-    page = (ROOT / 'references.md').read_text()
+    page = (ROOT / 'chapters/references.md').read_text()
     items = re.findall(r'^1\. .*\]\(<(\S+)>\)', page, re.M)
     assert sorted(items) == sorted(link(entry) for entry in bibliography().values())
-    assert 'file: references.md' in (ROOT / 'myst.yml').read_text()
+    assert 'file: chapters/references.md' in (ROOT / 'myst.yml').read_text()
 
 
-def test_how_to_use_page_follows_the_home_page():
+def test_how_to_use_is_on_the_home_page():
+    """"How to use this book" is a subsection of the home page's "About this web edition"."""
     toc = re.findall(r'- file: (\S+)', (ROOT / 'myst.yml').read_text())
-    assert toc[:2] == ['index.md', 'how_to_use.md']
-    assert re.search(r'^downloads: \[\]$', (ROOT / 'how_to_use.md').read_text(), re.M)
-    assert '](how_to_use.md)' in (ROOT / 'index.md').read_text()
+    assert toc[:2] == ['index.md', 'chapters/Preface.md']
+    assert not (ROOT / 'how_to_use.md').exists()
+    page = (ROOT / 'index.md').read_text()
+    about = page.index('## About this web edition')
+    assert about < page.index('### How to use this book') < page.index('## License')
+    assert '(how-to-use)=\n### How to use this book' in page
+    assert '](#how-to-use)' in (ROOT / 'chapters/Preface.md').read_text()
+    assert 'releases/latest/download/riemann_book_notebooks.zip' in page
+    assert 'rocket icon' in page and 'pip install -e . jupyterlab' in page

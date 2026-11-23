@@ -12,7 +12,7 @@ import re
 import sys
 from collections import Counter
 
-BIB_KEYS = set(re.findall(r'^@\w+\s*\{([^,]+),', open('references.bib').read(), re.M))
+BIB_KEYS = set(re.findall(r'^@\w+\s*\{([^,]+),', open('chapters/references.bib').read(), re.M))
 
 changes, warnings = Counter(), []
 

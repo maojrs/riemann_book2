@@ -16,7 +16,7 @@ project:
   # a launch icon. No edit link elsewhere.
   edit_url: null
   bibliography:
-    - references.bib
+    - chapters/references.bib
   # Published next to the interactive figures (widgets/*.mjs): the Python worker, the book's
   # code as a wheel, Pyodide and D3. Prepare them first: uv run python widgets/assets.py
   static_files:
@@ -28,7 +28,6 @@ project:
   # become pages; AGENTS.md, CHANGES.md and .agents/ are not part of the book.
   toc:
     - file: index.md
-    - file: how_to_use.md
     - file: chapters/Preface.md
     - title: "Part I: The Riemann problem and its solution"
       children:
@@ -57,7 +56,7 @@ project:
         - file: chapters/Traffic_with_ramps.ipynb
         - file: chapters/Pressureless_flow.ipynb
         - file: chapters/Kitchen_sink_problem.ipynb
-    - file: references.md
+    - file: chapters/references.md
 site:
   template: book-theme
   options:

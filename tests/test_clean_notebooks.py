@@ -98,3 +98,11 @@ def test_heading_links_point_to_headings(clean):
 def test_packages_import(clean):
     code = 'import exact_solvers.acoustics, utils.riemann_tools, miniclaw.pyclaw'
     subprocess.run([sys.executable, '-c', code], cwd=clean, check=True)
+
+
+def test_preface_tip_links_to_the_web_book(clean):
+    """The Preface's tip becomes a quoted "Tip:"; its link to the home page's "How to use this
+    book" goes to the web book (the home page is not in the notebooks)."""
+    text = markdown(clean / 'chapters/Preface.md')
+    assert ('> **Tip:** New to this web edition? See [How to use this book]'
+            '(https://maojrs.github.io/riemann_book2/#how-to-use)') in text
