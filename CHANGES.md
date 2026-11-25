@@ -144,15 +144,16 @@ Changes to how the figures look, in Jupyter and on the web. The science shown is
 - **Labels:** Euler's checkboxes read "1-wave curves"/"3-wave curves" and "Plot 1-loci"/"Plot
   3-loci", as in Shallow_water; Nonconvex_scalar's "Yet another example" sliders read $q_l$
   and $q_r$ (approved).
-- **Sizes** (user's request): Acoustics' x-t plane is 250 px wide; Traffic_variable_speed's
+- **Sizes** (user's request): Traffic_variable_speed's
   single plots are 6 x 3 inches at the default text size; Pressureless_flow's `connect_states`
   is 8 x 4 inches; Kitchen_sink_problem's profiles have axis labels and sizes like the rest of
   the book, and its animations are 6.4 x 4.8 inches, play smoothly (100 frames, 60 ms each) and
   show the time with two decimals.
 - Pressureless_flow: the depth is a black line, not filled blue, as in the rest of the book.
-- `shallow_water_riemann` and `nonlinear_elasticity_riemann` are redrawn as SVG from TikZ
-  (`figures/src/`): the same diagrams, in the book's math font (ϵ in Nonlinear_elasticity, as in
-  its text). The phase-plane HTML files scale to the page width.
+- `shallow_water_riemann`, `nonlinear_elasticity_riemann` and Acoustics' `acoustics_xt_plane`
+  are redrawn as SVG from TikZ (`figures/src/`): the same diagrams, in the book's math font (ϵ in
+  Nonlinear_elasticity, as in its text), on white with a margin so that they read well on the
+  dark theme. Test: `test_every_figure_used_by_a_chapter_exists_and_svgs_have_sources`. The phase-plane HTML files scale to the page width.
 
 ## Interactive figures on the web
 
@@ -177,7 +178,8 @@ the reader's browser (`widgets/`, new). Notebook code is unchanged.
   `test_pressureless_figure_keeps_its_axes_and_draws_the_chapters_pictures`.
 - **Controls** (`interact.mjs`, `interact.css`): the notebook's widgets and layout, styled like
   ipywidgets with the book's accent colour; a lone time slider spans the width, checkboxes sit in
-  one line. A figure that cannot be drawn for the chosen values says so.
+  one line. On the dark theme the accent and the empty slider tracks are lighter. A figure that
+  cannot be drawn for the chosen values says so.
 
 ## Project infrastructure
 
@@ -196,7 +198,7 @@ the reader's browser (`widgets/`, new). Notebook code is unchanged.
 - **`book.css`:** a wider text column on large screens, and no horizontal scroll bars at any
   width: equations shrink or break (the few that cannot are wrapped in a `math-fit` div,
   markup only), code wraps, figures, animations and videos fit the column. Figures are shown at
-  80% of their pixel size.
+  80% of their pixel size, centred.
 - **Binder:** each chapter's rocket icon (top right) opens its notebook on mybinder.org, from the
   `notebooks` branch; Binder installs `pyproject.toml` on Python 3.10, so `requires-python` is
   `>=3.10`.

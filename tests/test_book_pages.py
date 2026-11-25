@@ -97,3 +97,18 @@ def test_how_to_use_is_on_the_home_page():
     assert '](#how-to-use)' in (ROOT / 'chapters/Preface.md').read_text()
     assert 'releases/latest/download/riemann_book_notebooks.zip' in page
     assert 'rocket icon' in page and 'pip install -e . jupyterlab' in page
+
+
+def test_every_figure_used_by_a_chapter_exists_and_svgs_have_sources():
+    """Every image a chapter shows is in figures/; each SVG diagram has its TikZ source and
+    is made by figures/src/build.sh (white background with a margin, readable on the dark theme)."""
+    build = (ROOT / 'figures/src/build.sh').read_text()
+    used = set()
+    for path in chapters() + ['chapters/Preface.md']:
+        used |= set(re.findall(r'\.\./figures/([\w/.-]+\.(?:png|svg|jpg))', (ROOT / path).read_text()))
+    assert 'acoustics_xt_plane.svg' in used
+    for name in used:
+        assert (ROOT / 'figures' / name).exists(), name
+        if name.endswith('.svg'):
+            assert (ROOT / 'figures/src' / name.replace('.svg', '.tex')).exists(), name
+            assert name[:-4] in build, name

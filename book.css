@@ -62,14 +62,15 @@ article iframe[src*="youtube"] { max-width: 100%; height: auto; aspect-ratio: 16
 article :is(h1, h2, h3, h4, h5, h6) { overflow-x: clip; }
 
 /* Figures output by code cells: 80% of their size in pixels (matplotlib's 100 dpi), so that
-   their labels are not larger than the text; never wider than the column. The interactive
-   figures are sized the same way (widgets/interact.mjs). */
-article [data-name="safe-output-image"] img { zoom: 0.8; max-width: 100%; }
+   their labels are not larger than the text; never wider than the column; centred. The
+   interactive figures are sized the same way (widgets/interact.mjs). */
+article [data-name="safe-output-image"] img { zoom: 0.8; max-width: 100%; display: block; margin: 0 auto; }
 
 /* The accent of the interactive figures' controls (widgets/interact.css): the blue of the
-   book's states, lighter on the dark theme. */
+   book's states, lighter on the dark theme; there the empty slider tracks are also lighter
+   (--book-rule: share of the text colour). */
 :root { --book-accent: #2456a6; }
-html.dark { --book-accent: #8db4ff; }
+html.dark { --book-accent: #a8c6ff; --book-rule: 45%; }
 
 /* Display equations that cannot wrap and are wider than a phone (an align of wide matrices,
    two equations side by side) are wrapped in a {div} with class math-fit: they shrink to the
