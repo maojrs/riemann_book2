@@ -1,0 +1,18 @@
+% Structure of the Riemann solution for acoustics (chapter Acoustics): two waves with speeds
+% -c and c, and the states between them. Make the SVG with figures/src/build.sh.
+\documentclass[12pt, border=0pt]{standalone}
+\input{riemann_diagram.tex}
+\begin{document}
+\begin{tikzpicture}
+  \draw[axis, -latex] (-4.2,0) -- (4.2,0) node[below left] {$x$};
+  \draw[axis, -latex] (-3.6,-0.15) -- (-3.6,3.6) node[below left] {$t$};
+  \draw[wave] (0,0) -- (-2.1,3);
+  \draw[wave] (0,0) -- (2.1,3);
+  \node[below] at (0,0) {$0$};
+  \node[above] at (-2.1,3) {$s_1 = -c$};
+  \node[above] at (2.1,3) {$s_2 = c$};
+  \node[state] at (-2.3,1.2) {$q_l$};
+  \node[state] at (0,2.2) {$q_m$};
+  \node[state] at (2.3,1.2) {$q_r$};
+\end{tikzpicture}
+\end{document}

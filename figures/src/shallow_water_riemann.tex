@@ -1,0 +1,15 @@
+% Structure of the shallow water Riemann solution (chapter Shallow_water): a 1-rarefaction
+% and a 2-shock. Make the SVG with figures/src/build.sh.
+\documentclass[12pt, border=0pt]{standalone}
+\input{riemann_diagram.tex}
+\begin{document}
+\begin{tikzpicture}
+  \draw[axis] (-4.2,0) -- (4.2,0);
+  \fan{-0.7}{-0.42}{3}
+  \draw[stationary] (0,0) -- (0,3.3);
+  \draw[wave] (0,0) -- (2.85,3);
+  \node[state] at (-3.3,1.15) {\state{h_l}{h_l u_l}};
+  \node[state] at (1.15,2.75) {\state{h_m}{h_m u_m}};
+  \node[state] at (3.35,1.05) {\state{h_r}{h_r u_r}};
+\end{tikzpicture}
+\end{document}

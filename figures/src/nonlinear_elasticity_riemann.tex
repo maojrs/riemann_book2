@@ -1,0 +1,17 @@
+% Structure of the Riemann solution for variable-coefficient nonlinear elasticity (chapter
+% Nonlinear_elasticity): a left-going wave, the stationary wave at x = 0 and a right-going
+% wave. Make the SVG with figures/src/build.sh.
+\documentclass[12pt, border=0pt]{standalone}
+\input{riemann_diagram.tex}
+\begin{document}
+\begin{tikzpicture}
+  \draw[axis] (-4.2,0) -- (4.2,0);
+  \fan{-0.7}{-0.42}{3}
+  \draw[stationary] (0,0) -- (0,3);
+  \draw[wave] (0,0) -- (2.85,3);
+  \node[state] at (-3.3,1.45) {\state{\epsilon_l}{\rho_l u_l}};
+  \node[state] at (-0.95,3.75) {\state{\epsilon_l^*}{\rho_l u_l^*}};
+  \node[state] at (1.15,2.75) {\state{\epsilon_r^*}{\rho_r u_r^*}};
+  \node[state] at (3.4,1.05) {\state{\epsilon_r}{\rho_r u_r}};
+\end{tikzpicture}
+\end{document}

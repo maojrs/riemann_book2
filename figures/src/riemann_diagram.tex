@@ -1,0 +1,22 @@
+% Shared style of the Riemann-structure diagrams (shallow_water_riemann.tex,
+% nonlinear_elasticity_riemann.tex): waves in the x-t plane and the constant states.
+\usepackage{amsmath}
+\usepackage{tikz}
+\usetikzlibrary{backgrounds}
+\definecolor{state}{RGB}{31,78,156}
+\tikzset{
+  every picture/.style={line cap=round, show background rectangle,
+                        background rectangle/.style={fill=white}, inner frame sep=6pt},
+  axis/.style={line width=0.9pt},
+  wave/.style={line width=0.9pt},
+  fan/.style={line width=0.35pt},
+  stationary/.style={line width=0.9pt, dash pattern=on 4pt off 3pt},
+  state/.style={text=state},
+}
+% A rarefaction fan from the origin: edge speeds #1 and #2 (dx per unit height), height #3
+\newcommand{\fan}[3]{%
+  \foreach \k in {1,2,3} {\draw[fan] (0,0) -- ({(#1 + \k*(#2-#1)/4)*#3}, #3);}
+  \draw[wave] (0,0) -- ({#1*#3}, #3);
+  \draw[wave] (0,0) -- ({#2*#3}, #3);}
+% A state vector with entries #1 and #2
+\newcommand{\state}[2]{$\begin{bmatrix} #1 \\ #2 \end{bmatrix}$}
